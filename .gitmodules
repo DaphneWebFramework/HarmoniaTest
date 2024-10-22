@@ -1,0 +1,3 @@
+[submodule "source/classes/TestToolkit"]
+	path = source/classes/TestToolkit
+	url = https://github.com/DaphneWebFramework/TestToolkit.git
