@@ -1,7 +1,15 @@
 <?php declare(strict_types=1);
 use \PHPUnit\Framework\TestCase;
+use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
+use \PHPUnit\Framework\Attributes\DataProviderExternal;
 
+use \Harmonia\Core\CString;
+
+use \TestToolkit\AccessHelper;
+use \TestToolkit\DataHelper;
+
+#[CoversClass(CString::class)]
 class CStringTest extends TestCase
 {
     #region Self Test ----------------------------------------------------------
@@ -50,6 +58,141 @@ class CStringTest extends TestCase
     }
 
     #endregion Self Test
+
+    #region __construct --------------------------------------------------------
+
+    function testDefaultConstructor()
+    {
+        $cstring = new CString();
+        $this->assertSame('', (string)$cstring);
+        $this->assertSame(
+            \mb_internal_encoding(),
+            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+        );
+    }
+
+    function testCopyConstructor()
+    {
+        $original = new CString('Hello, World!', 'ISO-8859-1');
+        $copy = new CString($original, 'UTF-8'); // 'UTF-8' should be ignored
+        $this->assertSame((string)$original, (string)$copy);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($original, 'encoding'),
+            AccessHelper::GetNonPublicProperty($copy, 'encoding')
+        );
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($original, 'isSingleByte'),
+            AccessHelper::GetNonPublicProperty($copy, 'isSingleByte')
+        );
+    }
+
+    function testConstructorWithNativeString()
+    {
+        $string = 'Hello, World!';
+        $cstring = new CString($string);
+        $this->assertSame($string, (string)$cstring);
+        $this->assertSame(
+            \mb_internal_encoding(),
+            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+        );
+    }
+
+    function testConstructorWithNativeStringAndNullEncoding()
+    {
+        $string = 'Hello, World!';
+        $cstring = new CString($string, null);
+        $this->assertSame($string, (string)$cstring);
+        $this->assertSame(
+            \mb_internal_encoding(),
+            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+        );
+    }
+
+    function testConstructorWithNativeStringAndSpecifiedEncoding()
+    {
+        $string = 'Hello, World!';
+        $cstring = new CString($string, 'ISO-8859-1');
+        $this->assertSame($string, (string)$cstring);
+        $this->assertSame(
+            'ISO-8859-1',
+            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+        );
+    }
+
+    function testConstructorWithStringable()
+    {
+        $stringable = new class() implements \Stringable {
+            function __toString(): string {
+                return 'I am Stringable';
+            }
+        };
+        $cstring = new CString($stringable);
+        $this->assertSame('I am Stringable', (string)$cstring);
+        $this->assertSame(
+            \mb_internal_encoding(),
+            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+        );
+    }
+
+    function testConstructorWithStringableAndNullEncoding()
+    {
+        $stringable = new class() implements \Stringable {
+            function __toString(): string {
+                return 'I am Stringable';
+            }
+        };
+        $cstring = new CString($stringable, null);
+        $this->assertSame('I am Stringable', (string)$cstring);
+        $this->assertSame(
+            \mb_internal_encoding(),
+            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+        );
+    }
+
+    function testConstructorWithStringableAndSpecifiedEncoding()
+    {
+        $stringable = new class() implements \Stringable {
+            function __toString(): string {
+                return 'I am Stringable';
+            }
+        };
+        $cstring = new CString($stringable, 'ISO-8859-1');
+        $this->assertSame('I am Stringable', (string)$cstring);
+        $this->assertSame(
+            'ISO-8859-1',
+            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+        );
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    public function testConstructorWithInvalidValueType($value)
+    {
+        $this->expectException(\TypeError::class);
+        new CString($value);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
+    public function testConstructorWithInvalidEncodingType($encoding)
+    {
+        $this->expectException(\TypeError::class);
+        new CString('Hello, World!', $encoding);
+    }
+
+    #[DataProvider('singleByteEncodingProvider')]
+    function testConstructorWithSingleByteEncoding($encoding)
+    {
+        $cstring = new CString('Hello, World!', $encoding);
+        $this->assertTrue(AccessHelper::GetNonPublicProperty($cstring, 'isSingleByte'));
+    }
+
+    #[DataProvider('multiByteEncodingProvider')]
+    function testConstructorWithMultiByteEncoding($encoding)
+    {
+        $cstring = new CString('Hello, World!', $encoding);
+        $this->assertFalse(AccessHelper::GetNonPublicProperty($cstring, 'isSingleByte'));
+    }
+
+    #endregion __construct
 
     #region Data Providers -----------------------------------------------------
 
