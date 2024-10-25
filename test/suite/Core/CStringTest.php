@@ -37,7 +37,7 @@ class CStringTest extends TestCase
             \in_array($encoding, self::$encodingsWithAliases, true),
             "Encoding {$encoding} is not supported in this environment."
         );
-        $this->assertEquals(
+        $this->assertSame(
             \strlen($sampleString),
             \mb_strlen($sampleString, $encoding),
             "Encoding {$encoding} did not behave as a single-byte encoding."
@@ -222,7 +222,7 @@ class CStringTest extends TestCase
     function testLength(int $expected, string $value, string $encoding)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertEquals($expected, $cstr->Length());
+        $this->assertSame($expected, $cstr->Length());
     }
 
     function testLengthWithInvalidEncoding()
@@ -240,7 +240,7 @@ class CStringTest extends TestCase
     function testFirst(string $expected, string $value, string $encoding)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertEquals($expected, $cstr->First());
+        $this->assertSame($expected, $cstr->First());
     }
 
     function testFirstWithInvalidEncoding()
@@ -258,7 +258,7 @@ class CStringTest extends TestCase
     function testLast(string $expected, string $value, string $encoding)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertEquals($expected, $cstr->Last());
+        $this->assertSame($expected, $cstr->Last());
     }
 
     function testLastWithInvalidEncoding()
@@ -276,7 +276,7 @@ class CStringTest extends TestCase
     function testAt(string $expected, string $value, string $encoding, int $offset)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertEquals($expected, $cstr->At($offset));
+        $this->assertSame($expected, $cstr->At($offset));
     }
 
     function testAtWithInvalidEncoding()
@@ -495,54 +495,108 @@ class CStringTest extends TestCase
     static function isEmptyDataProvider(): array
     {
         return [
-            [true, '', 'ISO-8859-1'],
-            [false, 'Hello', 'ISO-8859-1'],
-            [true, '', 'UTF-8'],
-            [false, 'こんにちは', 'UTF-8']
+            'empty string returns true (single-byte)' => [
+                true, '', 'ISO-8859-1'
+            ],
+            'non-empty string returns false (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1'
+            ],
+            'empty string returns true (multibyte)' => [
+                true, '', 'UTF-8'
+            ],
+            'non-empty string returns false (multibyte)' => [
+                false, 'こんにちは', 'UTF-8'
+            ],
         ];
     }
 
     static function lengthDataProvider(): array
     {
         return [
-            [5, 'Hello', 'ISO-8859-1'],
-            [5, 'こんにちは', 'UTF-8']
+            'non-empty string returns non-zero length (single-byte)' => [
+                5, 'Hello', 'ISO-8859-1'
+            ],
+            'empty string returns zero length (single-byte)' => [
+                0, '', 'ISO-8859-1'
+            ],
+            'non-empty string returns non-zero length (multibyte)' => [
+                5, 'こんにちは', 'UTF-8'
+            ],
+            'empty string returns zero length (multibyte)' => [
+                0, '', 'UTF-8'
+            ],
         ];
     }
 
     static function firstDataProvider(): array
     {
         return [
-            ['H', 'Hello', 'ISO-8859-1'],
-            ['こ', 'こんにちは', 'UTF-8'],
-            ['', '', 'ISO-8859-1'],
-            ['', '', 'UTF-8'],
+            'non-empty string returns first character (single-byte)' => [
+                'H', 'Hello', 'ISO-8859-1'
+            ],
+            'empty string returns empty string (single-byte)' => [
+                '', '', 'ISO-8859-1'
+            ],
+            'non-empty string returns first character (multibyte)' => [
+                'こ', 'こんにちは', 'UTF-8'
+            ],
+            'empty string returns empty string (multibyte)' => [
+                '', '', 'UTF-8'
+            ],
         ];
     }
 
     static function lastDataProvider(): array
     {
         return [
-            ['o', 'Hello', 'ISO-8859-1'],
-            ['は', 'こんにちは', 'UTF-8'],
-            ['', '', 'ISO-8859-1'],
-            ['', '', 'UTF-8'],
+            'non-empty string returns last character (single-byte)' => [
+                'o', 'Hello', 'ISO-8859-1'
+            ],
+            'empty string returns empty string (single-byte)' => [
+                '', '', 'ISO-8859-1'
+            ],
+            'non-empty string returns last character (multibyte)' => [
+                'は', 'こんにちは', 'UTF-8'
+            ],
+            'empty string returns empty string (multibyte)' => [
+                '', '', 'UTF-8'
+            ],
         ];
     }
 
     static function atDataProvider(): array
     {
         return [
-            ['H', 'Hello', 'ISO-8859-1', 0],
-            ['e', 'Hello', 'ISO-8859-1', 1],
-            ['o', 'Hello', 'ISO-8859-1', 4],
-            ['', 'Hello', 'ISO-8859-1', -1],
-            ['', 'Hello', 'ISO-8859-1', 10],
-            ['こ', 'こんにちは', 'UTF-8', 0],
-            ['ん', 'こんにちは', 'UTF-8', 1],
-            ['は', 'こんにちは', 'UTF-8', 4],
-            ['', 'こんにちは', 'UTF-8', -1],
-            ['', 'こんにちは', 'UTF-8', 10]
+            'valid offset returns character at start (single-byte)' => [
+                'H', 'Hello', 'ISO-8859-1', 0
+            ],
+            'valid offset returns character in middle (single-byte)' => [
+                'e', 'Hello', 'ISO-8859-1', 1
+            ],
+            'valid offset returns character at end (single-byte)' => [
+                'o', 'Hello', 'ISO-8859-1', 4
+            ],
+            'negative offset returns empty string (single-byte)' => [
+                '', 'Hello', 'ISO-8859-1', -1
+            ],
+            'out-of-bounds offset returns empty string (single-byte)' => [
+                '', 'Hello', 'ISO-8859-1', 10
+            ],
+            'valid offset returns character at start (multibyte)' => [
+                'こ', 'こんにちは', 'UTF-8', 0
+            ],
+            'valid offset returns character in middle (multibyte)' => [
+                'ん', 'こんにちは', 'UTF-8', 1
+            ],
+            'valid offset returns character at end (multibyte)' => [
+                'は', 'こんにちは', 'UTF-8', 4
+            ],
+            'negative offset returns empty string (multibyte)' => [
+                '', 'こんにちは', 'UTF-8', -1
+            ],
+            'out-of-bounds offset returns empty string (multibyte)' => [
+                '', 'こんにちは', 'UTF-8', 10
+            ],
         ];
     }
 
@@ -567,10 +621,10 @@ class CStringTest extends TestCase
             'multi-character truncation (single-byte)' => [
                 'Aello', 'Hello', 'ISO-8859-1', 0, 'ABC' // Truncate to 'A'
             ],
-            'no-op for negative offset (single-byte)' => [
+            'negative offset does nothing (single-byte)' => [
                 'Hello', 'Hello', 'ISO-8859-1', -1, 'Y'
             ],
-            'no-op for empty character (single-byte)' => [
+            'empty character does nothing (single-byte)' => [
                 'Hello', 'Hello', 'ISO-8859-1', 0, ''
             ],
             'insertion in empty string (single-byte)' => [
@@ -597,10 +651,10 @@ class CStringTest extends TestCase
             'multi-character truncation (multibyte)' => [
                 'あんにちは', 'こんにちは', 'UTF-8', 0, 'あいうえお' // Truncate to 'あ'
             ],
-            'no-op for negative offset (multibyte)' => [
+            'negative offset does nothing (multibyte)' => [
                 'こんにちは', 'こんにちは', 'UTF-8', -1, 'さ'
             ],
-            'no-op for empty character (multibyte)' => [
+            'empty character does nothing (multibyte)' => [
                 'こんにちは', 'こんにちは', 'UTF-8', 0, ''
             ],
             'insertion in empty string (multibyte)' => [
