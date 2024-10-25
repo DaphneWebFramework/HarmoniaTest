@@ -194,6 +194,46 @@ class CStringTest extends TestCase
 
     #endregion __construct
 
+    #region __toString ---------------------------------------------------------
+
+    function testToString()
+    {
+        $string = 'Hello, World!';
+        $cstring = new CString($string);
+        $this->assertSame($string, (string)$cstring);
+    }
+
+    #endregion __toString
+
+    #region IsEmpty ------------------------------------------------------------
+
+    #[DataProvider('isEmptyCaseProvider')]
+    function testIsEmpty(bool $expected, string $value, string $encoding)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, $cstr->IsEmpty());
+    }
+
+    #endregion IsEmpty
+
+    #region Length ------------------------------------------------------------
+
+    #[DataProvider('lengthCaseProvider')]
+    function testLength(int $expected, string $value, string $encoding)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertEquals($expected, $cstr->Length());
+    }
+
+    function testLengthWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Length();
+    }
+
+    #endregion Length
+
     #region Data Providers -----------------------------------------------------
 
     static function singleByteEncodingProvider()
@@ -352,6 +392,24 @@ class CStringTest extends TestCase
             self::supportedMultiByteEncodingProvider(),
             self::unsupportedMultiByteEncodingProvider()
         );
+    }
+
+    static function isEmptyCaseProvider(): array
+    {
+        return [
+            [true, '', 'ISO-8859-1'],
+            [false, 'Hello', 'ISO-8859-1'],
+            [true, '', 'UTF-8'],
+            [false, 'こんにちは', 'UTF-8']
+        ];
+    }
+
+    static function lengthCaseProvider(): array
+    {
+        return [
+            [5, 'Hello', 'ISO-8859-1'],
+            [5, 'こんにちは', 'UTF-8']
+        ];
     }
 
     #endregion Data Providers
