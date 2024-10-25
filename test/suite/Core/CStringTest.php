@@ -207,7 +207,7 @@ class CStringTest extends TestCase
 
     #region IsEmpty ------------------------------------------------------------
 
-    #[DataProvider('isEmptyCaseProvider')]
+    #[DataProvider('isEmptyDataProvider')]
     function testIsEmpty(bool $expected, string $value, string $encoding)
     {
         $cstr = new CString($value, $encoding);
@@ -218,7 +218,7 @@ class CStringTest extends TestCase
 
     #region Length ------------------------------------------------------------
 
-    #[DataProvider('lengthCaseProvider')]
+    #[DataProvider('lengthDataProvider')]
     function testLength(int $expected, string $value, string $encoding)
     {
         $cstr = new CString($value, $encoding);
@@ -233,6 +233,68 @@ class CStringTest extends TestCase
     }
 
     #endregion Length
+
+    #region First --------------------------------------------------------------
+
+    #[DataProvider('firstDataProvider')]
+    function testFirst(string $expected, string $value, string $encoding)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertEquals($expected, $cstr->First());
+    }
+
+    function testFirstWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->First();
+    }
+
+    #endregion First
+
+    #region Last ---------------------------------------------------------------
+
+    #[DataProvider('lastDataProvider')]
+    function testLast(string $expected, string $value, string $encoding)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertEquals($expected, $cstr->Last());
+    }
+
+    function testLastWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Last();
+    }
+
+    #endregion Last
+
+    #region At -----------------------------------------------------------------
+
+    #[DataProvider('atDataProvider')]
+    function testAt(string $expected, string $value, string $encoding, int $offset)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertEquals($expected, $cstr->At($offset));
+    }
+
+    function testAtWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->At(1);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testAtWithNonIntegerOffset($offset)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->At($offset);
+    }
+
+    #endregion At
 
     #region Data Providers -----------------------------------------------------
 
@@ -394,7 +456,7 @@ class CStringTest extends TestCase
         );
     }
 
-    static function isEmptyCaseProvider(): array
+    static function isEmptyDataProvider(): array
     {
         return [
             [true, '', 'ISO-8859-1'],
@@ -404,11 +466,47 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function lengthCaseProvider(): array
+    static function lengthDataProvider(): array
     {
         return [
             [5, 'Hello', 'ISO-8859-1'],
             [5, 'こんにちは', 'UTF-8']
+        ];
+    }
+
+    static function firstDataProvider(): array
+    {
+        return [
+            ['H', 'Hello', 'ISO-8859-1'],
+            ['こ', 'こんにちは', 'UTF-8'],
+            ['', '', 'ISO-8859-1'],
+            ['', '', 'UTF-8'],
+        ];
+    }
+
+    static function lastDataProvider(): array
+    {
+        return [
+            ['o', 'Hello', 'ISO-8859-1'],
+            ['は', 'こんにちは', 'UTF-8'],
+            ['', '', 'ISO-8859-1'],
+            ['', '', 'UTF-8'],
+        ];
+    }
+
+    static function atDataProvider(): array
+    {
+        return [
+            ['H', 'Hello', 'ISO-8859-1', 0],
+            ['e', 'Hello', 'ISO-8859-1', 1],
+            ['o', 'Hello', 'ISO-8859-1', 4],
+            ['', 'Hello', 'ISO-8859-1', -1],
+            ['', 'Hello', 'ISO-8859-1', 10],
+            ['こ', 'こんにちは', 'UTF-8', 0],
+            ['ん', 'こんにちは', 'UTF-8', 1],
+            ['は', 'こんにちは', 'UTF-8', 4],
+            ['', 'こんにちは', 'UTF-8', -1],
+            ['', 'こんにちは', 'UTF-8', 10]
         ];
     }
 
