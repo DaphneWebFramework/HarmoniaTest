@@ -296,6 +296,42 @@ class CStringTest extends TestCase
 
     #endregion At
 
+    #region SetAt --------------------------------------------------------------
+
+    #[DataProvider('setAtDataProvider')]
+    function testSetAt(string $expected, string $value, string $encoding,
+        int $offset, string $character)
+    {
+        $cstr = new CString($value, $encoding);
+        $cstr->SetAt($offset, $character);
+        $this->assertSame($expected, (string)$cstr);
+    }
+
+    function testSetAtWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->SetAt(0, 'Y');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testSetAtWithNonIntegerOffset($offset)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->SetAt($offset, 'Y');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testSetAtWithNonStringCharacter($character)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->SetAt(0, $character);
+    }
+
+    #endregion SetAt
+
     #region Data Providers -----------------------------------------------------
 
     static function singleByteEncodingProvider()
@@ -507,6 +543,72 @@ class CStringTest extends TestCase
             ['は', 'こんにちは', 'UTF-8', 4],
             ['', 'こんにちは', 'UTF-8', -1],
             ['', 'こんにちは', 'UTF-8', 10]
+        ];
+    }
+
+    static function setAtDataProvider(): array
+    {
+        return [
+            'insertion at start (single-byte)' => [
+                'Yello', 'Hello', 'ISO-8859-1', 0, 'Y'
+            ],
+            'insertion in middle (single-byte)' => [
+                'Hallo', 'Hello', 'ISO-8859-1', 1, 'a'
+            ],
+            'insertion at end (single-byte)' => [
+                'Helly', 'Hello', 'ISO-8859-1', 4, 'y'
+            ],
+            'insertion after last character (single-byte)' => [
+                'Hello!', 'Hello', 'ISO-8859-1', 5, '!'
+            ],
+            'insertion past the length (single-byte)' => [
+                'Hello     Y', 'Hello', 'ISO-8859-1', 10, 'Y'
+            ],
+            'multi-character truncation (single-byte)' => [
+                'Aello', 'Hello', 'ISO-8859-1', 0, 'ABC' // Truncate to 'A'
+            ],
+            'no-op for negative offset (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', -1, 'Y'
+            ],
+            'no-op for empty character (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', 0, ''
+            ],
+            'insertion in empty string (single-byte)' => [
+                'Y', '', 'ISO-8859-1', 0, 'Y'
+            ],
+            'insertion past the length in empty string (single-byte)' => [
+                '   Y', '', 'ISO-8859-1', 3, 'Y'
+            ],
+            'insertion at start (multibyte)' => [
+                'さんにちは', 'こんにちは', 'UTF-8', 0, 'さ'
+            ],
+            'insertion in middle (multibyte)' => [
+                'こすにちは', 'こんにちは', 'UTF-8', 1, 'す'
+            ],
+            'insertion at end (multibyte)' => [
+                'こんにちせ', 'こんにちは', 'UTF-8', 4, 'せ'
+            ],
+            'insertion after last character (multibyte)' => [
+                'こんにちはぞ', 'こんにちは', 'UTF-8', 5, 'ぞ'
+            ],
+            'insertion past the length (multibyte)' => [
+                'こんにちは     さ', 'こんにちは', 'UTF-8', 10, 'さ'
+            ],
+            'multi-character truncation (multibyte)' => [
+                'あんにちは', 'こんにちは', 'UTF-8', 0, 'あいうえお' // Truncate to 'あ'
+            ],
+            'no-op for negative offset (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', -1, 'さ'
+            ],
+            'no-op for empty character (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', 0, ''
+            ],
+            'insertion in empty string (multibyte)' => [
+                'さ', '', 'UTF-8', 0, 'さ'
+            ],
+            'insertion past the length in empty string (multibyte)' => [
+                '   さ', '', 'UTF-8', 3, 'さ'
+            ],
         ];
     }
 
