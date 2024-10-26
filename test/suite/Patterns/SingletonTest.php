@@ -36,7 +36,7 @@ class SingletonTest extends TestCase
         $this->assertNotSame($instance1, $instance2);
     }
 
-    public function testNewOperatorInstantiationNotAllowed()
+    function testNewOperatorInstantiationNotAllowed()
     {
         $this->expectException(\Error::class);
         new SingletonUnderTest();

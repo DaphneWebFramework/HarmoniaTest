@@ -122,7 +122,7 @@ class CStringTest extends TestCase
     function testConstructorWithStringable()
     {
         $stringable = new class() implements \Stringable {
-            function __toString(): string {
+            function __toString() {
                 return 'I am Stringable';
             }
         };
@@ -137,7 +137,7 @@ class CStringTest extends TestCase
     function testConstructorWithStringableAndNullEncoding()
     {
         $stringable = new class() implements \Stringable {
-            function __toString(): string {
+            function __toString() {
                 return 'I am Stringable';
             }
         };
@@ -152,7 +152,7 @@ class CStringTest extends TestCase
     function testConstructorWithStringableAndSpecifiedEncoding()
     {
         $stringable = new class() implements \Stringable {
-            function __toString(): string {
+            function __toString() {
                 return 'I am Stringable';
             }
         };
@@ -165,14 +165,14 @@ class CStringTest extends TestCase
     }
 
     #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    public function testConstructorWithInvalidValueType($value)
+    function testConstructorWithInvalidValueType($value)
     {
         $this->expectException(\TypeError::class);
         new CString($value);
     }
 
     #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
-    public function testConstructorWithInvalidEncodingType($encoding)
+    function testConstructorWithInvalidEncodingType($encoding)
     {
         $this->expectException(\TypeError::class);
         new CString('Hello, World!', $encoding);
@@ -208,7 +208,7 @@ class CStringTest extends TestCase
     #region IsEmpty ------------------------------------------------------------
 
     #[DataProvider('isEmptyDataProvider')]
-    function testIsEmpty(bool $expected, string $value, string $encoding)
+    function testIsEmpty($expected, $value, $encoding)
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->IsEmpty());
@@ -219,7 +219,7 @@ class CStringTest extends TestCase
     #region Length ------------------------------------------------------------
 
     #[DataProvider('lengthDataProvider')]
-    function testLength(int $expected, string $value, string $encoding)
+    function testLength($expected, $value, $encoding)
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->Length());
@@ -237,7 +237,7 @@ class CStringTest extends TestCase
     #region First --------------------------------------------------------------
 
     #[DataProvider('firstDataProvider')]
-    function testFirst(string $expected, string $value, string $encoding)
+    function testFirst($expected, $value, $encoding)
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->First());
@@ -255,7 +255,7 @@ class CStringTest extends TestCase
     #region Last ---------------------------------------------------------------
 
     #[DataProvider('lastDataProvider')]
-    function testLast(string $expected, string $value, string $encoding)
+    function testLast($expected, $value, $encoding)
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->Last());
@@ -273,7 +273,7 @@ class CStringTest extends TestCase
     #region At -----------------------------------------------------------------
 
     #[DataProvider('atDataProvider')]
-    function testAt(string $expected, string $value, string $encoding, int $offset)
+    function testAt($expected, $value, $encoding, $offset)
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->At($offset));
@@ -299,8 +299,7 @@ class CStringTest extends TestCase
     #region SetAt --------------------------------------------------------------
 
     #[DataProvider('setAtDataProvider')]
-    function testSetAt(string $expected, string $value, string $encoding,
-        int $offset, string $character)
+    function testSetAt($expected, $value, $encoding, $offset, $character)
     {
         $cstr = new CString($value, $encoding);
         $cstr->SetAt($offset, $character);
@@ -519,7 +518,7 @@ class CStringTest extends TestCase
         );
     }
 
-    static function isEmptyDataProvider(): array
+    static function isEmptyDataProvider()
     {
         return [
             'empty string returns true (single-byte)' => [
@@ -537,7 +536,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function lengthDataProvider(): array
+    static function lengthDataProvider()
     {
         return [
             'non-empty string returns non-zero length (single-byte)' => [
@@ -555,7 +554,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function firstDataProvider(): array
+    static function firstDataProvider()
     {
         return [
             'non-empty string returns first character (single-byte)' => [
@@ -573,7 +572,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function lastDataProvider(): array
+    static function lastDataProvider()
     {
         return [
             'non-empty string returns last character (single-byte)' => [
@@ -591,7 +590,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function atDataProvider(): array
+    static function atDataProvider()
     {
         return [
             'valid offset returns character at start (single-byte)' => [
@@ -627,7 +626,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function setAtDataProvider(): array
+    static function setAtDataProvider()
     {
         return [
             'insertion at start (single-byte)' => [
@@ -693,7 +692,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function deleteAtDataProvider(): array
+    static function deleteAtDataProvider()
     {
         return [
             'deletion at start (single-byte)' => [
