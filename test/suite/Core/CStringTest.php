@@ -332,6 +332,33 @@ class CStringTest extends TestCase
 
     #endregion SetAt
 
+    #region DeleteAt -----------------------------------------------------------
+
+    #[DataProvider('deleteAtDataProvider')]
+    function testDeleteAt($expected, $value, $encoding, $offset)
+    {
+        $cstr = new CString($value, $encoding);
+        $cstr->DeleteAt($offset);
+        $this->assertSame($expected, (string)$cstr);
+    }
+
+    function testDeleteAtWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->DeleteAt(0);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testDeleteAtWithNonIntegerOffset($offset)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->DeleteAt($offset);
+    }
+
+    #endregion DeleteAt
+
     #region Data Providers -----------------------------------------------------
 
     static function singleByteEncodingProvider()
@@ -662,6 +689,42 @@ class CStringTest extends TestCase
             ],
             'insertion past the length in empty string (multibyte)' => [
                 '   さ', '', 'UTF-8', 3, 'さ'
+            ],
+        ];
+    }
+
+    static function deleteAtDataProvider(): array
+    {
+        return [
+            'deletion at start (single-byte)' => [
+                'ello', 'Hello', 'ISO-8859-1', 0
+            ],
+            'deletion in middle (single-byte)' => [
+                'Hllo', 'Hello', 'ISO-8859-1', 1
+            ],
+            'deletion at end (single-byte)' => [
+                'Hell', 'Hello', 'ISO-8859-1', 4
+            ],
+            'negative offset does nothing (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', -1
+            ],
+            'out-of-bounds offset does nothing (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', 10
+            ],
+            'deletion at start (multibyte)' => [
+                'んにちは', 'こんにちは', 'UTF-8', 0
+            ],
+            'deletion in middle (multibyte)' => [
+                'こにちは', 'こんにちは', 'UTF-8', 1
+            ],
+            'deletion at end (multibyte)' => [
+                'こんにち', 'こんにちは', 'UTF-8', 4
+            ],
+            'negative offset does nothing (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', -1
+            ],
+            'out-of-bounds offset does nothing (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', 10
             ],
         ];
     }
