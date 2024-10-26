@@ -521,17 +521,17 @@ class CStringTest extends TestCase
     static function isEmptyDataProvider()
     {
         return [
-            'empty string returns true (single-byte)' => [
-                true, '', 'ISO-8859-1'
-            ],
-            'non-empty string returns false (single-byte)' => [
+            'non-empty string (single-byte)' => [
                 false, 'Hello', 'ISO-8859-1'
             ],
-            'empty string returns true (multibyte)' => [
-                true, '', 'UTF-8'
+            'empty string (single-byte)' => [
+                true, '', 'ISO-8859-1'
             ],
-            'non-empty string returns false (multibyte)' => [
+            'non-empty string (multibyte)' => [
                 false, 'こんにちは', 'UTF-8'
+            ],
+            'empty string (multibyte)' => [
+                true, '', 'UTF-8'
             ],
         ];
     }
@@ -539,16 +539,16 @@ class CStringTest extends TestCase
     static function lengthDataProvider()
     {
         return [
-            'non-empty string returns non-zero length (single-byte)' => [
+            'non-empty string (single-byte)' => [
                 5, 'Hello', 'ISO-8859-1'
             ],
-            'empty string returns zero length (single-byte)' => [
+            'empty string (single-byte)' => [
                 0, '', 'ISO-8859-1'
             ],
-            'non-empty string returns non-zero length (multibyte)' => [
+            'non-empty string (multibyte)' => [
                 5, 'こんにちは', 'UTF-8'
             ],
-            'empty string returns zero length (multibyte)' => [
+            'empty string (multibyte)' => [
                 0, '', 'UTF-8'
             ],
         ];
@@ -557,16 +557,16 @@ class CStringTest extends TestCase
     static function firstDataProvider()
     {
         return [
-            'non-empty string returns first character (single-byte)' => [
+            'non-empty string (single-byte)' => [
                 'H', 'Hello', 'ISO-8859-1'
             ],
-            'empty string returns empty string (single-byte)' => [
+            'empty string (single-byte)' => [
                 '', '', 'ISO-8859-1'
             ],
-            'non-empty string returns first character (multibyte)' => [
+            'non-empty string (multibyte)' => [
                 'こ', 'こんにちは', 'UTF-8'
             ],
-            'empty string returns empty string (multibyte)' => [
+            'empty string (multibyte)' => [
                 '', '', 'UTF-8'
             ],
         ];
@@ -575,16 +575,16 @@ class CStringTest extends TestCase
     static function lastDataProvider()
     {
         return [
-            'non-empty string returns last character (single-byte)' => [
+            'non-empty string (single-byte)' => [
                 'o', 'Hello', 'ISO-8859-1'
             ],
-            'empty string returns empty string (single-byte)' => [
+            'empty string (single-byte)' => [
                 '', '', 'ISO-8859-1'
             ],
-            'non-empty string returns last character (multibyte)' => [
+            'non-empty string (multibyte)' => [
                 'は', 'こんにちは', 'UTF-8'
             ],
-            'empty string returns empty string (multibyte)' => [
+            'empty string (multibyte)' => [
                 '', '', 'UTF-8'
             ],
         ];
@@ -593,35 +593,43 @@ class CStringTest extends TestCase
     static function atDataProvider()
     {
         return [
-            'valid offset returns character at start (single-byte)' => [
+        // Single-byte
+            'offset at start (single-byte)' => [
                 'H', 'Hello', 'ISO-8859-1', 0
             ],
-            'valid offset returns character in middle (single-byte)' => [
+            'offset in middle (single-byte)' => [
                 'e', 'Hello', 'ISO-8859-1', 1
             ],
-            'valid offset returns character at end (single-byte)' => [
+            'offset at end (single-byte)' => [
                 'o', 'Hello', 'ISO-8859-1', 4
             ],
-            'negative offset returns empty string (single-byte)' => [
-                '', 'Hello', 'ISO-8859-1', -1
-            ],
-            'out-of-bounds offset returns empty string (single-byte)' => [
+            'offset past the length (single-byte)' => [
                 '', 'Hello', 'ISO-8859-1', 10
             ],
-            'valid offset returns character at start (multibyte)' => [
+            'negative offset (single-byte)' => [
+                '', 'Hello', 'ISO-8859-1', -1
+            ],
+            'empty string (single-byte)' => [
+                '', '', 'ISO-8859-1', 0
+            ],
+        // Multibyte
+            'offset at start (multibyte)' => [
                 'こ', 'こんにちは', 'UTF-8', 0
             ],
-            'valid offset returns character in middle (multibyte)' => [
+            'offset in middle (multibyte)' => [
                 'ん', 'こんにちは', 'UTF-8', 1
             ],
-            'valid offset returns character at end (multibyte)' => [
+            'offset at end (multibyte)' => [
                 'は', 'こんにちは', 'UTF-8', 4
             ],
-            'negative offset returns empty string (multibyte)' => [
+            'offset past the length (multibyte)' => [
+                '', 'こんにちは', 'UTF-8', 10
+            ],
+            'negative offset (multibyte)' => [
                 '', 'こんにちは', 'UTF-8', -1
             ],
-            'out-of-bounds offset returns empty string (multibyte)' => [
-                '', 'こんにちは', 'UTF-8', 10
+            'empty string (multibyte)' => [
+                '', '', 'UTF-8', 0
             ],
         ];
     }
@@ -697,35 +705,43 @@ class CStringTest extends TestCase
     static function deleteAtDataProvider()
     {
         return [
-            'deletion at start (single-byte)' => [
+        // Single-byte
+            'offset at start (single-byte)' => [
                 'ello', 'Hello', 'ISO-8859-1', 0
             ],
-            'deletion in middle (single-byte)' => [
+            'offset in middle (single-byte)' => [
                 'Hllo', 'Hello', 'ISO-8859-1', 1
             ],
-            'deletion at end (single-byte)' => [
+            'offset at end (single-byte)' => [
                 'Hell', 'Hello', 'ISO-8859-1', 4
             ],
-            'negative offset does nothing (single-byte)' => [
-                'Hello', 'Hello', 'ISO-8859-1', -1
-            ],
-            'out-of-bounds offset does nothing (single-byte)' => [
+            'offset past the length (single-byte)' => [
                 'Hello', 'Hello', 'ISO-8859-1', 10
             ],
-            'deletion at start (multibyte)' => [
+            'negative offset (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', -1
+            ],
+            'empty string (single-byte)' => [
+                '', '', 'ISO-8859-1', 0
+            ],
+        // Multibyte
+            'offset at start (multibyte)' => [
                 'んにちは', 'こんにちは', 'UTF-8', 0
             ],
-            'deletion in middle (multibyte)' => [
+            'offset in middle (multibyte)' => [
                 'こにちは', 'こんにちは', 'UTF-8', 1
             ],
-            'deletion at end (multibyte)' => [
+            'offset at end (multibyte)' => [
                 'こんにち', 'こんにちは', 'UTF-8', 4
             ],
-            'negative offset does nothing (multibyte)' => [
+            'offset past the length (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', 10
+            ],
+            'negative offset (multibyte)' => [
                 'こんにちは', 'こんにちは', 'UTF-8', -1
             ],
-            'out-of-bounds offset does nothing (multibyte)' => [
-                'こんにちは', 'こんにちは', 'UTF-8', 10
+            'empty string (multibyte)' => [
+                '', '', 'UTF-8', 0
             ],
         ];
     }
