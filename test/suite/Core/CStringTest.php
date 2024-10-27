@@ -334,10 +334,10 @@ class CStringTest extends TestCase
     #region DeleteAt -----------------------------------------------------------
 
     #[DataProvider('deleteAtDataProvider')]
-    function testDeleteAt($expected, $value, $encoding, $offset)
+    function testDeleteAt($expected, $value, $encoding, $offset, $count = 1)
     {
         $cstr = new CString($value, $encoding);
-        $cstr->DeleteAt($offset);
+        $cstr->DeleteAt($offset, $count);
         $this->assertSame($expected, (string)$cstr);
     }
 
@@ -354,6 +354,14 @@ class CStringTest extends TestCase
         $cstr = new CString('Hello', 'ISO-8859-1');
         $this->expectException(\TypeError::class);
         $cstr->DeleteAt($offset);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testDeleteAtWithNonIntegerCount($count)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->DeleteAt(0, $count);
     }
 
     #endregion DeleteAt
@@ -603,7 +611,7 @@ class CStringTest extends TestCase
             'offset at end (single-byte)' => [
                 'o', 'Hello', 'ISO-8859-1', 4
             ],
-            'offset past the length (single-byte)' => [
+            'offset past length (single-byte)' => [
                 '', 'Hello', 'ISO-8859-1', 10
             ],
             'negative offset (single-byte)' => [
@@ -622,7 +630,7 @@ class CStringTest extends TestCase
             'offset at end (multibyte)' => [
                 'は', 'こんにちは', 'UTF-8', 4
             ],
-            'offset past the length (multibyte)' => [
+            'offset past length (multibyte)' => [
                 '', 'こんにちは', 'UTF-8', 10
             ],
             'negative offset (multibyte)' => [
@@ -650,10 +658,10 @@ class CStringTest extends TestCase
             'offset after last character (single-byte)' => [
                 'Hello', 'Hello', 'ISO-8859-1', 5, '!'
             ],
-            'offset past the length (single-byte)' => [
+            'offset past length (single-byte)' => [
                 'Hello', 'Hello', 'ISO-8859-1', 10, 'Y'
             ],
-            'offset past the length in empty string (single-byte)' => [
+            'offset past length in empty string (single-byte)' => [
                 '', '', 'ISO-8859-1', 3, 'Y'
             ],
             'negative offset (single-byte)' => [
@@ -681,10 +689,10 @@ class CStringTest extends TestCase
             'offset after last character (multibyte)' => [
                 'こんにちは', 'こんにちは', 'UTF-8', 5, 'ぞ'
             ],
-            'offset past the length (multibyte)' => [
+            'offset past length (multibyte)' => [
                 'こんにちは', 'こんにちは', 'UTF-8', 10, 'さ'
             ],
-            'offset past the length in empty string (multibyte)' => [
+            'offset past length in empty string (multibyte)' => [
                 '', '', 'UTF-8', 3, 'さ'
             ],
             'negative offset (multibyte)' => [
@@ -706,42 +714,96 @@ class CStringTest extends TestCase
     {
         return [
         // Single-byte
-            'offset at start (single-byte)' => [
+            'offset at start, single character (single-byte)' => [
                 'ello', 'Hello', 'ISO-8859-1', 0
             ],
-            'offset in middle (single-byte)' => [
+            'offset at start, multiple characters (single-byte)' => [
+                'llo', 'Hello', 'ISO-8859-1', 0, 2
+            ],
+            'offset in middle, single character (single-byte)' => [
                 'Hllo', 'Hello', 'ISO-8859-1', 1
             ],
-            'offset at end (single-byte)' => [
+            'offset in middle, multiple characters (single-byte)' => [
+                'Ho', 'Hello', 'ISO-8859-1', 1, 3
+            ],
+            'offset at end, single character (single-byte)' => [
                 'Hell', 'Hello', 'ISO-8859-1', 4
             ],
-            'offset past the length (single-byte)' => [
+            'offset at end, multiple characters (single-byte)' => [
+                'Hel', 'Hello', 'ISO-8859-1', 3, 2
+            ],
+            'offset past length, single character (single-byte)' => [
                 'Hello', 'Hello', 'ISO-8859-1', 10
             ],
-            'negative offset (single-byte)' => [
+            'offset past length, multiple characters (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', 10, 2
+            ],
+            'negative offset, single character (single-byte)' => [
                 'Hello', 'Hello', 'ISO-8859-1', -1
             ],
-            'empty string (single-byte)' => [
+            'negative offset, multiple characters (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', -1, 3
+            ],
+            'zero count (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', 2, 0
+            ],
+            'negative count (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', 2, -1
+            ],
+            'count exceeds available (single-byte)' => [
+                'He', 'Hello', 'ISO-8859-1', 2, 10
+            ],
+            'empty string, single character (single-byte)' => [
                 '', '', 'ISO-8859-1', 0
             ],
+            'empty string, multiple characters (single-byte)' => [
+                '', '', 'ISO-8859-1', 0, 3
+            ],
         // Multibyte
-            'offset at start (multibyte)' => [
+            'offset at start, single character (multibyte)' => [
                 'んにちは', 'こんにちは', 'UTF-8', 0
             ],
-            'offset in middle (multibyte)' => [
+            'offset at start, multiple characters (multibyte)' => [
+                'にちは', 'こんにちは', 'UTF-8', 0, 2
+            ],
+            'offset in middle, single character (multibyte)' => [
                 'こにちは', 'こんにちは', 'UTF-8', 1
             ],
-            'offset at end (multibyte)' => [
+            'offset in middle, multiple characters (multibyte)' => [
+                'こは', 'こんにちは', 'UTF-8', 1, 3
+            ],
+            'offset at end, single character (multibyte)' => [
                 'こんにち', 'こんにちは', 'UTF-8', 4
             ],
-            'offset past the length (multibyte)' => [
+            'offset at end, multiple characters (multibyte)' => [
+                'こんに', 'こんにちは', 'UTF-8', 3, 2
+            ],
+            'offset past length, single character (multibyte)' => [
                 'こんにちは', 'こんにちは', 'UTF-8', 10
             ],
-            'negative offset (multibyte)' => [
+            'offset past length, multiple characters (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', 10, 2
+            ],
+            'negative offset, single character (multibyte)' => [
                 'こんにちは', 'こんにちは', 'UTF-8', -1
             ],
-            'empty string (multibyte)' => [
+            'negative offset, multiple characters (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', -1, 3
+            ],
+            'zero count (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', 2, 0
+            ],
+            'negative count (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', 2, -1
+            ],
+            'count exceeds available (multibyte)' => [
+                'こん', 'こんにちは', 'UTF-8', 2, 10
+            ],
+            'empty string, single character (multibyte)' => [
                 '', '', 'UTF-8', 0
+            ],
+            'empty string, multiple characters (multibyte)' => [
+                '', '', 'UTF-8', 0, 3
             ],
         ];
     }
