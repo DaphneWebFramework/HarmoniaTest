@@ -331,6 +331,41 @@ class CStringTest extends TestCase
 
     #endregion SetAt
 
+    #region InsertAt ------------------------------------------------------------
+
+    #[DataProvider('insertAtDataProvider')]
+    function testInsertAt($expected, $value, $encoding, $offset, $substring)
+    {
+        $cstr = new CString($value, $encoding);
+        $cstr->InsertAt($offset, $substring);
+        $this->assertSame($expected, (string)$cstr);
+    }
+
+    function testInsertAtWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->InsertAt(0, 'Hey');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testInsertAtWithNonIntegerOffset($offset)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->InsertAt($offset, 'Hey');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testInsertAtWithNonStringSubstring($substring)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->InsertAt(0, $substring);
+    }
+
+    #endregion InsertAt
+
     #region DeleteAt -----------------------------------------------------------
 
     #[DataProvider('deleteAtDataProvider')]
@@ -706,6 +741,56 @@ class CStringTest extends TestCase
             ],
             'empty string (multibyte)' => [
                 '', '', 'UTF-8', 0, 'さ'
+            ],
+        ];
+    }
+
+    static function insertAtDataProvider()
+    {
+        return [
+        // Single-byte
+            'offset at start (single-byte)' => [
+                'Hello, World!', 'World!', 'ISO-8859-1', 0, 'Hello, '
+            ],
+            'offset in middle (single-byte)' => [
+                'Hell no', 'Hello', 'ISO-8859-1', 4, ' n'
+            ],
+            'offset at end (single-byte)' => [
+                'Hello!', 'Hello', 'ISO-8859-1', 5, '!'
+            ],
+            'offset past length (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', 6, ' everyone'
+            ],
+            'negative offset (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', -1, 'Oops'
+            ],
+            'empty substring (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', 0, ''
+            ],
+            'empty string (single-byte)' => [
+                'Hello there', '', 'ISO-8859-1', 0, 'Hello there'
+            ],
+        // Multibyte
+            'offset at start (multibyte)' => [
+                'おはようこんにちは', 'こんにちは', 'UTF-8', 0, 'おはよう'
+            ],
+            'offset in middle (multibyte)' => [
+                'こんさにちは', 'こんにちは', 'UTF-8', 2, 'さ'
+            ],
+            'offset at end (multibyte)' => [
+                'こんにちは!', 'こんにちは', 'UTF-8', 5, '!'
+            ],
+            'offset past length (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', 6, ' またね'
+            ],
+            'negative offset (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', -1, 'さ'
+            ],
+            'empty substring (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', 0, ''
+            ],
+            'empty string (multibyte)' => [
+                'ありがとう', '', 'UTF-8', 0, 'ありがとう'
             ],
         ];
     }
