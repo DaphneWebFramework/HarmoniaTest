@@ -436,6 +436,103 @@ class CStringTest extends TestCase
 
     #endregion DeleteAt
 
+    #region Left ---------------------------------------------------------------
+
+    #[DataProvider('leftDataProvider')]
+    function testLeft($expected, $value, $encoding, $count)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, (string)$cstr->Left($count));
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testLeftWithNonIntegerCount($count)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Left($count);
+    }
+
+    function testLeftWithNegativeCount()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Count must be a non-negative integer.');
+        $cstr->Left(-1);
+    }
+
+    #endregion Left
+
+    #region Right --------------------------------------------------------------
+
+    #[DataProvider('rightDataProvider')]
+    function testRight($expected, $value, $encoding, $count)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, (string)$cstr->Right($count));
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testRightWithNonIntegerCount($count)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Right($count);
+    }
+
+    function testRightWithNegativeCount()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Count must be a non-negative integer.');
+        $cstr->Right(-1);
+    }
+
+    #endregion Right
+
+    #region Middle -------------------------------------------------------------
+
+    #[DataProvider('middleDataProvider')]
+    function testMiddle($expected, $value, $encoding, $offset, $count)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, (string)$cstr->Middle($offset, $count));
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testMiddleWithNonIntegerOffset($offset)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Middle($offset, 2);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testMiddleWithNonIntegerCount($count)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Middle(1, $count);
+    }
+
+    function testMiddleWithNegativeOffset()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Offset must be a non-negative integer.');
+        $cstr->Middle(-1, 2);
+    }
+
+    function testMiddleWithNegativeCount()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Count must be a non-negative integer.');
+        $cstr->Middle(1, -1);
+    }
+
+    #endregion Middle
+
     #region Data Providers -----------------------------------------------------
 
     static function singleByteEncodingProvider()
@@ -934,6 +1031,54 @@ class CStringTest extends TestCase
             'empty string, multiple characters (multibyte)' => [
                 '', '', 'UTF-8', 0, 3
             ],
+        ];
+    }
+
+    static function leftDataProvider()
+    {
+        return [
+        // Single-byte
+            ['Hel', 'Hello', 'ISO-8859-1', 3],
+            ['Hello', 'Hello', 'ISO-8859-1', 10],
+            ['', 'Hello', 'ISO-8859-1', 0],
+            ['', '', 'ISO-8859-1', 2],
+        // Multibyte
+            ['こん', 'こんにちは', 'UTF-8', 2],
+            ['こんにちは', 'こんにちは', 'UTF-8', 10],
+            ['', 'こんにちは', 'UTF-8', 0],
+            ['', '', 'UTF-8', 3],
+        ];
+    }
+
+    static function rightDataProvider()
+    {
+        return [
+        // Single-byte
+            ['llo', 'Hello', 'ISO-8859-1', 3],
+            ['Hello', 'Hello', 'ISO-8859-1', 10],
+            ['', 'Hello', 'ISO-8859-1', 0],
+            ['', '', 'ISO-8859-1', 2],
+        // Multibyte
+            ['ちは', 'こんにちは', 'UTF-8', 2],
+            ['こんにちは', 'こんにちは', 'UTF-8', 10],
+            ['', 'こんにちは', 'UTF-8', 0],
+            ['', '', 'UTF-8', 3],
+        ];
+    }
+
+    static function middleDataProvider()
+    {
+        return [
+        // Single-byte
+            ['ell', 'Hello', 'ISO-8859-1', 1, 3],
+            ['Hello', 'Hello', 'ISO-8859-1', 0, 10],
+            ['', 'Hello', 'ISO-8859-1', 10, 2],
+            ['', '', 'ISO-8859-1', 3, 5],
+        // Multibyte
+            ['んに', 'こんにちは', 'UTF-8', 1, 2],
+            ['こんにちは', 'こんにちは', 'UTF-8', 0, 10],
+            ['', 'こんにちは', 'UTF-8', 10, 2],
+            ['', '', 'UTF-8', 3, 5],
         ];
     }
 
