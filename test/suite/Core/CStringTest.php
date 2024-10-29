@@ -59,15 +59,53 @@ class CStringTest extends TestCase
 
     #endregion Self Test
 
+    #region wrap ---------------------------------------------------------------
+
+    public function testWrapWithCompatibleEncoding()
+    {
+        $cstr = new CString('こんにちは', 'UTF-8');
+        $str = 'おはよう';
+        $cstr2 = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$str]);
+        $this->assertInstanceOf(CString::class, $cstr2);
+        $this->assertEquals($str, (string)$cstr2);
+    }
+
+    public function testWrapWithIncompatibleEncoding()
+    {
+        $cstr = new CString('Atladı', 'CP1254');
+        $invalidString = 'Быстрая';
+        $this->expectException(\ValueError::class);
+        $this->expectExceptionMessage("String is not compatible with encoding 'CP1254'.");
+        AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$invalidString]);
+    }
+
+    public function testWrapWithUndetectableEncoding()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\ValueError::class);
+        $this->expectExceptionMessage("Unable to detect string's encoding.");
+        AccessHelper::CallNonPublicMethod($cstr, 'wrap', [chr(0xfe)]);
+    }
+
+    public function testWrapWithConversionFailure()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\ValueError::class);
+        $this->expectExceptionMessage("String could not be converted to encoding 'ISO-8859-1'.");
+        AccessHelper::CallNonPublicMethod($cstr, 'wrap', ['こんにちは']);
+    }
+
+    #endregion wrap
+
     #region __construct --------------------------------------------------------
 
     function testDefaultConstructor()
     {
-        $cstring = new CString();
-        $this->assertSame('', (string)$cstring);
+        $cstr = new CString();
+        $this->assertSame('', (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
         );
     }
 
@@ -88,34 +126,34 @@ class CStringTest extends TestCase
 
     function testConstructorWithNativeString()
     {
-        $string = 'Hello, World!';
-        $cstring = new CString($string);
-        $this->assertSame($string, (string)$cstring);
+        $str = 'Hello, World!';
+        $cstr = new CString($str);
+        $this->assertSame($str, (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
         );
     }
 
     function testConstructorWithNativeStringAndNullEncoding()
     {
-        $string = 'Hello, World!';
-        $cstring = new CString($string, null);
-        $this->assertSame($string, (string)$cstring);
+        $str = 'Hello, World!';
+        $cstr = new CString($str, null);
+        $this->assertSame($str, (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
         );
     }
 
     function testConstructorWithNativeStringAndSpecifiedEncoding()
     {
-        $string = 'Hello, World!';
-        $cstring = new CString($string, 'ISO-8859-1');
-        $this->assertSame($string, (string)$cstring);
+        $str = 'Hello, World!';
+        $cstr = new CString($str, 'ISO-8859-1');
+        $this->assertSame($str, (string)$cstr);
         $this->assertSame(
             'ISO-8859-1',
-            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
         );
     }
 
@@ -126,11 +164,11 @@ class CStringTest extends TestCase
                 return 'I am Stringable';
             }
         };
-        $cstring = new CString($stringable);
-        $this->assertSame('I am Stringable', (string)$cstring);
+        $cstr = new CString($stringable);
+        $this->assertSame('I am Stringable', (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
         );
     }
 
@@ -141,11 +179,11 @@ class CStringTest extends TestCase
                 return 'I am Stringable';
             }
         };
-        $cstring = new CString($stringable, null);
-        $this->assertSame('I am Stringable', (string)$cstring);
+        $cstr = new CString($stringable, null);
+        $this->assertSame('I am Stringable', (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
         );
     }
 
@@ -156,11 +194,11 @@ class CStringTest extends TestCase
                 return 'I am Stringable';
             }
         };
-        $cstring = new CString($stringable, 'ISO-8859-1');
-        $this->assertSame('I am Stringable', (string)$cstring);
+        $cstr = new CString($stringable, 'ISO-8859-1');
+        $this->assertSame('I am Stringable', (string)$cstr);
         $this->assertSame(
             'ISO-8859-1',
-            AccessHelper::GetNonPublicProperty($cstring, 'encoding')
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
         );
     }
 
@@ -181,15 +219,15 @@ class CStringTest extends TestCase
     #[DataProvider('singleByteEncodingProvider')]
     function testConstructorWithSingleByteEncoding($encoding)
     {
-        $cstring = new CString('Hello, World!', $encoding);
-        $this->assertTrue(AccessHelper::GetNonPublicProperty($cstring, 'isSingleByte'));
+        $cstr = new CString('Hello, World!', $encoding);
+        $this->assertTrue(AccessHelper::GetNonPublicProperty($cstr, 'isSingleByte'));
     }
 
     #[DataProvider('multiByteEncodingProvider')]
     function testConstructorWithMultiByteEncoding($encoding)
     {
-        $cstring = new CString('Hello, World!', $encoding);
-        $this->assertFalse(AccessHelper::GetNonPublicProperty($cstring, 'isSingleByte'));
+        $cstr = new CString('Hello, World!', $encoding);
+        $this->assertFalse(AccessHelper::GetNonPublicProperty($cstr, 'isSingleByte'));
     }
 
     #endregion __construct
@@ -198,9 +236,9 @@ class CStringTest extends TestCase
 
     function testToString()
     {
-        $string = 'Hello, World!';
-        $cstring = new CString($string);
-        $this->assertSame($string, (string)$cstring);
+        $str = 'Hello, World!';
+        $cstr = new CString($str);
+        $this->assertSame($str, (string)$cstr);
     }
 
     #endregion __toString
@@ -306,6 +344,13 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
+    function testSetAtWithIncompatibleEncoding()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\ValueError::class);
+        $cstr->SetAt(0, 'さ');
+    }
+
     function testSetAtWithInvalidEncoding()
     {
         $cstr = new CString('Hello', 'INVALID-ENCODING');
@@ -339,6 +384,13 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $cstr->InsertAt($offset, $substring);
         $this->assertSame($expected, (string)$cstr);
+    }
+
+    function testInsertAtWithIncompatibleEncoding()
+    {
+        $cstr = new CString('atladı', 'CP1254');
+        $this->expectException(\ValueError::class);
+        $cstr->InsertAt(0, 'Быстрая');
     }
 
     function testInsertAtWithInvalidEncoding()
