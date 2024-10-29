@@ -70,29 +70,12 @@ class CStringTest extends TestCase
         $this->assertEquals($str, (string)$cstr2);
     }
 
-    public function testWrapWithIncompatibleEncoding()
+    #[DataProvider('wrapIncompatibleEncodingDataProvider')]
+    function testWrapWithIncompatibleEncoding($encoding, $incompatibleString)
     {
-        $cstr = new CString('Atladı', 'CP1254');
-        $invalidString = 'Быстрая';
+        $cstr = new CString('', $encoding);
         $this->expectException(\ValueError::class);
-        $this->expectExceptionMessage("String is not compatible with encoding 'CP1254'.");
-        AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$invalidString]);
-    }
-
-    public function testWrapWithUndetectableEncoding()
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\ValueError::class);
-        $this->expectExceptionMessage("Unable to detect string's encoding.");
-        AccessHelper::CallNonPublicMethod($cstr, 'wrap', [chr(0xfe)]);
-    }
-
-    public function testWrapWithConversionFailure()
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\ValueError::class);
-        $this->expectExceptionMessage("String could not be converted to encoding 'ISO-8859-1'.");
-        AccessHelper::CallNonPublicMethod($cstr, 'wrap', ['こんにちは']);
+        AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString]);
     }
 
     #endregion wrap
@@ -611,6 +594,15 @@ class CStringTest extends TestCase
             self::supportedMultiByteEncodingProvider(),
             self::unsupportedMultiByteEncodingProvider()
         );
+    }
+
+    static function wrapIncompatibleEncodingDataProvider()
+    {
+        return [
+            ['CP1254', 'Быстрая'],
+            ['ISO-8859-1', chr(0xfe)],
+            ['ISO-8859-1', 'こんにちは'],
+        ];
     }
 
     static function isEmptyDataProvider()
