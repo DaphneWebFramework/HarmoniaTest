@@ -606,6 +606,44 @@ class CStringTest extends TestCase
 
     #endregion TrimRight
 
+    #region Lowercase ----------------------------------------------------------
+
+    #[DataProvider('lowercaseDataProvider')]
+    function testLowercase(string $expected, string $value, string $encoding)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, (string)$cstr->Lowercase());
+        $this->assertSame($value, (string)$cstr);
+    }
+
+    function testLowercaseWithInvalidEncoding()
+    {
+        $cstr = new CString('HELLO', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Lowercase();
+    }
+
+    #endregion Lowercase
+
+    #region Uppercase ----------------------------------------------------------
+
+    #[DataProvider('uppercaseDataProvider')]
+    function testUppercase(string $expected, string $value, string $encoding)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, (string)$cstr->Uppercase());
+        $this->assertSame($value, (string)$cstr);
+    }
+
+    function testUppercaseWithInvalidEncoding()
+    {
+        $cstr = new CString('hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Uppercase();
+    }
+
+    #endregion Uppercase
+
     #region Data Providers -----------------------------------------------------
 
     static function singleByteEncodingProvider()
@@ -1346,6 +1384,32 @@ class CStringTest extends TestCase
             'null characters (multibyte)' => [
                 '　こんにちは', '　こんにちは　', 'UTF-8', null
             ],
+        ];
+    }
+
+    static function lowercaseDataProvider()
+    {
+        return [
+            ['hello', 'HELLO', 'ISO-8859-1'],
+            ['hello', 'hElLo', 'ISO-8859-1'],
+            ['hello', 'hello', 'ISO-8859-1'],
+            ['こんにちは', 'こんにちは', 'UTF-8'],
+            ['schön', 'SCHÖN', 'UTF-8'],
+            ['éléphant', 'ÉLÉPHANT', 'UTF-8'],
+            ['çöğüş i̇şi̇ güçtür', 'ÇÖĞÜŞ İŞİ GÜÇTÜR', 'UTF-8']
+        ];
+    }
+
+    static function uppercaseDataProvider()
+    {
+        return [
+            ['HELLO', 'hello', 'ISO-8859-1'],
+            ['HELLO', 'HeLlO', 'ISO-8859-1'],
+            ['HELLO', 'HELLO', 'ISO-8859-1'],
+            ['こんにちは', 'こんにちは', 'UTF-8'],
+            ['SCHÖN', 'schön', 'UTF-8'],
+            ['ÉLÉPHANT', 'éléphant', 'UTF-8'],
+            ['ÇÖĞÜŞ İŞİ GÜÇTÜR', 'çöğüş i̇şi̇ güçtür', 'UTF-8']
         ];
     }
 
