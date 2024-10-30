@@ -453,14 +453,6 @@ class CStringTest extends TestCase
         $cstr->Left($count);
     }
 
-    function testLeftWithNegativeCount()
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Count must be a non-negative integer.');
-        $cstr->Left(-1);
-    }
-
     #endregion Left
 
     #region Right --------------------------------------------------------------
@@ -478,14 +470,6 @@ class CStringTest extends TestCase
         $cstr = new CString('Hello', 'ISO-8859-1');
         $this->expectException(\TypeError::class);
         $cstr->Right($count);
-    }
-
-    function testRightWithNegativeCount()
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Count must be a non-negative integer.');
-        $cstr->Right(-1);
     }
 
     #endregion Right
@@ -513,22 +497,6 @@ class CStringTest extends TestCase
         $cstr = new CString('Hello', 'ISO-8859-1');
         $this->expectException(\TypeError::class);
         $cstr->Middle(1, $count);
-    }
-
-    function testMiddleWithNegativeOffset()
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Offset must be a non-negative integer.');
-        $cstr->Middle(-1, 2);
-    }
-
-    function testMiddleWithNegativeCount()
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Count must be a non-negative integer.');
-        $cstr->Middle(1, -1);
     }
 
     #endregion Middle
@@ -1041,11 +1009,13 @@ class CStringTest extends TestCase
             ['Hel', 'Hello', 'ISO-8859-1', 3],
             ['Hello', 'Hello', 'ISO-8859-1', 10],
             ['', 'Hello', 'ISO-8859-1', 0],
+            ['', 'Hello', 'ISO-8859-1', -1],
             ['', '', 'ISO-8859-1', 2],
         // Multibyte
             ['こん', 'こんにちは', 'UTF-8', 2],
             ['こんにちは', 'こんにちは', 'UTF-8', 10],
             ['', 'こんにちは', 'UTF-8', 0],
+            ['', 'こんにちは', 'UTF-8', -3],
             ['', '', 'UTF-8', 3],
         ];
     }
@@ -1057,11 +1027,13 @@ class CStringTest extends TestCase
             ['llo', 'Hello', 'ISO-8859-1', 3],
             ['Hello', 'Hello', 'ISO-8859-1', 10],
             ['', 'Hello', 'ISO-8859-1', 0],
+            ['', 'Hello', 'ISO-8859-1', -1],
             ['', '', 'ISO-8859-1', 2],
         // Multibyte
             ['ちは', 'こんにちは', 'UTF-8', 2],
             ['こんにちは', 'こんにちは', 'UTF-8', 10],
             ['', 'こんにちは', 'UTF-8', 0],
+            ['', 'こんにちは', 'UTF-8', -3],
             ['', '', 'UTF-8', 3],
         ];
     }
@@ -1073,11 +1045,15 @@ class CStringTest extends TestCase
             ['ell', 'Hello', 'ISO-8859-1', 1, 3],
             ['Hello', 'Hello', 'ISO-8859-1', 0, 10],
             ['', 'Hello', 'ISO-8859-1', 10, 2],
+            ['', 'Hello', 'ISO-8859-1', -1, 3],
+            ['', 'Hello', 'ISO-8859-1', 1, -3],
             ['', '', 'ISO-8859-1', 3, 5],
         // Multibyte
             ['んに', 'こんにちは', 'UTF-8', 1, 2],
             ['こんにちは', 'こんにちは', 'UTF-8', 0, 10],
             ['', 'こんにちは', 'UTF-8', 10, 2],
+            ['', 'こんにちは', 'UTF-8', -2, 3],
+            ['', 'こんにちは', 'UTF-8', 1, -5],
             ['', '', 'UTF-8', 3, 5],
         ];
     }
