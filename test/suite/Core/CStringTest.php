@@ -445,6 +445,13 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr->Left($count));
     }
 
+    function testLeftWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Left(4);
+    }
+
     #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
     function testLeftWithNonIntegerCount($count)
     {
@@ -464,6 +471,13 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr->Right($count));
     }
 
+    function testRightWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Right(2);
+    }
+
     #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
     function testRightWithNonIntegerCount($count)
     {
@@ -481,6 +495,13 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, (string)$cstr->Middle($offset, $count));
+    }
+
+    function testMiddleWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Middle(1, 3);
     }
 
     #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
