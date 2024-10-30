@@ -237,7 +237,7 @@ class CStringTest extends TestCase
 
     #endregion IsEmpty
 
-    #region Length ------------------------------------------------------------
+    #region Length -------------------------------------------------------------
 
     #[DataProvider('lengthDataProvider')]
     function testLength($expected, $value, $encoding)
@@ -359,7 +359,7 @@ class CStringTest extends TestCase
 
     #endregion SetAt
 
-    #region InsertAt ------------------------------------------------------------
+    #region InsertAt -----------------------------------------------------------
 
     #[DataProvider('insertAtDataProvider')]
     function testInsertAt($expected, $value, $encoding, $offset, $substring)
@@ -500,6 +500,90 @@ class CStringTest extends TestCase
     }
 
     #endregion Middle
+
+    #region Trim ---------------------------------------------------------------
+
+    #[DataProvider('trimDataProvider')]
+    function testTrim(string $expected, string $value, string $encoding,
+        ?string $characters = null)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertEquals($expected, (string)$cstr->Trim($characters));
+        $this->assertEquals($value, (string)$cstr);
+    }
+
+    function testTrimWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Trim();
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
+    function testTrimWithInvalidCharacters($characters)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Trim($characters);
+    }
+
+    #endregion Trim
+
+    #region TrimLeft -----------------------------------------------------------
+
+    #[DataProvider('trimLeftDataProvider')]
+    function testTrimLeft(string $expected, string $value, string $encoding,
+        ?string $characters = null)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertEquals($expected, (string)$cstr->TrimLeft($characters));
+        $this->assertEquals($value, (string)$cstr);
+    }
+
+    function testTrimLeftWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->TrimLeft();
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
+    function testTrimLeftWithInvalidCharacters($characters)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->TrimLeft($characters);
+    }
+
+    #endregion TrimLeft
+
+    #region TrimRight ----------------------------------------------------------
+
+    #[DataProvider('trimRightDataProvider')]
+    function testTrimRight(string $expected, string $value, string $encoding,
+        ?string $characters = null)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertEquals($expected, (string)$cstr->TrimRight($characters));
+        $this->assertEquals($value, (string)$cstr);
+    }
+
+    function testTrimRightWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->TrimRight();
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
+    function testTrimRightWithInvalidCharacters($characters)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->TrimRight($characters);
+    }
+
+    #endregion TrimRight
 
     #region Data Providers -----------------------------------------------------
 
@@ -1055,6 +1139,192 @@ class CStringTest extends TestCase
             ['', 'こんにちは', 'UTF-8', -2, 3],
             ['', 'こんにちは', 'UTF-8', 1, -5],
             ['', '', 'UTF-8', 3, 5],
+        ];
+    }
+
+    static function trimDataProvider()
+    {
+        return [
+        // Single-byte
+            'default whitespace (single-byte)' => [
+                'Hello', " \n Hello \r\t", 'ISO-8859-1'
+            ],
+            'custom characters (single-byte)' => [
+                'Hello', '-=Hello=-', 'ISO-8859-1', '=-'
+            ],
+            'no whitespace (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1'
+            ],
+            'only whitespace (single-byte)' => [
+                '', '    ', 'ISO-8859-1'
+            ],
+            'only trim characters (single-byte)' => [
+                '', '====', 'ISO-8859-1', '='
+            ],
+            'non-present characters (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', '=*'
+            ],
+            'empty string (single-byte)' => [
+                '', '', 'ISO-8859-1'
+            ],
+            'empty characters (single-byte)' => [
+                ' Hello ', ' Hello ', 'ISO-8859-1', ''
+            ],
+            'null characters (single-byte)' => [
+                'Hello', " \n Hello \t ", 'ISO-8859-1', null
+            ],
+        // Multibyte
+            'default whitespace (multibyte)' => [
+                'こんにちは', '　こんにちは　', 'UTF-8'
+            ],
+            'custom characters (multibyte)' => [
+                'こんにちは', '=*=こんにちは=*=', 'UTF-8', '=*'
+            ],
+            'no whitespace (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8'
+            ],
+            'only whitespace (single-byte)' => [
+                '', '　　　　', 'UTF-8'
+            ],
+            'only trim characters (multibyte)' => [
+                '', '＝＝＝', 'UTF-8', '＝'
+            ],
+            'non-present characters (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', '=*'
+            ],
+            'empty string (multibyte)' => [
+                '', '', 'UTF-8'
+            ],
+            'empty characters (multibyte)' => [
+                '　こんにちは　', '　こんにちは　', 'UTF-8', ''
+            ],
+            'null characters (multibyte)' => [
+                'こんにちは', '　こんにちは　', 'UTF-8', null
+            ],
+        ];
+    }
+
+    static function trimLeftDataProvider()
+    {
+        return [
+        // Single-byte
+            'default whitespace (single-byte)' => [
+                "Hello \r\t", " \n Hello \r\t", 'ISO-8859-1'
+            ],
+            'custom characters (single-byte)' => [
+                'Hello=-', '-=Hello=-', 'ISO-8859-1', '=-'
+            ],
+            'no whitespace (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1'
+            ],
+            'only whitespace (single-byte)' => [
+                '', '    ', 'ISO-8859-1'
+            ],
+            'only trim characters (single-byte)' => [
+                '', '====', 'ISO-8859-1', '='
+            ],
+            'non-present characters (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', '=*'
+            ],
+            'empty string (single-byte)' => [
+                '', '', 'ISO-8859-1'
+            ],
+            'empty characters (single-byte)' => [
+                ' Hello ', ' Hello ', 'ISO-8859-1', ''
+            ],
+            'null characters (single-byte)' => [
+                "Hello \t ", " \n Hello \t ", 'ISO-8859-1', null
+            ],
+        // Multibyte
+            'default whitespace (multibyte)' => [
+                'こんにちは　', '　こんにちは　', 'UTF-8'
+            ],
+            'custom characters (multibyte)' => [
+                'こんにちは=*=', '=*=こんにちは=*=', 'UTF-8', '=*'
+            ],
+            'no whitespace (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8'
+            ],
+            'only whitespace (single-byte)' => [
+                '', '　　　　', 'UTF-8'
+            ],
+            'only trim characters (multibyte)' => [
+                '', '＝＝＝', 'UTF-8', '＝'
+            ],
+            'non-present characters (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', '=*'
+            ],
+            'empty string (multibyte)' => [
+                '', '', 'UTF-8'
+            ],
+            'empty characters (multibyte)' => [
+                '　こんにちは　', '　こんにちは　', 'UTF-8', ''
+            ],
+            'null characters (multibyte)' => [
+                'こんにちは　', '　こんにちは　', 'UTF-8', null
+            ],
+        ];
+    }
+
+    static function trimRightDataProvider()
+    {
+        return [
+        // Single-byte
+            'default whitespace (single-byte)' => [
+                " \n Hello", " \n Hello \r\t", 'ISO-8859-1'
+            ],
+            'custom characters (single-byte)' => [
+                '-=Hello', '-=Hello=-', 'ISO-8859-1', '=-'
+            ],
+            'no whitespace (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1'
+            ],
+            'only whitespace (single-byte)' => [
+                '', '    ', 'ISO-8859-1'
+            ],
+            'only trim characters (single-byte)' => [
+                '', '====', 'ISO-8859-1', '='
+            ],
+            'non-present characters (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', '=*'
+            ],
+            'empty string (single-byte)' => [
+                '', '', 'ISO-8859-1'
+            ],
+            'empty characters (single-byte)' => [
+                ' Hello ', ' Hello ', 'ISO-8859-1', ''
+            ],
+            'null characters (single-byte)' => [
+                " \n Hello", " \n Hello \t ", 'ISO-8859-1', null
+            ],
+        // Multibyte
+            'default whitespace (multibyte)' => [
+                '　こんにちは', '　こんにちは　', 'UTF-8'
+            ],
+            'custom characters (multibyte)' => [
+                '=*=こんにちは', '=*=こんにちは=*=', 'UTF-8', '=*'
+            ],
+            'no whitespace (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8'
+            ],
+            'only whitespace (single-byte)' => [
+                '', '　　　　', 'UTF-8'
+            ],
+            'only trim characters (multibyte)' => [
+                '', '＝＝＝', 'UTF-8', '＝'
+            ],
+            'non-present characters (multibyte)' => [
+                'こんにちは', 'こんにちは', 'UTF-8', '=*'
+            ],
+            'empty string (multibyte)' => [
+                '', '', 'UTF-8'
+            ],
+            'empty characters (multibyte)' => [
+                '　こんにちは　', '　こんにちは　', 'UTF-8', ''
+            ],
+            'null characters (multibyte)' => [
+                '　こんにちは', '　こんにちは　', 'UTF-8', null
+            ],
         ];
     }
 
