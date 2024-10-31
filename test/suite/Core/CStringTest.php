@@ -625,6 +625,49 @@ class CStringTest extends TestCase
 
     #endregion Lowercase
 
+    #region Equals -------------------------------------------------------------
+
+    #[DataProvider('equalsDataProvider')]
+    function testEquals(bool $expected, string $value, string $encoding,
+        string|CString $other, bool $caseSensitive = true)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, $cstr->Equals($other, $caseSensitive));
+    }
+
+    function testEqualsWithInvalidEncodingCaseSensitive()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Equals('Hello', false); // throws for case-insensitive
+    }
+
+    function testEqualsWithInvalidEncodingCaseInsensitive()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        // No exception is thrown because encoding validation is skipped when
+        // the comparison is case-sensitive.
+        $this->assertTrue ($cstr->Equals('Hello'));
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testEqualsWithNonStringOther($other)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Equals($other);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
+    function testEqualsWithNonBooleanCaseSensitive($caseSensitive)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Equals('Hello', $caseSensitive);
+    }
+
+    #endregion Equals
+
     #region Uppercase ----------------------------------------------------------
 
     #[DataProvider('uppercaseDataProvider')]
@@ -1652,6 +1695,40 @@ class CStringTest extends TestCase
             'search string longer than instance (multibyte)' => [
                 false, 'Résumé', 'UTF-8', 'Résumé Long'
             ],
+        ];
+    }
+
+    static function equalsDataProvider()
+    {
+        return [
+        // Single-byte, case-sensitive
+            [true, 'Hello', 'ISO-8859-1', 'Hello'],
+            [false, 'Hello', 'ISO-8859-1', 'hello'],
+            [false, 'Hello', 'ISO-8859-1', 'Helloo'],
+            [true, 'Hello', 'ISO-8859-1', new CString('Hello', 'ISO-8859-1')],
+            [false, 'Hello', 'ISO-8859-1', new CString('hello', 'ISO-8859-1')],
+            [false, 'Hello', 'ISO-8859-1', new CString('Helloo', 'ISO-8859-1')],
+        // Single-byte, case-insensitive
+            [true, 'Hello', 'ISO-8859-1', 'hello', false],
+            [true, 'Hello', 'ISO-8859-1', 'HELLO', false],
+            [false, 'Hello', 'ISO-8859-1', 'Helloo', false],
+            [true, 'Hello', 'ISO-8859-1', new CString('hello', 'ISO-8859-1'), false],
+            [true, 'Hello', 'ISO-8859-1', new CString('HELLO', 'ISO-8859-1'), false],
+            [false, 'Hello', 'ISO-8859-1', new CString('Helloo', 'ISO-8859-1'), false],
+        // Multibyte, case-sensitive
+            [true, 'Résumé', 'UTF-8', 'Résumé'],
+            [false, 'Résumé', 'UTF-8', 'résumé'],
+            [false, 'Résumé', 'UTF-8', 'RésuméExtra'],
+            [true, 'Résumé', 'UTF-8', new CString('Résumé', 'UTF-8')],
+            [false, 'Résumé', 'UTF-8', new CString('résumé', 'UTF-8')],
+            [false, 'Résumé', 'UTF-8', new CString('RésuméExtra', 'UTF-8')],
+        // Multibyte, case-insensitive
+            [true, 'Résumé', 'UTF-8', 'résumé', false],
+            [true, 'Résumé', 'UTF-8', 'RÉSUMÉ', false],
+            [false, 'Résumé', 'UTF-8', 'RésuméExtra', false],
+            [true, 'Résumé', 'UTF-8', new CString('résumé', 'UTF-8'), false],
+            [true, 'Résumé', 'UTF-8', new CString('RÉSUMÉ', 'UTF-8'), false],
+            [false, 'Résumé', 'UTF-8', new CString('RésuméExtra', 'UTF-8'), false],
         ];
     }
 
