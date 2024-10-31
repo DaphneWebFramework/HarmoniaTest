@@ -644,6 +644,76 @@ class CStringTest extends TestCase
 
     #endregion Uppercase
 
+    #region StartsWith ---------------------------------------------------------
+
+    #[DataProvider('startsWithDataProvider')]
+    function testStartsWith(bool $expected, string $value, string $encoding,
+        string $searchString, bool $caseSensitive = true)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, $cstr->StartsWith($searchString, $caseSensitive));
+    }
+
+    function testStartsWithWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->StartsWith('Hell');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testStartsWithWithNonStringSearch($searchString)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->StartsWith($searchString);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
+    function testStartsWithWithNonBooleanCaseSensitive($caseSensitive)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->StartsWith('Hell', $caseSensitive);
+    }
+
+    #endregion StartsWith
+
+    #region EndsWith -----------------------------------------------------------
+
+    #[DataProvider('endsWithDataProvider')]
+    function testEndsWith(bool $expected, string $value, string $encoding,
+        string $searchString, bool $caseSensitive = true)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, $cstr->EndsWith($searchString, $caseSensitive));
+    }
+
+    function testEndsWithWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->EndsWith('llo');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testEndsWithWithNonStringSearch($searchString)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->EndsWith($searchString);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
+    function testEndsWithWithNonBooleanCaseSensitive($caseSensitive)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->EndsWith('llo', $caseSensitive);
+    }
+
+    #endregion EndsWith
+
     #region Data Providers -----------------------------------------------------
 
     static function singleByteEncodingProvider()
@@ -1410,6 +1480,178 @@ class CStringTest extends TestCase
             ['SCHÖN', 'schön', 'UTF-8'],
             ['ÉLÉPHANT', 'éléphant', 'UTF-8'],
             ['ÇÖĞÜŞ İŞİ GÜÇTÜR', 'çöğüş i̇şi̇ güçtür', 'UTF-8']
+        ];
+    }
+
+    static function startsWithDataProvider()
+    {
+        return [
+        // Single-byte
+            'exact match (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', 'Hello'
+            ],
+            'partial match (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', 'Hell'
+            ],
+            'single character match (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', 'H'
+            ],
+            'case-sensitive fails (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1', 'hello'
+            ],
+            'case-insensitive match (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', 'HELLO', false
+            ],
+            'completely different string (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1', 'World'
+            ],
+            'same length, different content (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1', 'HeLLo'
+            ],
+            'empty search string (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', ''
+            ],
+            'empty instance string (single-byte)' => [
+                false, '', 'ISO-8859-1', 'Hello'
+            ],
+            'empty instance and search strings (single-byte)' => [
+                true, '', 'ISO-8859-1', ''
+            ],
+            'leading whitespace fails (single-byte)' => [
+                false, ' Hello', 'ISO-8859-1', 'Hello'
+            ],
+            'leading whitespace matches (single-byte)' => [
+                true, ' Hello', 'ISO-8859-1', ' Hello'
+            ],
+            'search string longer than instance (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1', 'Hello World'
+            ],
+        // Multibyte
+            'exact match (multibyte)' => [
+                true, 'Résumé', 'UTF-8', 'Résumé'
+            ],
+            'partial match (multibyte)' => [
+                true, 'Résumé', 'UTF-8', 'Ré'
+            ],
+            'single character match (multibyte)' => [
+                true, 'Résumé', 'UTF-8', 'R'
+            ],
+            'case-sensitive fails (multibyte)' => [
+                false, 'Résumé', 'UTF-8', 'résumé'
+            ],
+            'case-insensitive match (multibyte)' => [
+                true, 'Résumé', 'UTF-8', 'RÉSUMÉ', false
+            ],
+            'completely different string (multibyte)' => [
+                false, 'Résumé', 'UTF-8', 'World'
+            ],
+            'same length, different content (multibyte)' => [
+                false, 'Résumé', 'UTF-8', 'RéSumé'
+            ],
+            'empty search string (multibyte)' => [
+                true, 'Résumé', 'UTF-8', ''
+            ],
+            'empty instance string (multibyte)' => [
+                false, '', 'UTF-8', 'Résumé'
+            ],
+            'empty instance and search strings (multibyte)' => [
+                true, '', 'UTF-8', ''
+            ],
+            'leading whitespace fails (multibyte)' => [
+                false, ' Résumé', 'UTF-8', 'Résumé'
+            ],
+            'leading whitespace matches (multibyte)' => [
+                true, ' Résumé', 'UTF-8', ' Résumé'
+            ],
+            'search string longer than instance (multibyte)' => [
+                false, 'Résumé', 'UTF-8', 'Résumé Long'
+            ],
+        ];
+    }
+
+    static function endsWithDataProvider()
+    {
+        return [
+        // Single-byte
+            'exact match (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', 'Hello'
+            ],
+            'partial match (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', 'llo'
+            ],
+            'single character match (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', 'o'
+            ],
+            'case-sensitive fails (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1', 'hello'
+            ],
+            'case-insensitive match (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', 'HELLO', false
+            ],
+            'completely different string (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1', 'World'
+            ],
+            'same length, different content (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1', 'HeLLo'
+            ],
+            'empty search string (single-byte)' => [
+                true, 'Hello', 'ISO-8859-1', ''
+            ],
+            'empty instance string (single-byte)' => [
+                false, '', 'ISO-8859-1', 'Hello'
+            ],
+            'empty instance and search strings (single-byte)' => [
+                true, '', 'ISO-8859-1', ''
+            ],
+            'trailing whitespace fails (single-byte)' => [
+                false, 'Hello ', 'ISO-8859-1', 'Hello'
+            ],
+            'trailing whitespace matches (single-byte)' => [
+                true, 'Hello ', 'ISO-8859-1', 'Hello '
+            ],
+            'search string longer than instance (single-byte)' => [
+                false, 'Hello', 'ISO-8859-1', 'Hello World'
+            ],
+        // Multibyte
+            'exact match (multibyte)' => [
+                true, 'Résumé', 'UTF-8', 'Résumé'
+            ],
+            'partial match (multibyte)' => [
+                true, 'Résumé', 'UTF-8', 'umé'
+            ],
+            'single character match (multibyte)' => [
+                true, 'Résumé', 'UTF-8', 'é'
+            ],
+            'case-sensitive fails (multibyte)' => [
+                false, 'Résumé', 'UTF-8', 'résumé'
+            ],
+            'case-insensitive match (multibyte)' => [
+                true, 'Résumé', 'UTF-8', 'RÉSUMÉ', false
+            ],
+            'completely different string (multibyte)' => [
+                false, 'Résumé', 'UTF-8', 'World'
+            ],
+            'same length, different content (multibyte)' => [
+                false, 'Résumé', 'UTF-8', 'RéSumé'
+            ],
+            'empty search string (multibyte)' => [
+                true, 'Résumé', 'UTF-8', ''
+            ],
+            'empty instance string (multibyte)' => [
+                false, '', 'UTF-8', 'Résumé'
+            ],
+            'empty instance and search strings (multibyte)' => [
+                true, '', 'UTF-8', ''
+            ],
+            'trailing whitespace fails (multibyte)' => [
+                false, 'Résumé ', 'UTF-8', 'Résumé'
+            ],
+            'trailing whitespace matches (multibyte)' => [
+                true, 'Résumé ', 'UTF-8', 'Résumé '
+            ],
+            'search string longer than instance (multibyte)' => [
+                false, 'Résumé', 'UTF-8', 'Résumé Long'
+            ],
         ];
     }
 
