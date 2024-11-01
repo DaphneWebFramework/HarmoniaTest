@@ -823,6 +823,40 @@ class CStringTest extends TestCase
 
     #endregion Interface: ArrayAccess
 
+    #region Interface: IteratorAggregate ---------------------------------------
+
+    function testGetIteratorForSingleByteEncoding()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $result = [];
+        foreach ($cstr as $char) {
+            $result[] = $char;
+        }
+        $this->assertEquals(['H', 'e', 'l', 'l', 'o'], $result);
+    }
+
+    function testGetIteratorForMultiByteEncoding()
+    {
+        $cstr = new CString('こんにちは', 'UTF-8');
+        $result = [];
+        foreach ($cstr as $char) {
+            $result[] = $char;
+        }
+        $this->assertEquals(['こ', 'ん', 'に', 'ち', 'は'], $result);
+    }
+
+    function testGetIteratorForEmptyString()
+    {
+        $cstr = new CString();
+        $result = [];
+        foreach ($cstr as $char) {
+            $result[] = $char;
+        }
+        $this->assertEmpty($result);
+    }
+
+    #endregion Interface: IteratorAggregate
+
     #region Data Providers -----------------------------------------------------
 
     static function singleByteEncodingProvider()
