@@ -215,17 +215,6 @@ class CStringTest extends TestCase
 
     #endregion __construct
 
-    #region __toString ---------------------------------------------------------
-
-    function testToString()
-    {
-        $str = 'Hello, World!';
-        $cstr = new CString($str);
-        $this->assertSame($str, (string)$cstr);
-    }
-
-    #endregion __toString
-
     #region IsEmpty ------------------------------------------------------------
 
     #[DataProvider('isEmptyDataProvider')]
@@ -756,6 +745,83 @@ class CStringTest extends TestCase
     }
 
     #endregion EndsWith
+
+    #region Interface: Stringable ----------------------------------------------
+
+    function testToString()
+    {
+        $str = 'Hello, World!';
+        $cstr = new CString($str);
+        $this->assertSame($str, (string)$cstr);
+    }
+
+    #endregion Interface: Stringable
+
+    #region Interface: ArrayAccess ---------------------------------------------
+
+    #[DataProvider('offsetExistsDataProvider')]
+    function testOffsetExists(bool $expected, string $value, string $encoding,
+        int $offset)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, isset($cstr[$offset]));
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testOffsetExistsWithNonIntegerOffset($nonInteger)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Offset must be an integer.');
+        isset($cstr[$nonInteger]);
+    }
+
+    function testOffsetExistsWithNegativeOffset()
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Offset must be a non-negative integer.');
+        isset($cstr[-1]);
+    }
+
+    function testOffsetGet()
+    {
+        $cstr = $this->getMockBuilder(CString::class)
+            ->setConstructorArgs(['Hello', 'ISO-8859-1'])
+            ->onlyMethods(['At'])
+            ->getMock();
+        $cstr->expects($this->once())
+            ->method('At')
+            ->with(1)
+            ->willReturn('e');
+        $this->assertSame('e', $cstr[1]);
+    }
+
+    function testOffsetSet()
+    {
+        $cstr = $this->getMockBuilder(CString::class)
+            ->setConstructorArgs(['Hello', 'ISO-8859-1'])
+            ->onlyMethods(['SetAt'])
+            ->getMock();
+        $cstr->expects($this->once())
+            ->method('SetAt')
+            ->with(1, 'a');
+        $cstr[1] = 'a';
+    }
+
+    function testOffsetUnset()
+    {
+        $cstr = $this->getMockBuilder(CString::class)
+            ->setConstructorArgs(['Hello', 'ISO-8859-1'])
+            ->onlyMethods(['DeleteAt'])
+            ->getMock();
+        $cstr->expects($this->once())
+            ->method('DeleteAt')
+            ->with(1);
+        unset($cstr[1]);
+    }
+
+    #endregion Interface: ArrayAccess
 
     #region Data Providers -----------------------------------------------------
 
@@ -1729,6 +1795,24 @@ class CStringTest extends TestCase
             [true, 'Résumé', 'UTF-8', new CString('résumé', 'UTF-8'), false],
             [true, 'Résumé', 'UTF-8', new CString('RÉSUMÉ', 'UTF-8'), false],
             [false, 'Résumé', 'UTF-8', new CString('RésuméExtra', 'UTF-8'), false],
+        ];
+    }
+
+    static function offsetExistsDataProvider()
+    {
+        return [
+        // Single-byte
+            [true, 'Hello', 'ISO-8859-1', 0],
+            [true, 'Hello', 'ISO-8859-1', 1],
+            [true, 'Hello', 'ISO-8859-1', 4],
+            [false, 'Hello', 'ISO-8859-1', 5],
+            [false, 'Hello', 'ISO-8859-1', 10],
+        // Multibyte
+            [true, 'こんにちは', 'UTF-8', 0],
+            [true, 'こんにちは', 'UTF-8', 1],
+            [true, 'こんにちは', 'UTF-8', 4],
+            [false, 'こんにちは', 'UTF-8', 5],
+            [false, 'こんにちは', 'UTF-8', 10],
         ];
     }
 
