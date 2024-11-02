@@ -59,27 +59,6 @@ class CStringTest extends TestCase
 
     #endregion Self Test
 
-    #region wrap ---------------------------------------------------------------
-
-    public function testWrapWithCompatibleEncoding()
-    {
-        $cstr = new CString('こんにちは', 'UTF-8');
-        $str = 'おはよう';
-        $cstr2 = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$str]);
-        $this->assertInstanceOf(CString::class, $cstr2);
-        $this->assertEquals($str, (string)$cstr2);
-    }
-
-    #[DataProvider('wrapIncompatibleEncodingDataProvider')]
-    function testWrapWithIncompatibleEncoding($encoding, $incompatibleString)
-    {
-        $cstr = new CString('', $encoding);
-        $this->expectException(\ValueError::class);
-        AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString]);
-    }
-
-    #endregion wrap
-
     #region __construct --------------------------------------------------------
 
     function testDefaultConstructor()
@@ -900,6 +879,85 @@ class CStringTest extends TestCase
     }
 
     #endregion Interface: IteratorAggregate
+
+    #region Private: wrap ------------------------------------------------------
+
+    public function testWrapWithCompatibleEncoding()
+    {
+        $cstr = new CString('こんにちは', 'UTF-8');
+        $str = 'おはよう';
+        $cstr2 = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$str]);
+        $this->assertInstanceOf(CString::class, $cstr2);
+        $this->assertEquals($str, (string)$cstr2);
+    }
+
+    #[DataProvider('wrapIncompatibleEncodingDataProvider')]
+    function testWrapWithIncompatibleEncoding($encoding, $incompatibleString)
+    {
+        $cstr = new CString('', $encoding);
+        $this->expectException(\ValueError::class);
+        AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString]);
+    }
+
+    #endregion Private: wrap
+
+    #region Private: withMultibyteRegexEncoding --------------------------------
+
+    public function testWithMultibyteRegexEncodingNoChangeNeeded()
+    {
+        \mb_regex_encoding('UTF-8'); // Global encoding same as instance's encoding.
+        $cstr = new CString('Hello', 'UTF-8');
+        AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
+            function() {
+                // Confirm that the encoding remains 'UTF-8'.
+                $this->assertSame('UTF-8', \mb_regex_encoding());
+            }
+        ]);
+        // Encoding should remain 'UTF-8' when no change is needed.
+        $this->assertSame('UTF-8', \mb_regex_encoding());
+    }
+
+    public function testWithMultibyteRegexEncodingChangeNeeded()
+    {
+        $originalEncoding = \mb_regex_encoding();
+        $cstr = new CString('Hello', 'EUC-JP'); // Different instance encoding.
+        AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
+            function() {
+                // Confirm that the encoding was changed to 'EUC-JP'
+                $this->assertSame('EUC-JP', \mb_regex_encoding());
+            }
+        ]);
+        // Original encoding should be restored after callback.
+        $this->assertSame($originalEncoding, \mb_regex_encoding());
+    }
+
+    public function testWithMultibyteRegexEncodingCaseInsensitiveComparison()
+    {
+        \mb_regex_encoding('UTF-8'); // Uppercase global encoding.
+        $cstr = new CString('Hello', 'utf-8'); // Lowercase instance encoding.
+        AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
+            function() {
+                // Confirm that the encoding remains 'UTF-8' thanks to
+                // case-insensitive comparison.
+                $this->assertSame('UTF-8', \mb_regex_encoding());
+            }
+        ]);
+        // Encoding should remain 'UTF-8'.
+        $this->assertSame('UTF-8', \mb_regex_encoding());
+    }
+
+    public function testWithMultibyteRegexEncodingReturnsCallbackResult()
+    {
+        $cstr = new CString();
+        $result = AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
+            function() {
+                return 42;
+            }
+        ]);
+        $this->assertSame(42, $result);
+    }
+
+    #endregion Private: withMultibyteRegexEncoding
 
     #region Data Providers -----------------------------------------------------
 
