@@ -694,7 +694,7 @@ class CStringTest extends TestCase
     }
 
     #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testStartsWithWithNonStringSearch($searchString)
+    function testStartsWithWithNonStringSearchString($searchString)
     {
         $cstr = new CString('Hello', 'ISO-8859-1');
         $this->expectException(\TypeError::class);
@@ -729,7 +729,7 @@ class CStringTest extends TestCase
     }
 
     #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testEndsWithWithNonStringSearch($searchString)
+    function testEndsWithWithNonStringSearchString($searchString)
     {
         $cstr = new CString('Hello', 'ISO-8859-1');
         $this->expectException(\TypeError::class);
@@ -745,6 +745,50 @@ class CStringTest extends TestCase
     }
 
     #endregion EndsWith
+
+    #region IndexOf ------------------------------------------------------------
+
+    #[DataProvider('indexOfDataProvider')]
+    function testIndexOf(?int $expected, string $value, string $encoding,
+        string $searchString, int $startOffset = 0, bool $caseSensitive = true)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($expected, $cstr->IndexOf($searchString, $startOffset,
+            $caseSensitive));
+    }
+
+    function testIndexOfWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->IndexOf('Hell');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testIndexOfWithNonStringSearchString($searchString)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->IndexOf($searchString);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testIndexOfWithNonIntegerStartOffset($startOffset)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->IndexOf('Hell', $startOffset);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
+    function testIndexOfWithNonBooleanCaseSensitive($caseSensitive)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->IndexOf('Hell', 0, $caseSensitive);
+    }
+
+    #endregion IndexOf
 
     #region Interface: Stringable ----------------------------------------------
 
@@ -1829,6 +1873,56 @@ class CStringTest extends TestCase
             [true, 'Résumé', 'UTF-8', new CString('résumé', 'UTF-8'), false],
             [true, 'Résumé', 'UTF-8', new CString('RÉSUMÉ', 'UTF-8'), false],
             [false, 'Résumé', 'UTF-8', new CString('RésuméExtra', 'UTF-8'), false],
+        ];
+    }
+
+    static function indexOfDataProvider()
+    {
+        return [
+        // Single-byte
+            'match at start (single-byte)' => [
+                0, 'Hello', 'ISO-8859-1', 'Hell'
+            ],
+            'match in middle (single-byte)' => [
+                2, 'Hello', 'ISO-8859-1', 'llo'
+            ],
+            'match at end (single-byte)' => [
+                4, 'Hello', 'ISO-8859-1', 'o'
+            ],
+            'no match due to case sensitivity (single-byte)' => [
+                null, 'Hello', 'ISO-8859-1', 'hello'
+            ],
+            'match with case-insensitive (single-byte)' => [
+                0, 'Hello', 'ISO-8859-1', 'hello', 0, false
+            ],
+            'no match for unrelated string (single-byte)' => [
+                null, 'Hello', 'ISO-8859-1', 'World'
+            ],
+            'match with start offset (single-byte)' => [
+                8, 'Hello, World!', 'ISO-8859-1', 'o', 5
+            ],
+        // Multibyte
+            'match at start (multibyte)' => [
+                0, 'こんにちは', 'UTF-8', 'こん'
+            ],
+            'match in middle (multibyte)' => [
+                2, 'こんにちは', 'UTF-8', 'にち'
+            ],
+            'match at end (multibyte)' => [
+                4, 'こんにちは', 'UTF-8', 'は'
+            ],
+            'no match due to case sensitivity (multibyte)' => [
+                null, 'Résumé', 'UTF-8', 'résumé'
+            ],
+            'match with case-insensitive (multibyte)' => [
+                0, 'Résumé', 'UTF-8', 'résumé', 0, false
+            ],
+            'no match for unrelated string (multibyte)' => [
+                null, 'こんにちは', 'UTF-8', 'さようなら'
+            ],
+            'match with start offset (multibyte)' => [
+                9, 'こんにちは、世界、こんにちは', 'UTF-8', 'こ', 5
+            ],
         ];
     }
 
