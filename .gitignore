@@ -3,3 +3,4 @@ __MACOSX
 /.vscode/
 /.vagrant/
 /Vagrant*
+/Submodule*.bat
