@@ -85,6 +85,70 @@ class CArrayTest extends TestCase
 
     #endregion ValueOrDefault
 
+    #region PushBack -----------------------------------------------------------
+
+    function testPushBack()
+    {
+        $carr = new CArray([1, 2]);
+        $carr->PushBack(3)->PushBack(4);
+        $this->assertSame([1, 2, 3, 4],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion PushBack
+
+    #region PushFront ----------------------------------------------------------
+
+    function testPushFront()
+    {
+        $carr = new CArray([3, 4]);
+        $carr->PushFront(2)->PushFront(1);
+        $this->assertSame([1, 2, 3, 4],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion PushFront
+
+    #region PopBack ------------------------------------------------------------
+
+    function testPopBack()
+    {
+        $carr = new CArray([1, 2, 3, 4]);
+        $this->assertSame(4, $carr->PopBack());
+        $this->assertSame(3, $carr->PopBack());
+        $this->assertSame([1, 2],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testPopBackOnEmptyArray()
+    {
+        $carr = new CArray();
+        $this->assertNull($carr->PopBack());
+        $this->assertSame([], AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion PopBack
+
+    #region PopFront -----------------------------------------------------------
+
+    function testPopFront()
+    {
+        $carr = new CArray([1, 2, 3, 4]);
+        $this->assertSame(1, $carr->PopFront());
+        $this->assertSame(2, $carr->PopFront());
+        $this->assertSame([3, 4],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testPopFrontOnEmptyArray()
+    {
+        $carr = new CArray();
+        $this->assertNull($carr->PopFront());
+        $this->assertSame([], AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion PopFront
+
     #region Data Providers -----------------------------------------------------
 
     static function containsKeyDataProvider()
