@@ -23,18 +23,18 @@ class CArrayTest extends TestCase
     function testCopyConstructor()
     {
         $original = new CArray([1, 2, 3]);
-        $carr = new CArray($original);
+        $copy = new CArray($original);
         $this->assertSame(
             AccessHelper::GetNonPublicProperty($original, 'value'),
-            AccessHelper::GetNonPublicProperty($carr, 'value')
+            AccessHelper::GetNonPublicProperty($copy, 'value')
         );
     }
 
     function testConstructorWithNativeArray()
     {
-        $array = [1, 2, 3];
-        $carr = new CArray($array);
-        $this->assertSame($array, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $arr = [1, 2, 3];
+        $carr = new CArray($arr);
+        $this->assertSame($arr, AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
     #[DataProviderExternal(DataHelper::class, 'NonArrayProvider')]
@@ -49,21 +49,41 @@ class CArrayTest extends TestCase
     #region ContainsKey --------------------------------------------------------
 
     #[DataProvider('containsKeyDataProvider')]
-    function testContainsKey(bool $expected, array $array, string|int $key)
+    function testContainsKey(bool $expected, array $arr, string|int $key)
     {
-        $carr = new CArray($array);
+        $carr = new CArray($arr);
         $this->assertSame($expected, $carr->ContainsKey($key));
     }
 
     #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
     function testContainsKeyWithInvalidKeyType($key)
     {
-        $carr = new CArray(['a' => 1, 'b' => 2]);
+        $carr = new CArray();
         $this->expectException(\TypeError::class);
         $carr->ContainsKey($key);
     }
 
     #endregion ContainsKey
+
+    #region ValueOrDefault -----------------------------------------------------
+
+    #[DataProvider('valueOrDefaultDataProvider')]
+    function testValueOrDefault(mixed $expected, array $arr, string|int $key,
+        mixed $defaultValue = null)
+    {
+        $carr = new CArray($arr);
+        $this->assertSame($expected, $carr->ValueOrDefault($key, $defaultValue));
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testValueOrDefaultWithInvalidKeyType($key)
+    {
+        $carr = new CArray();
+        $this->expectException(\TypeError::class);
+        $carr->ValueOrDefault($key);
+    }
+
+    #endregion ValueOrDefault
 
     #region Data Providers -----------------------------------------------------
 
@@ -89,7 +109,40 @@ class CArrayTest extends TestCase
                 true, ['1' => 'one', '2' => 'two'], 1
             ],
             'key in empty array' => [
-                false, [], 'key'
+                false, [], 'missing'
+            ],
+        ];
+    }
+
+    static function valueOrDefaultDataProvider()
+    {
+        return [
+            'string key that exists' => [
+                42, ['a' => 42, 'b' => 24], 'a'
+            ],
+            'string key that does not exist with null default' => [
+                null, ['a' => 42, 'b' => 24], 'c'
+            ],
+            'string key that does not exist with non-null default' => [
+                'default', ['a' => 42, 'b' => 24], 'c', 'default'
+            ],
+            'integer key that exists' => [
+                'one', [1 => 'one', 2 => 'two'], 1
+            ],
+            'integer key that does not exist with null default' => [
+                null, [1 => 'one', 2 => 'two'], 3
+            ],
+            'integer key that does not exist with non-null default' => [
+                'three', [1 => 'one', 2 => 'two'], 3, 'three'
+            ],
+            'numeric string key that exists as integer' => [
+                'one', ['1' => 'one', '2' => 'two'], 1
+            ],
+            'numeric string key that exists as string' => [
+                'one', [1 => 'one', 2 => 'two'], '1'
+            ],
+            'key in empty array with default value' => [
+                'empty', [], 'missing', 'empty'
             ],
         ];
     }
