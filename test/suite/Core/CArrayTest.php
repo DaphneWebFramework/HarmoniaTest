@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
+use \PHPUnit\Framework\Attributes\DataProvider;
 use \PHPUnit\Framework\Attributes\DataProviderExternal;
 
 use \Harmonia\Core\CArray;
@@ -44,4 +45,54 @@ class CArrayTest extends TestCase
     }
 
     #endregion __construct
+
+    #region ContainsKey --------------------------------------------------------
+
+    #[DataProvider('containsKeyDataProvider')]
+    function testContainsKey(bool $expected, array $array, string|int $key)
+    {
+        $carr = new CArray($array);
+        $this->assertSame($expected, $carr->ContainsKey($key));
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testContainsKeyWithInvalidKeyType($key)
+    {
+        $carr = new CArray(['a' => 1, 'b' => 2]);
+        $this->expectException(\TypeError::class);
+        $carr->ContainsKey($key);
+    }
+
+    #endregion ContainsKey
+
+    #region Data Providers -----------------------------------------------------
+
+    static function containsKeyDataProvider()
+    {
+        return [
+            'string key that exists' => [
+                true, ['a' => 1, 'b' => 2], 'a'
+            ],
+            'integer key that exists' => [
+                true, [0 => 'first', 1 => 'second'], 0
+            ],
+            'string key that does not exist' => [
+                false, ['x' => 10, 'y' => 20], 'z'
+            ],
+            'integer key that does not exist' => [
+                false, [0 => 'first', 1 => 'second'], 2
+            ],
+            'numeric string key that exists as string' => [
+                true, ['1' => 'one', '2' => 'two'], '1'
+            ],
+            'numeric string key that exists as integer' => [
+                true, ['1' => 'one', '2' => 'two'], 1
+            ],
+            'key in empty array' => [
+                false, [], 'key'
+            ],
+        ];
+    }
+
+    #endregion Data Providers
 }
