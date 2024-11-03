@@ -769,6 +769,50 @@ class CStringTest extends TestCase
 
     #endregion IndexOf
 
+    #region Replace ------------------------------------------------------------
+
+    #[DataProvider('replaceDataProvider')]
+    function testReplace(string $expected, string $value, string $encoding,
+        string $searchString, string $replacement, bool $caseSensitive = true)
+    {
+        $cstr = new CString($value, $encoding);
+        $result = $cstr->Replace($searchString, $replacement, $caseSensitive);
+        $this->assertSame($expected, (string)$result);
+    }
+
+    function testReplaceWithInvalidEncoding()
+    {
+        $cstr = new CString('Hello', 'INVALID-ENCODING');
+        $this->expectException(\ValueError::class);
+        $cstr->Replace('Hello', 'Hi');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testReplaceWithNonStringSearchString($searchString)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Replace($searchString, 'Hi');
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testReplaceWithNonStringReplacement($replacement)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Replace('Hello', $replacement);
+    }
+
+    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
+    function testReplaceWithNonBooleanCaseSensitive($caseSensitive)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Replace('Hello', 'Hi', $caseSensitive);
+    }
+
+    #endregion Replace
+
     #region Interface: Stringable ----------------------------------------------
 
     function testToString()
@@ -1999,6 +2043,62 @@ class CStringTest extends TestCase
             [true, 'こんにちは', 'UTF-8', 4],
             [false, 'こんにちは', 'UTF-8', 5],
             [false, 'こんにちは', 'UTF-8', 10],
+        ];
+    }
+
+    static function replaceDataProvider()
+    {
+        return [
+        // Single-byte
+            'exact match replace (single-byte)' => [
+                'Hi', 'Hello', 'ISO-8859-1', 'Hello', 'Hi'
+            ],
+            'partial replace in middle (single-byte)' => [
+                'Hell yes', 'Hello', 'ISO-8859-1', 'o', ' yes'
+            ],
+            'replace start of string (single-byte)' => [
+                'Heyo', 'Hello', 'ISO-8859-1', 'Hell', 'Hey'
+            ],
+            'replace end of string (single-byte)' => [
+                'Heaven', 'Hello', 'ISO-8859-1', 'llo', 'aven'
+            ],
+            'replace with empty string (single-byte)' => [
+                'Hell', 'Hello', 'ISO-8859-1', 'o', ''
+            ],
+            'no match due to case sensitivity (single-byte)' => [
+                'Hello', 'Hello', 'ISO-8859-1', 'hello', 'Hi'
+            ],
+            'case-insensitive replace (single-byte)' => [
+                'Hi', 'Hello', 'ISO-8859-1', 'hello', 'Hi', false
+            ],
+            'replace all occurrences (single-byte)' => [
+                'Hi Hi', 'Hello Hello', 'ISO-8859-1', 'Hello', 'Hi'
+            ],
+        // Multibyte
+            'exact match replace (multibyte)' => [
+                'さようなら', 'こんにちは', 'UTF-8', 'こんにちは', 'さようなら'
+            ],
+            'partial replace in middle (multibyte)' => [
+                'こににちは', 'こんにちは', 'UTF-8', 'ん', 'に'
+            ],
+            'replace start of string (multibyte)' => [
+                'さようならにちは', 'こんにちは', 'UTF-8', 'こん', 'さようなら'
+            ],
+            'replace end of string (multibyte)' => [
+                'こんにち!', 'こんにちは', 'UTF-8', 'は', '!'
+            ],
+            'replace with empty string (multibyte)' => [
+                'こんにち', 'こんにちは', 'UTF-8', 'は', ''
+            ],
+            'no match due to case sensitivity (multibyte)' => [
+                'Résumé', 'Résumé', 'UTF-8', 'résumé', 'Summary'
+            ],
+            'case-insensitive replace (multibyte)' => [
+                'Summary', 'Résumé', 'UTF-8', 'résumé', 'Summary', false
+            ],
+            'replace all occurrences (multibyte)' => [
+                'さようならさようなら', 'こんにちはこんにちは', 'UTF-8', 'こんにちは', 'さようなら'
+            ],
         ];
     }
 
