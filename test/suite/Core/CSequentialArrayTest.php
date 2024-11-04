@@ -47,7 +47,7 @@ class CSequentialArrayTest extends TestCase
             AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
-    function testPopBackOnEmptyArray()
+    function testPopBackWithEmptyArray()
     {
         $carr = new CSequentialArray();
         $this->assertNull($carr->PopBack());
@@ -67,7 +67,7 @@ class CSequentialArrayTest extends TestCase
             AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
-    function testPopFrontOnEmptyArray()
+    function testPopFrontWithEmptyArray()
     {
         $carr = new CSequentialArray();
         $this->assertNull($carr->PopFront());
@@ -78,18 +78,40 @@ class CSequentialArrayTest extends TestCase
 
     #region InsertBefore -------------------------------------------------------
 
-    function testInsertBeforeInMiddle()
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testInsertBeforeWithInvalidIndexType($index)
     {
-        $carr = new CSequentialArray([100, 102, 103]);
-        $carr->InsertBefore(1, 101);
-        $this->assertSame([100, 101, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $cstr = new CSequentialArray();
+        $this->expectException(\TypeError::class);
+        $cstr->InsertBefore($index, 99);
+    }
+
+    function testInsertBeforeWithNegativeIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\OutOfRangeException::class);
+        $carr->InsertBefore(-1, 99);
+    }
+
+    function testInsertBeforeWithIndexExceedingSize()
+    {
+        $carr = new CSequentialArray([100, 101, 102]);
+        $this->expectException(\OutOfRangeException::class);
+        $carr->InsertBefore(4, 103);
     }
 
     function testInsertBeforeAtBeginning()
     {
         $carr = new CSequentialArray([101, 102, 103]);
         $carr->InsertBefore(0, 100);
+        $this->assertSame([100, 101, 102, 103],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testInsertBeforeInMiddle()
+    {
+        $carr = new CSequentialArray([100, 102, 103]);
+        $carr->InsertBefore(1, 101);
         $this->assertSame([100, 101, 102, 103],
             AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
@@ -108,20 +130,6 @@ class CSequentialArrayTest extends TestCase
         $carr->InsertBefore(1, 101)->InsertBefore(2, 102);
         $this->assertSame([100, 101, 102, 103],
             AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testInsertBeforeWithNegativeOffset()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->InsertBefore(-1, 99);
-    }
-
-    function testInsertBeforeWithOffsetExceedingSize()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->InsertBefore(4, 103);
     }
 
     function testInsertBeforeReindexKeys()
@@ -165,12 +173,26 @@ class CSequentialArrayTest extends TestCase
 
     #region InsertAfter --------------------------------------------------------
 
-    function testInsertAfterInMiddle()
+    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
+    function testInsertAfterWithInvalidIndexType($index)
     {
-        $carr = new CSequentialArray([100, 101, 103]);
-        $carr->InsertAfter(1, 102);
-        $this->assertSame([100, 101, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $cstr = new CSequentialArray();
+        $this->expectException(\TypeError::class);
+        $cstr->InsertAfter($index, 99);
+    }
+
+    function testInsertAfterWithNegativeIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\OutOfRangeException::class);
+        $carr->InsertAfter(-1, 99);
+    }
+
+    function testInsertAfterWithIndexExceedingSize()
+    {
+        $carr = new CSequentialArray([100, 101, 102]);
+        $this->expectException(\OutOfRangeException::class);
+        $carr->InsertAfter(3, 103);
     }
 
     function testInsertAfterAtBeginning()
@@ -178,6 +200,14 @@ class CSequentialArrayTest extends TestCase
         $carr = new CSequentialArray([101, 102, 103]);
         $carr->InsertAfter(0, 100);
         $this->assertSame([101, 100, 102, 103],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testInsertAfterInMiddle()
+    {
+        $carr = new CSequentialArray([100, 101, 103]);
+        $carr->InsertAfter(1, 102);
+        $this->assertSame([100, 101, 102, 103],
             AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
@@ -195,20 +225,6 @@ class CSequentialArrayTest extends TestCase
         $carr->InsertAfter(0, 100.5)->InsertAfter(2, 101.5);
         $this->assertSame([100, 100.5, 101, 101.5],
             AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testInsertAfterWithNegativeOffset()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->InsertAfter(-1, 99);
-    }
-
-    function testInsertAfterWithOffsetExceedingSize()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->InsertAfter(3, 103);
     }
 
     function testInsertAfterReindexKeys()
@@ -249,6 +265,71 @@ class CSequentialArrayTest extends TestCase
     }
 
     #endregion InsertAfter
+
+    #region Delete -------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testDeleteWithInvalidIndexType($index)
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\TypeError::class);
+        $carr->Delete($index);
+    }
+
+    function testDeleteWithStringIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\InvalidArgumentException::class);
+        $carr->Delete('key');
+    }
+
+    function testDeleteWithNegativeIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\OutOfRangeException::class);
+        $carr->Delete(-1);
+    }
+
+    function testDeleteWithIndexExceedingSize()
+    {
+        $carr = new CSequentialArray([100, 101, 102]);
+        $this->expectException(\OutOfRangeException::class);
+        $carr->Delete(3);
+    }
+
+    function testDeleteAtBeginning()
+    {
+        $carr = new CSequentialArray([100, 101, 102]);
+        $carr->Delete(0);
+        $this->assertSame([101, 102],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testDeleteInMiddle()
+    {
+        $carr = new CSequentialArray([100, 101, 102, 103]);
+        $carr->Delete(1);
+        $this->assertSame([100, 102, 103],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testDeleteAtEnd()
+    {
+        $carr = new CSequentialArray([100, 101, 102]);
+        $carr->Delete(2);
+        $this->assertSame([100, 101],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testDeleteChaining()
+    {
+        $carr = new CSequentialArray([100, 101, 102, 103]);
+        $carr->Delete(1)->Delete(2);
+        $this->assertSame([100, 102],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion Delete
 
     #region Data Providers -----------------------------------------------------
 
