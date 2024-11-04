@@ -846,8 +846,8 @@ class CStringTest extends TestCase
     function testOffsetExistsWithNegativeOffset()
     {
         $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Offset must be a non-negative integer.');
+        $this->expectException(\OutOfRangeException::class);
+        $this->expectExceptionMessage('Offset cannot be negative.');
         isset($cstr[-1]);
     }
 
