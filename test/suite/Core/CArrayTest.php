@@ -85,6 +85,34 @@ class CArrayTest extends TestCase
 
     #endregion ValueOrDefault
 
+    #region Delete -------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testDeleteWithInvalidKeyType($key)
+    {
+        $carr = new CArray();
+        $this->expectException(\TypeError::class);
+        $carr->Delete($key);
+    }
+
+    #[DataProvider('deleteDataProvider')]
+    public function testDelete(array $expected, array $arr, string|int $key)
+    {
+        $carr = new CArray($arr);
+        $carr->Delete($key);
+        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testDeleteChaining()
+    {
+        $carr = new CArray(['x' => 10, 'y' => 20, 'z' => 30]);
+        $carr->Delete('x')->Delete('z');
+        $this->assertSame(['y' => 20],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion Delete
+
     #region Data Providers -----------------------------------------------------
 
     static function containsKeyDataProvider()
@@ -144,6 +172,32 @@ class CArrayTest extends TestCase
             'key in empty array with default value' => [
                 'empty', [], 'missing', 'empty'
             ],
+        ];
+    }
+
+    static function deleteDataProvider()
+    {
+        return [
+            'existing string key' => [
+                ['a' => 1, 'c' => 3],
+                ['a' => 1, 'b' => 2, 'c' => 3],
+                'b'
+            ],
+            'existing integer key' => [
+                [0 => 'apple', 2 => 'cherry'],
+                [0 => 'apple', 1 => 'banana', 2 => 'cherry'],
+                1
+            ],
+            'non-existing string key' => [
+                ['a' => 1, 'b' => 2],
+                ['a' => 1, 'b' => 2],
+                'c'
+            ],
+            'non-existing integer key' => [
+                [0 => 'apple', 1 => 'banana'],
+                [0 => 'apple', 1 => 'banana'],
+                5
+            ]
         ];
     }
 

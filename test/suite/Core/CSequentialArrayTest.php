@@ -297,28 +297,12 @@ class CSequentialArrayTest extends TestCase
         $carr->Delete(3);
     }
 
-    function testDeleteAtBeginning()
+    #[DataProvider('deleteDataProvider')]
+    public function testDelete(array $expected, array $arr, string|int $index)
     {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $carr->Delete(0);
-        $this->assertSame([101, 102],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testDeleteInMiddle()
-    {
-        $carr = new CSequentialArray([100, 101, 102, 103]);
-        $carr->Delete(1);
-        $this->assertSame([100, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testDeleteAtEnd()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $carr->Delete(2);
-        $this->assertSame([100, 101],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $carr = new CSequentialArray($arr);
+        $carr->Delete($index);
+        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
     function testDeleteChaining()
@@ -332,6 +316,27 @@ class CSequentialArrayTest extends TestCase
     #endregion Delete
 
     #region Data Providers -----------------------------------------------------
+
+    static function deleteDataProvider()
+    {
+        return [
+            'index at beginning' => [
+                [101, 102],
+                [100, 101, 102],
+                0
+            ],
+            'index in middle' => [
+                [100, 102, 103],
+                [100, 101, 102, 103],
+                1
+            ],
+            'index at end' => [
+                [100, 101],
+                [100, 101, 102],
+                2
+            ]
+        ];
+    }
 
     #endregion Data Providers
 }
