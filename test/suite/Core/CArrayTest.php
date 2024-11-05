@@ -14,6 +14,13 @@ class CArrayTest extends TestCase
 {
     #region __construct --------------------------------------------------------
 
+    #[DataProviderExternal(DataHelper::class, 'NonArrayProvider')]
+    function testConstructorWithInvalidValueType($value)
+    {
+        $this->expectException(\TypeError::class);
+        new CArray($value);
+    }
+
     function testDefaultConstructor()
     {
         $carr = new CArray();
@@ -37,23 +44,9 @@ class CArrayTest extends TestCase
         $this->assertSame($arr, AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
-    #[DataProviderExternal(DataHelper::class, 'NonArrayProvider')]
-    function testConstructorWithInvalidValueType($value)
-    {
-        $this->expectException(\TypeError::class);
-        new CArray($value);
-    }
-
     #endregion __construct
 
     #region Has ----------------------------------------------------------------
-
-    #[DataProvider('hasDataProvider')]
-    function testHas(bool $expected, array $arr, string|int $key)
-    {
-        $carr = new CArray($arr);
-        $this->assertSame($expected, $carr->Has($key));
-    }
 
     #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
     function testHasWithInvalidKeyType($key)
@@ -63,17 +56,45 @@ class CArrayTest extends TestCase
         $carr->Has($key);
     }
 
-    #endregion Has
-
-    #region Get ----------------------------------------------------------------
-
-    #[DataProvider('getDataProvider')]
-    function testGet(mixed $expected, array $arr, string|int $key,
-        mixed $defaultValue = null)
+    #[DataProvider('hasDataProvider')]
+    function testHas(bool $expected, array $arr, string|int $key)
     {
         $carr = new CArray($arr);
-        $this->assertSame($expected, $carr->Get($key, $defaultValue));
+        $this->assertSame($expected, $carr->Has($key));
     }
+
+    #endregion Has
+
+    #region Set ----------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testSetWithInvalidKeyType($key)
+    {
+        $carr = new CArray();
+        $this->expectException(\TypeError::class);
+        $carr->Set($key, 1);
+    }
+
+    #[DataProvider('setDataProvider')]
+    public function testSet(array $expected, array $arr, string|int $key,
+        mixed $value)
+    {
+        $carr = new CArray($arr);
+        $carr->Set($key, $value);
+        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testSetChaining()
+    {
+        $carr = new CArray(['x' => 10]);
+        $carr->Set('y', 20)->Set('x', 15);
+        $this->assertSame(['x' => 15, 'y' => 20],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion Set
+
+    #region Get ----------------------------------------------------------------
 
     #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
     function testGetWithInvalidKeyType($key)
@@ -81,6 +102,14 @@ class CArrayTest extends TestCase
         $carr = new CArray();
         $this->expectException(\TypeError::class);
         $carr->Get($key);
+    }
+
+    #[DataProvider('getDataProvider')]
+    function testGet(mixed $expected, array $arr, string|int $key,
+        mixed $defaultValue = null)
+    {
+        $carr = new CArray($arr);
+        $this->assertSame($expected, $carr->Get($key, $defaultValue));
     }
 
     #endregion Get
@@ -138,6 +167,54 @@ class CArrayTest extends TestCase
             ],
             'empty array' => [
                 false, [], 'missing'
+            ],
+        ];
+    }
+
+    static function setDataProvider()
+    {
+        return [
+            'new string key' => [
+                ['a' => 1, 'b' => 2, 'c' => 3],
+                ['a' => 1, 'b' => 2],
+                'c',
+                3
+            ],
+            'new integer key' => [
+                [0 => 'apple', 1 => 'banana', 2 => 'cherry'],
+                [0 => 'apple', 1 => 'banana'],
+                2,
+                'cherry'
+            ],
+            'existing string key' => [
+                ['a' => 1, 'b' => 20],
+                ['a' => 1, 'b' => 2],
+                'b',
+                20
+            ],
+            'existing integer key' => [
+                [0 => 'apple', 1 => 'blueberry'],
+                [0 => 'apple', 1 => 'banana'],
+                1,
+                'blueberry'
+            ],
+            'existing integer key accessed as string' => [
+                [1 => 'updated', 2 => 'two'],
+                [1 => 'one', 2 => 'two'],
+                '1',
+                'updated'
+            ],
+            'existing numeric string key accessed as integer' => [
+                ['1' => 'one', '2' => 'updated'],
+                ['1' => 'one', '2' => 'two'],
+                2,
+                'updated'
+            ],
+            'empty array' => [
+                ['new_key' => 'new_value'],
+                [],
+                'new_key',
+                'new_value'
             ],
         ];
     }
