@@ -65,6 +65,26 @@ class CArrayTest extends TestCase
 
     #endregion Has
 
+    #region Get ----------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testGetWithInvalidKeyType($key)
+    {
+        $carr = new CArray();
+        $this->expectException(\TypeError::class);
+        $carr->Get($key);
+    }
+
+    #[DataProvider('getDataProvider')]
+    function testGet(mixed $expected, array $arr, string|int $key,
+        mixed $defaultValue = null)
+    {
+        $carr = new CArray($arr);
+        $this->assertSame($expected, $carr->Get($key, $defaultValue));
+    }
+
+    #endregion Get
+
     #region Set ----------------------------------------------------------------
 
     #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
@@ -94,26 +114,6 @@ class CArrayTest extends TestCase
 
     #endregion Set
 
-    #region Get ----------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testGetWithInvalidKeyType($key)
-    {
-        $carr = new CArray();
-        $this->expectException(\TypeError::class);
-        $carr->Get($key);
-    }
-
-    #[DataProvider('getDataProvider')]
-    function testGet(mixed $expected, array $arr, string|int $key,
-        mixed $defaultValue = null)
-    {
-        $carr = new CArray($arr);
-        $this->assertSame($expected, $carr->Get($key, $defaultValue));
-    }
-
-    #endregion Get
-
     #region Delete -------------------------------------------------------------
 
     #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
@@ -142,6 +142,56 @@ class CArrayTest extends TestCase
 
     #endregion Delete
 
+    #region Interface: ArrayAccess ---------------------------------------------
+
+    function testOffsetExists()
+    {
+        $carr = $this->getMockBuilder(CArray::class)
+            ->onlyMethods(['Has'])
+            ->getMock();
+        $carr->expects($this->once())
+            ->method('Has')
+            ->with('a')
+            ->willReturn(true);
+        $this->assertTrue(isset($carr['a']));
+    }
+
+    function testOffsetGet()
+    {
+        $carr = $this->getMockBuilder(CArray::class)
+            ->onlyMethods(['Get'])
+            ->getMock();
+        $carr->expects($this->once())
+            ->method('Get')
+            ->with('a')
+            ->willReturn(1);
+        $this->assertSame(1, $carr['a']);
+    }
+
+    function testOffsetSet()
+    {
+        $carr = $this->getMockBuilder(CArray::class)
+            ->onlyMethods(['Set'])
+            ->getMock();
+        $carr->expects($this->once())
+            ->method('Set')
+            ->with('b', 2);
+        $carr['b'] = 2;
+    }
+
+    function testOffsetUnset()
+    {
+        $carr = $this->getMockBuilder(CArray::class)
+            ->onlyMethods(['Delete'])
+            ->getMock();
+        $carr->expects($this->once())
+            ->method('Delete')
+            ->with('a');
+        unset($carr['a']);
+    }
+
+    #endregion Interface: ArrayAccess
+
     #region Data Providers -----------------------------------------------------
 
     static function hasDataProvider()
@@ -167,6 +217,42 @@ class CArrayTest extends TestCase
             ],
             'empty array' => [
                 false, [], 'missing'
+            ],
+        ];
+    }
+
+    static function getDataProvider()
+    {
+        return [
+            'existing string key' => [
+                42, ['a' => 42, 'b' => 24], 'a'
+            ],
+            'non-existing string key with null default' => [
+                null, ['a' => 42, 'b' => 24], 'c'
+            ],
+            'non-existing string key with non-null default' => [
+                'default', ['a' => 42, 'b' => 24], 'c', 'default'
+            ],
+            'existing integer key' => [
+                'one', [1 => 'one', 2 => 'two'], 1
+            ],
+            'non-existing integer key with null default' => [
+                null, [1 => 'one', 2 => 'two'], 3
+            ],
+            'non-existing integer key with non-null default' => [
+                'three', [1 => 'one', 2 => 'two'], 3, 'three'
+            ],
+            'existing integer key accessed as string' => [
+                'one', [1 => 'one', 2 => 'two'], '1'
+            ],
+            'existing numeric string key accessed as integer' => [
+                'one', ['1' => 'one', '2' => 'two'], 1
+            ],
+            'empty array with null default' => [
+                null, [], 'missing'
+            ],
+            'empty array with default value' => [
+                'empty', [], 'missing', 'empty'
             ],
         ];
     }
@@ -215,42 +301,6 @@ class CArrayTest extends TestCase
                 [],
                 'new_key',
                 'new_value'
-            ],
-        ];
-    }
-
-    static function getDataProvider()
-    {
-        return [
-            'existing string key' => [
-                42, ['a' => 42, 'b' => 24], 'a'
-            ],
-            'non-existing string key with null default' => [
-                null, ['a' => 42, 'b' => 24], 'c'
-            ],
-            'non-existing string key with non-null default' => [
-                'default', ['a' => 42, 'b' => 24], 'c', 'default'
-            ],
-            'existing integer key' => [
-                'one', [1 => 'one', 2 => 'two'], 1
-            ],
-            'non-existing integer key with null default' => [
-                null, [1 => 'one', 2 => 'two'], 3
-            ],
-            'non-existing integer key with non-null default' => [
-                'three', [1 => 'one', 2 => 'two'], 3, 'three'
-            ],
-            'existing integer key accessed as string' => [
-                'one', [1 => 'one', 2 => 'two'], '1'
-            ],
-            'existing numeric string key accessed as integer' => [
-                'one', ['1' => 'one', '2' => 'two'], 1
-            ],
-            'empty array with null default' => [
-                null, [], 'missing'
-            ],
-            'empty array with default value' => [
-                'empty', [], 'missing', 'empty'
             ],
         ];
     }
