@@ -7,7 +7,6 @@ use \PHPUnit\Framework\Attributes\DataProviderExternal;
 use \Harmonia\Core\CSequentialArray;
 use \Harmonia\Core\CArray; // testCopyConstructorWith[Non]SequentialCArray
 
-use \TestToolkit\AccessHelper;
 use \TestToolkit\DataHelper;
 
 #[CoversClass(CSequentialArray::class)]
@@ -37,24 +36,20 @@ class CSequentialArrayTest extends TestCase
     function testConstructorWithNumericStringKeysTreatedAsInteger()
     {
         $carr = new CSequentialArray([0 => 'a', '1' => 'b', 2 => 'c']);
-        $this->assertSame(['a', 'b', 'c'],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame(['a', 'b', 'c'], $carr->ToArray());
     }
 
     function testDefaultConstructor()
     {
         $carr = new CSequentialArray();
-        $this->assertSame([], AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([], $carr->ToArray());
     }
 
     function testCopyConstructor()
     {
         $original = new CSequentialArray([1, 2, 3]);
         $copy = new CSequentialArray($original);
-        $this->assertSame(
-            AccessHelper::GetNonPublicProperty($original, 'value'),
-            AccessHelper::GetNonPublicProperty($copy, 'value')
-        );
+        $this->assertSame($original->ToArray(), $copy->ToArray());
     }
 
     function testCopyConstructorWithNonSequentialCArray()
@@ -68,17 +63,14 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CArray([0 => 'a', 1 => 'b', 2 => 'c']);
         $cseqarr = new CSequentialArray($carr);
-        $this->assertSame(
-            AccessHelper::GetNonPublicProperty($carr, 'value'),
-            AccessHelper::GetNonPublicProperty($cseqarr, 'value')
-        );
+        $this->assertSame($carr->ToArray(), $cseqarr->ToArray());
     }
 
     function testConstructorWithNativeArray()
     {
         $arr = [1, 2, 3];
         $carr = new CSequentialArray($arr);
-        $this->assertSame($arr, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame($arr, $carr->ToArray());
     }
 
     #endregion __construct
@@ -158,15 +150,14 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CSequentialArray($arr);
         $carr->Set($index, $value);
-        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame($expected, $carr->ToArray());
     }
 
     function testSetChaining()
     {
         $carr = new CSequentialArray([100, 101]);
         $carr->Set(0, 200)->Set(1, 201);
-        $this->assertSame([200, 201],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([200, 201], $carr->ToArray());
     }
 
     #endregion Set
@@ -193,15 +184,14 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CSequentialArray($arr);
         $carr->Delete($index);
-        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame($expected, $carr->ToArray());
     }
 
     function testDeleteChaining()
     {
         $carr = new CSequentialArray([100, 101, 102, 103]);
         $carr->Delete(1)->Delete(2);
-        $this->assertSame([100, 102],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([100, 102], $carr->ToArray());
     }
 
     #endregion Delete
@@ -212,8 +202,7 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CSequentialArray([1, 2]);
         $carr->PushBack(3)->PushBack(4);
-        $this->assertSame([1, 2, 3, 4],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([1, 2, 3, 4], $carr->ToArray());
     }
 
     #endregion PushBack
@@ -224,8 +213,7 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CSequentialArray([3, 4]);
         $carr->PushFront(2)->PushFront(1);
-        $this->assertSame([1, 2, 3, 4],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([1, 2, 3, 4], $carr->ToArray());
     }
 
     #endregion PushFront
@@ -237,15 +225,14 @@ class CSequentialArrayTest extends TestCase
         $carr = new CSequentialArray([1, 2, 3, 4]);
         $this->assertSame(4, $carr->PopBack());
         $this->assertSame(3, $carr->PopBack());
-        $this->assertSame([1, 2],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([1, 2], $carr->ToArray());
     }
 
     function testPopBackWithEmptyArray()
     {
         $carr = new CSequentialArray();
         $this->assertNull($carr->PopBack());
-        $this->assertSame([], AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([], $carr->ToArray());
     }
 
     #endregion PopBack
@@ -257,15 +244,14 @@ class CSequentialArrayTest extends TestCase
         $carr = new CSequentialArray([1, 2, 3, 4]);
         $this->assertSame(1, $carr->PopFront());
         $this->assertSame(2, $carr->PopFront());
-        $this->assertSame([3, 4],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([3, 4], $carr->ToArray());
     }
 
     function testPopFrontWithEmptyArray()
     {
         $carr = new CSequentialArray();
         $this->assertNull($carr->PopFront());
-        $this->assertSame([], AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([], $carr->ToArray());
     }
 
     #endregion PopFront
@@ -286,15 +272,14 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CSequentialArray($arr);
         $carr->InsertBefore($index, $element);
-        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame($expected, $carr->ToArray());
     }
 
     function testInsertBeforeChaining()
     {
         $carr = new CSequentialArray([100, 103]);
         $carr->InsertBefore(1, 101)->InsertBefore(2, 102);
-        $this->assertSame([100, 101, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([100, 101, 102, 103], $carr->ToArray());
     }
 
     #endregion InsertBefore
@@ -315,15 +300,14 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CSequentialArray($arr);
         $carr->InsertAfter($index, $element);
-        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame($expected, $carr->ToArray());
     }
 
     function testInsertAfterChaining()
     {
         $carr = new CSequentialArray([100, 101]);
         $carr->InsertAfter(0, 100.5)->InsertAfter(2, 101.5);
-        $this->assertSame([100, 100.5, 101, 101.5],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([100, 100.5, 101, 101.5], $carr->ToArray());
     }
 
     #endregion InsertAfter

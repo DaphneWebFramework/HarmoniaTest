@@ -7,7 +7,6 @@ use \PHPUnit\Framework\Attributes\DataProviderExternal;
 use \Harmonia\Core\CArray;
 use \Harmonia\Core\CSequentialArray; // testCopyConstructorWithCSequentialArray
 
-use \TestToolkit\AccessHelper;
 use \TestToolkit\DataHelper;
 
 #[CoversClass(CArray::class)]
@@ -25,37 +24,52 @@ class CArrayTest extends TestCase
     function testDefaultConstructor()
     {
         $carr = new CArray();
-        $this->assertSame([], AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame([], $carr->ToArray());
     }
 
     function testCopyConstructor()
     {
         $original = new CArray([1, 2, 3]);
         $copy = new CArray($original);
-        $this->assertSame(
-            AccessHelper::GetNonPublicProperty($original, 'value'),
-            AccessHelper::GetNonPublicProperty($copy, 'value')
-        );
+        $this->assertSame($original->ToArray(), $copy->ToArray());
     }
 
     function testCopyConstructorWithCSequentialArray()
     {
         $cseqarr = new CSequentialArray(['a', 'b', 'c']);
         $carr = new CArray($cseqarr);
-        $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cseqarr, 'value'),
-            AccessHelper::GetNonPublicProperty($carr, 'value')
-        );
+        $this->assertSame($cseqarr->ToArray(), $carr->ToArray());
     }
 
     function testConstructorWithNativeArray()
     {
         $arr = [1, 2, 3];
         $carr = new CArray($arr);
-        $this->assertSame($arr, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame($arr, $carr->ToArray());
     }
 
     #endregion __construct
+
+    #region ToArray ------------------------------------------------------------
+
+    public function testToArrayReturnsIdenticalCopy()
+    {
+        $arr = ['a' => 1, 'b' => 2, 'c' => 3];
+        $carr = new CArray($arr);
+        $this->assertSame($arr, $carr->ToArray());
+    }
+
+    public function testToArrayModificationDoesNotAffectInternalArray()
+    {
+        $arr = ['a' => 1, 'b' => 2, 'c' => 3];
+        $carr = new CArray($arr);
+        $arrCopy = $carr->ToArray();
+        $arrCopy['a'] = 99;
+        $this->assertNotSame($arrCopy, $carr->ToArray());
+        $this->assertSame($arr, $carr->ToArray());
+    }
+
+    #endregion ToArray
 
     #region Has ----------------------------------------------------------------
 
@@ -112,15 +126,14 @@ class CArrayTest extends TestCase
     {
         $carr = new CArray($arr);
         $carr->Set($key, $value);
-        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame($expected, $carr->ToArray());
     }
 
     function testSetChaining()
     {
         $carr = new CArray(['x' => 10]);
         $carr->Set('y', 20)->Set('x', 15);
-        $this->assertSame(['x' => 15, 'y' => 20],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame(['x' => 15, 'y' => 20], $carr->ToArray());
     }
 
     #endregion Set
@@ -140,15 +153,14 @@ class CArrayTest extends TestCase
     {
         $carr = new CArray($arr);
         $carr->Delete($key);
-        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame($expected, $carr->ToArray());
     }
 
     function testDeleteChaining()
     {
         $carr = new CArray(['x' => 10, 'y' => 20, 'z' => 30]);
         $carr->Delete('x')->Delete('z');
-        $this->assertSame(['y' => 20],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $this->assertSame(['y' => 20], $carr->ToArray());
     }
 
     #endregion Delete
