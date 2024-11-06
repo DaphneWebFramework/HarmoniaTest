@@ -835,14 +835,6 @@ class CStringTest extends TestCase
         isset($cstr[$nonInteger]);
     }
 
-    function testOffsetExistsWithNegativeOffset()
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\OutOfRangeException::class);
-        $this->expectExceptionMessage('Offset cannot be negative.');
-        isset($cstr[-1]);
-    }
-
     #[DataProvider('offsetExistsDataProvider')]
     function testOffsetExists(bool $expected, string $value, string $encoding,
         int $offset)
@@ -2029,17 +2021,17 @@ class CStringTest extends TestCase
     {
         return [
         // Single-byte
+            [false, 'Hello', 'ISO-8859-1', -1],
             [true, 'Hello', 'ISO-8859-1', 0],
             [true, 'Hello', 'ISO-8859-1', 1],
             [true, 'Hello', 'ISO-8859-1', 4],
             [false, 'Hello', 'ISO-8859-1', 5],
-            [false, 'Hello', 'ISO-8859-1', 10],
         // Multibyte
+            [false, 'こんにちは', 'UTF-8', -1],
             [true, 'こんにちは', 'UTF-8', 0],
             [true, 'こんにちは', 'UTF-8', 1],
             [true, 'こんにちは', 'UTF-8', 4],
             [false, 'こんにちは', 'UTF-8', 5],
-            [false, 'こんにちは', 'UTF-8', 10],
         ];
     }
 
