@@ -153,20 +153,6 @@ class CSequentialArrayTest extends TestCase
         $carr->Set('key', 1);
     }
 
-    function testSetWithNegativeIndex()
-    {
-        $carr = new CSequentialArray();
-        $this->expectException(\OutOfRangeException::class);
-        $carr->Set(-1, 1);
-    }
-
-    function testSetWithIndexExceedingSize()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->Set(3, 103);
-    }
-
     #[DataProvider('setDataProvider')]
     public function testSet(array $expected, array $arr, string|int $index, mixed $value)
     {
@@ -200,20 +186,6 @@ class CSequentialArrayTest extends TestCase
         $carr = new CSequentialArray();
         $this->expectException(\InvalidArgumentException::class);
         $carr->Delete('key');
-    }
-
-    function testDeleteWithNegativeIndex()
-    {
-        $carr = new CSequentialArray();
-        $this->expectException(\OutOfRangeException::class);
-        $carr->Delete(-1);
-    }
-
-    function testDeleteWithIndexExceedingSize()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->Delete(3);
     }
 
     #[DataProvider('deleteDataProvider')]
@@ -308,42 +280,13 @@ class CSequentialArrayTest extends TestCase
         $cstr->InsertBefore($index, 99);
     }
 
-    function testInsertBeforeWithNegativeIndex()
+    #[DataProvider('insertBeforeDataProvider')]
+    public function testInsertBefore(array $expected, array $arr, int $index,
+        mixed $element)
     {
-        $carr = new CSequentialArray();
-        $this->expectException(\OutOfRangeException::class);
-        $carr->InsertBefore(-1, 99);
-    }
-
-    function testInsertBeforeWithIndexExceedingSize()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->InsertBefore(4, 103);
-    }
-
-    function testInsertBeforeAtBeginning()
-    {
-        $carr = new CSequentialArray([101, 102, 103]);
-        $carr->InsertBefore(0, 100);
-        $this->assertSame([100, 101, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testInsertBeforeInMiddle()
-    {
-        $carr = new CSequentialArray([100, 102, 103]);
-        $carr->InsertBefore(1, 101);
-        $this->assertSame([100, 101, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testInsertBeforeAtEnd()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $carr->InsertBefore(3, 103);
-        $this->assertSame([100, 101, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $carr = new CSequentialArray($arr);
+        $carr->InsertBefore($index, $element);
+        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
     function testInsertBeforeChaining()
@@ -366,42 +309,13 @@ class CSequentialArrayTest extends TestCase
         $cstr->InsertAfter($index, 99);
     }
 
-    function testInsertAfterWithNegativeIndex()
+    #[DataProvider('insertAfterDataProvider')]
+    public function testInsertAfter(array $expected, array $arr, int $index,
+        mixed $element)
     {
-        $carr = new CSequentialArray();
-        $this->expectException(\OutOfRangeException::class);
-        $carr->InsertAfter(-1, 99);
-    }
-
-    function testInsertAfterWithIndexExceedingSize()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->InsertAfter(3, 103);
-    }
-
-    function testInsertAfterAtBeginning()
-    {
-        $carr = new CSequentialArray([101, 102, 103]);
-        $carr->InsertAfter(0, 100);
-        $this->assertSame([101, 100, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testInsertAfterInMiddle()
-    {
-        $carr = new CSequentialArray([100, 101, 103]);
-        $carr->InsertAfter(1, 102);
-        $this->assertSame([100, 101, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testInsertAfterAtEnd()
-    {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $carr->InsertAfter(2, 103);
-        $this->assertSame([100, 101, 102, 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
+        $carr = new CSequentialArray($arr);
+        $carr->InsertAfter($index, $element);
+        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
     function testInsertAfterChaining()
@@ -511,6 +425,12 @@ class CSequentialArrayTest extends TestCase
     static function setDataProvider()
     {
         return [
+            'negative index' => [
+                [100, 101, 102],
+                [100, 101, 102],
+                -1,
+                199
+            ],
             'index at start' => [
                 [200, 101, 102],
                 [100, 101, 102],
@@ -529,12 +449,23 @@ class CSequentialArrayTest extends TestCase
                 2,
                 202
             ],
+            'index exceeds size' => [
+                [100, 101, 102],
+                [100, 101, 102],
+                3,
+                203
+            ],
         ];
     }
 
     static function deleteDataProvider()
     {
         return [
+            'negative index' => [
+                [100, 101, 102],
+                [100, 101, 102],
+                -1
+            ],
             'index at beginning' => [
                 [101, 102],
                 [100, 101, 102],
@@ -549,7 +480,84 @@ class CSequentialArrayTest extends TestCase
                 [100, 101],
                 [100, 101, 102],
                 2
-            ]
+            ],
+            'index exceeds size' => [
+                [100, 101, 102],
+                [100, 101, 102],
+                3
+            ],
+        ];
+    }
+
+    static function insertBeforeDataProvider()
+    {
+        return [
+            'negative index' => [
+                [100, 101, 102],
+                [100, 101, 102],
+                -1,
+                99
+            ],
+            'index at start' => [
+                [100, 101, 102, 103],
+                [101, 102, 103],
+                0,
+                100
+            ],
+            'index in middle' => [
+                [100, 101, 102, 103],
+                [100, 102, 103],
+                1,
+                101
+            ],
+            'index at end' => [
+                [100, 101, 102, 103],
+                [100, 101, 103],
+                2,
+                102
+            ],
+            'index exceeds size' => [
+                [100, 101, 102],
+                [100, 101, 102],
+                3,
+                103
+            ],
+        ];
+    }
+
+    static function insertAfterDataProvider()
+    {
+        return [
+            'negative index' => [
+                [100, 101, 102],
+                [100, 101, 102],
+                -1,
+                100
+            ],
+            'index at beginning' => [
+                [100, 101, 102, 103],
+                [100, 102, 103],
+                0,
+                101
+            ],
+            'index in middle' => [
+                [100, 101, 102, 103],
+                [100, 101, 103],
+                1,
+                102
+            ],
+            'index at end' => [
+                [100, 101, 102, 103],
+                [100, 101, 102],
+                2,
+                103
+            ],
+            'index exceeds size' => [
+                [100, 101, 102],
+                [100, 101, 102],
+                3,
+                104
+            ],
         ];
     }
 
