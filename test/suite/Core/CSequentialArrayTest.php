@@ -5,6 +5,7 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 use \PHPUnit\Framework\Attributes\DataProviderExternal;
 
 use \Harmonia\Core\CSequentialArray;
+use \Harmonia\Core\CArray; // testCopyConstructorWith[Non]SequentialCArray
 
 use \TestToolkit\AccessHelper;
 use \TestToolkit\DataHelper;
@@ -12,6 +13,227 @@ use \TestToolkit\DataHelper;
 #[CoversClass(CSequentialArray::class)]
 class CSequentialArrayTest extends TestCase
 {
+    #region __construct --------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonArrayProvider')]
+    function testConstructorWithInvalidValueType($value)
+    {
+        $this->expectException(\TypeError::class);
+        new CSequentialArray($value);
+    }
+
+    function testConstructorWithNonSequentialArray()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new CSequentialArray([1 => 'one', 3 => 'three']);
+    }
+
+    function testConstructorWithMixedKeysArray()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new CSequentialArray([0 => 'a', 'key' => 'value', 2 => 'c']);
+    }
+
+    function testConstructorWithNumericStringKeysTreatedAsInteger()
+    {
+        $carr = new CSequentialArray([0 => 'a', '1' => 'b', 2 => 'c']);
+        $this->assertSame(['a', 'b', 'c'],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testDefaultConstructor()
+    {
+        $carr = new CSequentialArray();
+        $this->assertSame([], AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testCopyConstructor()
+    {
+        $original = new CSequentialArray([1, 2, 3]);
+        $copy = new CSequentialArray($original);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($original, 'value'),
+            AccessHelper::GetNonPublicProperty($copy, 'value')
+        );
+    }
+
+    function testCopyConstructorWithNonSequentialCArray()
+    {
+        $carr = new CArray([1 => 'one', 3 => 'three']);
+        $this->expectException(\InvalidArgumentException::class);
+        new CSequentialArray($carr);
+    }
+
+    function testCopyConstructorWithSequentialCArray()
+    {
+        $carr = new CArray([0 => 'a', 1 => 'b', 2 => 'c']);
+        $cseqarr = new CSequentialArray($carr);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($carr, 'value'),
+            AccessHelper::GetNonPublicProperty($cseqarr, 'value')
+        );
+    }
+
+    function testConstructorWithNativeArray()
+    {
+        $arr = [1, 2, 3];
+        $carr = new CSequentialArray($arr);
+        $this->assertSame($arr, AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion __construct
+
+    #region Has ----------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testHasWithInvalidIndexType($index)
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\TypeError::class);
+        $carr->Has($index);
+    }
+
+    function testHasWithStringIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\InvalidArgumentException::class);
+        $carr->Has('key');
+    }
+
+    #[DataProvider('hasDataProvider')]
+    function testHas(bool $expected, array $arr, string|int $index)
+    {
+        $carr = new CSequentialArray($arr);
+        $this->assertSame($expected, $carr->Has($index));
+    }
+
+    #endregion Has
+
+    #region Get ----------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testGetWithInvalidIndexType($index)
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\TypeError::class);
+        $carr->Get($index);
+    }
+
+    function testGetWithStringIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\InvalidArgumentException::class);
+        $carr->Get('key');
+    }
+
+    #[DataProvider('getDataProvider')]
+    function testGet(mixed $expected, array $arr, string|int $index,
+        mixed $defaultValue = null)
+    {
+        $carr = new CSequentialArray($arr);
+        $this->assertSame($expected, $carr->Get($index, $defaultValue));
+    }
+
+    #endregion Get
+
+    #region Set ----------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testSetWithInvalidIndexType($index)
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\TypeError::class);
+        $carr->Set($index, 1);
+    }
+
+    function testSetWithStringIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\InvalidArgumentException::class);
+        $carr->Set('key', 1);
+    }
+
+    function testSetWithNegativeIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\OutOfRangeException::class);
+        $carr->Set(-1, 1);
+    }
+
+    function testSetWithIndexExceedingSize()
+    {
+        $carr = new CSequentialArray([100, 101, 102]);
+        $this->expectException(\OutOfRangeException::class);
+        $carr->Set(3, 103);
+    }
+
+    #[DataProvider('setDataProvider')]
+    public function testSet(array $expected, array $arr, string|int $index, mixed $value)
+    {
+        $carr = new CSequentialArray($arr);
+        $carr->Set($index, $value);
+        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testSetChaining()
+    {
+        $carr = new CSequentialArray([100, 101]);
+        $carr->Set(0, 200)->Set(1, 201);
+        $this->assertSame([200, 201],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion Set
+
+    #region Delete -------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
+    function testDeleteWithInvalidIndexType($index)
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\TypeError::class);
+        $carr->Delete($index);
+    }
+
+    function testDeleteWithStringIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\InvalidArgumentException::class);
+        $carr->Delete('key');
+    }
+
+    function testDeleteWithNegativeIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\OutOfRangeException::class);
+        $carr->Delete(-1);
+    }
+
+    function testDeleteWithIndexExceedingSize()
+    {
+        $carr = new CSequentialArray([100, 101, 102]);
+        $this->expectException(\OutOfRangeException::class);
+        $carr->Delete(3);
+    }
+
+    #[DataProvider('deleteDataProvider')]
+    public function testDelete(array $expected, array $arr, string|int $index)
+    {
+        $carr = new CSequentialArray($arr);
+        $carr->Delete($index);
+        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    function testDeleteChaining()
+    {
+        $carr = new CSequentialArray([100, 101, 102, 103]);
+        $carr->Delete(1)->Delete(2);
+        $this->assertSame([100, 102],
+            AccessHelper::GetNonPublicProperty($carr, 'value'));
+    }
+
+    #endregion Delete
+
     #region PushBack -----------------------------------------------------------
 
     function testPushBack()
@@ -132,43 +354,6 @@ class CSequentialArrayTest extends TestCase
             AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
-    function testInsertBeforeReindexKeys()
-    {
-        $carr = new CSequentialArray([10 => 100, 11 => 101, 13 => 103]);
-        $carr->InsertBefore(2, 102);
-        $this->assertSame([0 => 100, 1 => 101, 2 => 102, 3 => 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testInsertBeforeWithAssociativeArray()
-    {
-        $carr = new CSequentialArray(['ten' => 10, 'eleven' => 11, 'thirteen' => 13]);
-        $carr->InsertBefore(2, 12);
-        $this->assertSame([
-            'ten' => 10,
-            'eleven' => 11,
-            0 => 12,
-            'thirteen' => 13
-        ], AccessHelper::GetNonPublicProperty($carr, 'value'));
-        $carr->InsertBefore(1, 10.5);
-        $this->assertSame([
-            'ten' => 10,
-            0 => 10.5,
-            'eleven' => 11,
-            1 => 12,
-            'thirteen' => 13
-        ], AccessHelper::GetNonPublicProperty($carr, 'value'));
-        $carr->InsertBefore(4, 12.5);
-        $this->assertSame([
-            'ten' => 10,
-            0 => 10.5,
-            'eleven' => 11,
-            1 => 12,
-            2 => 12.5,
-            'thirteen' => 13
-        ], AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
     #endregion InsertBefore
 
     #region InsertAfter --------------------------------------------------------
@@ -227,95 +412,125 @@ class CSequentialArrayTest extends TestCase
             AccessHelper::GetNonPublicProperty($carr, 'value'));
     }
 
-    function testInsertAfterReindexKeys()
-    {
-        $carr = new CSequentialArray([10 => 100, 11 => 101, 13 => 103]);
-        $carr->InsertAfter(1, 102);
-        $this->assertSame([0 => 100, 1 => 101, 2 => 102, 3 => 103],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testInsertAfterWithAssociativeArray()
-    {
-        $carr = new CSequentialArray(['ten' => 10, 'eleven' => 11, 'thirteen' => 13]);
-        $carr->InsertAfter(1, 12);
-        $this->assertSame([
-            'ten' => 10,
-            'eleven' => 11,
-            0 => 12,
-            'thirteen' => 13
-        ], AccessHelper::GetNonPublicProperty($carr, 'value'));
-        $carr->InsertAfter(0, 10.5);
-        $this->assertSame([
-            'ten' => 10,
-            0 => 10.5,
-            'eleven' => 11,
-            1 => 12,
-            'thirteen' => 13
-        ], AccessHelper::GetNonPublicProperty($carr, 'value'));
-        $carr->InsertAfter(3, 12.5);
-        $this->assertSame([
-            'ten' => 10,
-            0 => 10.5,
-            'eleven' => 11,
-            1 => 12,
-            2 => 12.5,
-            'thirteen' => 13
-        ], AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
     #endregion InsertAfter
 
-    #region Delete -------------------------------------------------------------
+    #region Interface: ArrayAccess ---------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testDeleteWithInvalidIndexType($index)
+    function testOffsetExists()
     {
-        $carr = new CSequentialArray();
-        $this->expectException(\TypeError::class);
-        $carr->Delete($index);
+        $carr = $this->getMockBuilder(CSequentialArray::class)
+            ->onlyMethods(['Has'])
+            ->getMock();
+        $carr->expects($this->once())
+            ->method('Has')
+            ->with(1)
+            ->willReturn(true);
+        $this->assertTrue(isset($carr[1]));
     }
 
-    function testDeleteWithStringIndex()
+    function testOffsetGet()
     {
-        $carr = new CSequentialArray();
-        $this->expectException(\InvalidArgumentException::class);
-        $carr->Delete('key');
+        $carr = $this->getMockBuilder(CSequentialArray::class)
+            ->onlyMethods(['Get'])
+            ->getMock();
+        $carr->expects($this->once())
+            ->method('Get')
+            ->with(1)
+            ->willReturn(100);
+        $this->assertSame(100, $carr[1]);
     }
 
-    function testDeleteWithNegativeIndex()
+    function testOffsetSet()
     {
-        $carr = new CSequentialArray();
-        $this->expectException(\OutOfRangeException::class);
-        $carr->Delete(-1);
+        $carr = $this->getMockBuilder(CSequentialArray::class)
+            ->onlyMethods(['Set'])
+            ->getMock();
+        $carr->expects($this->once())
+            ->method('Set')
+            ->with(1, 200);
+        $carr[1] = 200;
     }
 
-    function testDeleteWithIndexExceedingSize()
+    function testOffsetUnset()
     {
-        $carr = new CSequentialArray([100, 101, 102]);
-        $this->expectException(\OutOfRangeException::class);
-        $carr->Delete(3);
+        $carr = $this->getMockBuilder(CSequentialArray::class)
+            ->onlyMethods(['Delete'])
+            ->getMock();
+        $carr->expects($this->once())
+            ->method('Delete')
+            ->with(1);
+        unset($carr[1]);
     }
 
-    #[DataProvider('deleteDataProvider')]
-    public function testDelete(array $expected, array $arr, string|int $index)
-    {
-        $carr = new CSequentialArray($arr);
-        $carr->Delete($index);
-        $this->assertSame($expected, AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    function testDeleteChaining()
-    {
-        $carr = new CSequentialArray([100, 101, 102, 103]);
-        $carr->Delete(1)->Delete(2);
-        $this->assertSame([100, 102],
-            AccessHelper::GetNonPublicProperty($carr, 'value'));
-    }
-
-    #endregion Delete
+    #endregion Interface: ArrayAccess
 
     #region Data Providers -----------------------------------------------------
+
+    static function hasDataProvider()
+    {
+        return [
+            'negative index' => [
+                false, [100, 101, 102], -1
+            ],
+            'index at start' => [
+                true, [100, 101, 102], 0
+            ],
+            'index in middle' => [
+                true, [100, 101, 102], 1
+            ],
+            'index at end' => [
+                true, [100, 101, 102], 2
+            ],
+            'index exceeds size' => [
+                false, [100, 101, 102], 3
+            ],
+            'empty array' => [
+                false, [], 0
+            ],
+        ];
+    }
+
+    static function getDataProvider()
+    {
+        return [
+            'existing index' => [
+                101, [100, 101, 102], 1
+            ],
+            'non-existing index with null default' => [
+                null, [100, 101, 102], 3
+            ],
+            'non-existing index with non-null default' => [
+                'default', [100, 101, 102], 3, 'default'
+            ],
+            'empty array with default value' => [
+                'empty', [], 0, 'empty'
+            ],
+        ];
+    }
+
+    static function setDataProvider()
+    {
+        return [
+            'index at start' => [
+                [200, 101, 102],
+                [100, 101, 102],
+                0,
+                200
+            ],
+            'index in middle' => [
+                [100, 201, 102],
+                [100, 101, 102],
+                1,
+                201
+            ],
+            'index at end' => [
+                [100, 101, 202],
+                [100, 101, 102],
+                2,
+                202
+            ],
+        ];
+    }
 
     static function deleteDataProvider()
     {

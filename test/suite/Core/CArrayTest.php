@@ -5,6 +5,7 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 use \PHPUnit\Framework\Attributes\DataProviderExternal;
 
 use \Harmonia\Core\CArray;
+use \Harmonia\Core\CSequentialArray; // testCopyConstructorWithCSequentialArray
 
 use \TestToolkit\AccessHelper;
 use \TestToolkit\DataHelper;
@@ -34,6 +35,16 @@ class CArrayTest extends TestCase
         $this->assertSame(
             AccessHelper::GetNonPublicProperty($original, 'value'),
             AccessHelper::GetNonPublicProperty($copy, 'value')
+        );
+    }
+
+    function testCopyConstructorWithCSequentialArray()
+    {
+        $cseqarr = new CSequentialArray(['a', 'b', 'c']);
+        $carr = new CArray($cseqarr);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cseqarr, 'value'),
+            AccessHelper::GetNonPublicProperty($carr, 'value')
         );
     }
 
