@@ -239,6 +239,40 @@ class CArrayTest extends TestCase
 
     #endregion Interface: Countable
 
+    #region Interface: IteratorAggregate ---------------------------------------
+
+    public function testGetIteratorForSequentialArray()
+    {
+        $carr = new CArray([1, 2, 3, 4, 5]);
+        $result = [];
+        foreach ($carr as $element) {
+            $result[] = $element;
+        }
+        $this->assertEquals([1, 2, 3, 4, 5], $result);
+    }
+
+    public function testGetIteratorForAssociativeArray()
+    {
+        $carr = new CArray(['a' => 'apple', 'b' => 'banana', 'c' => 'cherry']);
+        $result = [];
+        foreach ($carr as $key => $value) {
+            $result[$key] = $value;
+        }
+        $this->assertEquals(['a' => 'apple', 'b' => 'banana', 'c' => 'cherry'], $result);
+    }
+
+    public function testGetIteratorForEmptyArray()
+    {
+        $carr = new CArray();
+        $result = [];
+        foreach ($carr as $element) {
+            $result[] = $element;
+        }
+        $this->assertEmpty($result);
+    }
+
+    #endregion Interface: IteratorAggregate
+
     #region Data Providers -----------------------------------------------------
 
     public static function isEmptyDataProvider()
