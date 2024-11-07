@@ -24,7 +24,7 @@ class CArrayTest extends TestCase
     function testDefaultConstructor()
     {
         $carr = new CArray();
-        $this->assertSame([], $carr->ToArray());
+        $this->assertEmpty($carr->ToArray());
     }
 
     function testCopyConstructor()
@@ -70,6 +70,17 @@ class CArrayTest extends TestCase
     }
 
     #endregion ToArray
+
+    #region IsEmpty ------------------------------------------------------------
+
+    #[DataProvider('isEmptyDataProvider')]
+    public function testIsEmpty($expected, array $arr)
+    {
+        $carr = new CArray($arr);
+        $this->assertSame($expected, $carr->IsEmpty());
+    }
+
+    #endregion IsEmpty
 
     #region Has ----------------------------------------------------------------
 
@@ -215,7 +226,29 @@ class CArrayTest extends TestCase
 
     #endregion Interface: ArrayAccess
 
+    #region Interface: Countable -----------------------------------------------
+
+    #[DataProvider('countDataProvider')]
+    public function testCount(int $expected, array $arr)
+    {
+        $carr = new CArray($arr);
+        $this->assertSame($expected, count($carr));
+        $this->assertSame($expected, $carr->count());
+        $this->assertSame($expected, $carr->Count());
+    }
+
+    #endregion Interface: Countable
+
     #region Data Providers -----------------------------------------------------
+
+    public static function isEmptyDataProvider()
+    {
+        return [
+            'empty array' => [true, []],
+            'single element' => [false, [42]],
+            'multiple elements' => [false, [1, 2, 3]],
+        ];
+    }
 
     static function hasDataProvider()
     {
@@ -366,6 +399,15 @@ class CArrayTest extends TestCase
                 [],
                 'missing'
             ],
+        ];
+    }
+
+    public static function countDataProvider()
+    {
+        return [
+            'empty array' => [0, []],
+            'single element' => [1, [42]],
+            'multiple elements' => [3, [1, 2, 3]],
         ];
     }
 

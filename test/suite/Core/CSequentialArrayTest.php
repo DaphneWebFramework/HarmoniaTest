@@ -42,7 +42,7 @@ class CSequentialArrayTest extends TestCase
     function testDefaultConstructor()
     {
         $carr = new CSequentialArray();
-        $this->assertSame([], $carr->ToArray());
+        $this->assertEmpty($carr->ToArray());
     }
 
     function testCopyConstructor()
@@ -232,7 +232,7 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CSequentialArray();
         $this->assertNull($carr->PopBack());
-        $this->assertSame([], $carr->ToArray());
+        $this->assertEmpty($carr->ToArray());
     }
 
     #endregion PopBack
@@ -251,7 +251,7 @@ class CSequentialArrayTest extends TestCase
     {
         $carr = new CSequentialArray();
         $this->assertNull($carr->PopFront());
-        $this->assertSame([], $carr->ToArray());
+        $this->assertEmpty($carr->ToArray());
     }
 
     #endregion PopFront
