@@ -913,6 +913,44 @@ class CStringTest extends TestCase
 
     #endregion Interface: IteratorAggregate
 
+    #region Private: empty -----------------------------------------------------
+
+    /**
+     * Ensures `empty` returns unique, empty instances with the correct
+     * encoding for each `CString` object, confirming no shared state between
+     * instances.
+     */
+    function testEmptyReturnsInstanceWithCorrectEncoding()
+    {
+        $cstr1 = new CString('Hello', 'UTF-8');
+        $cstr2 = new CString('World', 'ISO-8859-1');
+        $empty1 = AccessHelper::CallNonPublicMethod($cstr1, 'empty');
+        $empty2 = AccessHelper::CallNonPublicMethod($cstr2, 'empty');
+        $this->assertSame('UTF-8',
+            AccessHelper::GetNonPublicProperty($empty1, 'encoding'));
+        $this->assertSame('ISO-8859-1',
+            AccessHelper::GetNonPublicProperty($empty2, 'encoding'));
+        $this->assertTrue($empty1->IsEmpty());
+        $this->assertTrue($empty2->IsEmpty());
+        $this->assertNotSame($empty1, $empty2);
+    }
+
+    /**
+     * Confirms `empty` returns a fresh, unmodified instance each time on the
+     * same `CString`, unaffected by previous modifications.
+     */
+    function testEmptyReturnsFreshInstanceEachTime()
+    {
+        $cstr = new CString('Hello', 'UTF-8');
+        $empty1 = AccessHelper::CallNonPublicMethod($cstr, 'empty');
+        $empty1->InsertAt(0, 'Modified');
+        $empty2 = AccessHelper::CallNonPublicMethod($cstr, 'empty');
+        $this->assertTrue($empty2->IsEmpty());
+        $this->assertNotSame($empty1, $empty2);
+    }
+
+    #endregion Private: empty
+
     #region Private: wrap ------------------------------------------------------
 
     public function testWrapWithCompatibleEncoding()
