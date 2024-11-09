@@ -958,47 +958,69 @@ class CStringTest extends TestCase
 
     #endregion Private: empty
 
+    #region Private: checkEncoding ---------------------------------------------
+
+    #[DataProvider('checkEncodingCompatibleDataProvider')]
+    function testCheckEncodingWithCompatibleEncoding($encoding, $compatibleString)
+    {
+        $cstr = new CString('', $encoding);
+        AccessHelper::CallNonPublicMethod($cstr, 'checkEncoding', [$compatibleString]);
+        $this->assertTrue(true);
+    }
+
+    #[DataProvider('checkEncodingIncompatibleDataProvider')]
+    function testCheckEncodingWithIncompatibleEncoding($encoding, $incompatibleString)
+    {
+        $cstr = new CString('', $encoding);
+        $this->expectException(\ValueError::class);
+        AccessHelper::CallNonPublicMethod($cstr, 'checkEncoding', [$incompatibleString]);
+    }
+
+    function testCheckEncodingWithCStringInstance()
+    {
+        $cstr = new CString('', 'UTF-8');
+        $original = new CString('Hello, World!', 'ISO-8859-1');
+        AccessHelper::CallNonPublicMethod($cstr, 'checkEncoding', [$original]);
+        $this->assertTrue(true);
+    }
+
+    #endregion Private: checkEncoding
+
     #region Private: wrap ------------------------------------------------------
 
-    #[DataProvider('wrapCompatibleEncodingDataProvider')]
+    #[DataProvider('checkEncodingCompatibleDataProvider')]
     public function testWrapWithCompatibleEncoding($encoding, $compatibleString)
     {
         $cstr = new CString('', $encoding);
         $wrapped = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$compatibleString]);
         $this->assertInstanceOf(CString::class, $wrapped);
         $this->assertEquals($compatibleString, (string)$wrapped);
+        $this->assertSame($encoding, AccessHelper::GetNonPublicProperty($wrapped, 'encoding'));
     }
 
-    #[DataProvider('wrapIncompatibleEncodingDataProvider')]
-    function testWrapWithIncompatibleEncoding($encoding, $incompatibleString)
+    #[DataProvider('checkEncodingIncompatibleDataProvider')]
+    public function testWrapWithIncompatibleEncoding($encoding, $incompatibleString)
     {
         $cstr = new CString('', $encoding);
         $this->expectException(\ValueError::class);
         AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString]);
     }
 
-    public function testWrapWithCStringInstance()
+    public function testWrapWithoutEncodingCheck()
     {
         $cstr = new CString('', 'UTF-8');
-        $original = new CString('Hello, World!', 'ISO-8859-1');
-        $wrapped = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$original]);
+        $incompatibleString = "\x80\x81\x82";
+        $wrapped = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString, false]);
         $this->assertInstanceOf(CString::class, $wrapped);
-        $this->assertSame((string)$original, (string)$wrapped);
-        $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($wrapped, 'encoding')
-        );
-        $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'isSingleByte'),
-            AccessHelper::GetNonPublicProperty($wrapped, 'isSingleByte')
-        );
+        $this->assertEquals($incompatibleString, (string)$wrapped);
+        $this->assertSame('UTF-8', AccessHelper::GetNonPublicProperty($wrapped, 'encoding'));
     }
 
     #endregion Private: wrap
 
     #region Private: withMultibyteRegexEncoding --------------------------------
 
-    public function testWithMultibyteRegexEncodingNoChangeNeeded()
+    function testWithMultibyteRegexEncodingNoChangeNeeded()
     {
         \mb_regex_encoding('UTF-8'); // Global encoding same as instance's encoding.
         $cstr = new CString('Hello', 'UTF-8');
@@ -1012,7 +1034,7 @@ class CStringTest extends TestCase
         $this->assertSame('UTF-8', \mb_regex_encoding());
     }
 
-    public function testWithMultibyteRegexEncodingChangeNeeded()
+    function testWithMultibyteRegexEncodingChangeNeeded()
     {
         $originalEncoding = \mb_regex_encoding();
         $cstr = new CString('Hello', 'EUC-JP'); // Different instance encoding.
@@ -1026,7 +1048,7 @@ class CStringTest extends TestCase
         $this->assertSame($originalEncoding, \mb_regex_encoding());
     }
 
-    public function testWithMultibyteRegexEncodingCaseInsensitiveComparison()
+    function testWithMultibyteRegexEncodingCaseInsensitiveComparison()
     {
         \mb_regex_encoding('UTF-8'); // Uppercase global encoding.
         $cstr = new CString('Hello', 'utf-8'); // Lowercase instance encoding.
@@ -1041,7 +1063,7 @@ class CStringTest extends TestCase
         $this->assertSame('UTF-8', \mb_regex_encoding());
     }
 
-    public function testWithMultibyteRegexEncodingReturnsCallbackResult()
+    function testWithMultibyteRegexEncodingReturnsCallbackResult()
     {
         $cstr = new CString();
         $result = AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
@@ -1212,57 +1234,6 @@ class CStringTest extends TestCase
             self::supportedMultiByteEncodingProvider(),
             self::unsupportedMultiByteEncodingProvider()
         );
-    }
-
-    static function wrapCompatibleEncodingDataProvider()
-    {
-        return [
-            'compatible UTF-8 with ASCII content' => [
-                'UTF-8', 'Hello'
-            ],
-            'compatible ISO-8859-1 with ASCII content' => [
-                'ISO-8859-1', 'Hello'
-            ],
-            'compatible Windows 1252 with ASCII content' => [
-                'Windows-1252', 'Simple ASCII text'
-            ],
-            'compatible UTF-8 with Japanese text' => [
-                'UTF-8', 'こんにちは'
-            ],
-        ];
-    }
-
-    static function wrapIncompatibleEncodingDataProvider()
-    {
-        return [
-            'visual match ISO-8859-1 e acute in UTF-8' => [
-                'ISO-8859-1', "\xC3\xA9" // 'é'
-            ],
-            'visual match Windows 1252 euro symbol UTF-8' => [
-                'Windows-1252', "\xE2\x82\xAC" // '€'
-            ],
-            'encoding limitation ISO 8859 1 with accented text' => [
-                'ISO-8859-1', "Café"
-            ],
-            'encoding limitation Windows 1252 with euro symbol' => [
-                'Windows-1252', "€ symbol"
-            ],
-            'encoding mismatch CP1254 with cyrillic text' => [
-                'CP1254', 'Быстрая'
-            ],
-            'encoding mismatch ISO-8859-1 with invalid byte fe' => [
-                'ISO-8859-1', chr(0xfe)
-            ],
-            'encoding mismatch ISO-8859-1 with japanese text' => [
-                'ISO-8859-1', 'こんにちは'
-            ],
-            'detection fail UTF-8 with invalid bytes' => [
-                'UTF-8', "\x80\x81\x82"
-            ],
-            'detection fail ISO-8859-1 with invalid sequence' => [
-                'ISO-8859-1', "\xC3\x28"
-            ],
-        ];
     }
 
     static function isEmptyDataProvider()
@@ -2191,6 +2162,57 @@ class CStringTest extends TestCase
             ],
             'replace all occurrences (multibyte)' => [
                 'さようならさようなら', 'こんにちはこんにちは', 'UTF-8', 'こんにちは', 'さようなら'
+            ],
+        ];
+    }
+
+    static function checkEncodingCompatibleDataProvider()
+    {
+        return [
+            'compatible UTF-8 with ASCII content' => [
+                'UTF-8', 'Hello'
+            ],
+            'compatible ISO-8859-1 with ASCII content' => [
+                'ISO-8859-1', 'Hello'
+            ],
+            'compatible Windows 1252 with ASCII content' => [
+                'Windows-1252', 'Simple ASCII text'
+            ],
+            'compatible UTF-8 with Japanese text' => [
+                'UTF-8', 'こんにちは'
+            ],
+        ];
+    }
+
+    static function checkEncodingIncompatibleDataProvider()
+    {
+        return [
+            'visual match ISO-8859-1 e acute in UTF-8' => [
+                'ISO-8859-1', "\xC3\xA9" // 'é'
+            ],
+            'visual match Windows 1252 euro symbol UTF-8' => [
+                'Windows-1252', "\xE2\x82\xAC" // '€'
+            ],
+            'encoding limitation ISO 8859 1 with accented text' => [
+                'ISO-8859-1', "Café"
+            ],
+            'encoding limitation Windows 1252 with euro symbol' => [
+                'Windows-1252', "€ symbol"
+            ],
+            'encoding mismatch CP1254 with cyrillic text' => [
+                'CP1254', 'Быстрая'
+            ],
+            'encoding mismatch ISO-8859-1 with invalid byte fe' => [
+                'ISO-8859-1', chr(0xfe)
+            ],
+            'encoding mismatch ISO-8859-1 with japanese text' => [
+                'ISO-8859-1', 'こんにちは'
+            ],
+            'detection fail ISO-8859-1 with invalid sequence' => [
+                'ISO-8859-1', "\xC3\x28"
+            ],
+            'detection fail UTF-8 with invalid bytes' => [
+                'UTF-8', "\x80\x81\x82"
             ],
         ];
     }
