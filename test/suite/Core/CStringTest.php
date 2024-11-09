@@ -965,7 +965,7 @@ class CStringTest extends TestCase
     #[DataProvider('wrapIncompatibleEncodingDataProvider')]
     function testWrapWithIncompatibleEncoding($encoding, $incompatibleString)
     {
-        $cstr = new CString('Hello', $encoding);
+        $cstr = new CString('', $encoding);
         $this->expectException(\ValueError::class);
         AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString]);
     }
@@ -1193,9 +1193,27 @@ class CStringTest extends TestCase
     static function wrapIncompatibleEncodingDataProvider()
     {
         return [
-            ['CP1254', 'Быстрая'],
-            ['ISO-8859-1', chr(0xfe)],
-            ['ISO-8859-1', 'こんにちは'],
+            'visual match ISO 8859 1 e acute in UTF 8' => [
+                'ISO-8859-1', "\xC3\xA9" // 'é'
+            ],
+            'visual match Windows 1252 euro symbol UTF 8' => [
+                'Windows-1252', "\xE2\x82\xAC" // '€'
+            ],
+            'encoding mismatch CP1254 with cyrillic text' => [
+                'CP1254', 'Быстрая'
+            ],
+            'encoding mismatch ISO 8859 1 with invalid byte fe' => [
+                'ISO-8859-1', chr(0xfe)
+            ],
+            'encoding mismatch ISO 8859 1 with japanese text' => [
+                'ISO-8859-1', 'こんにちは'
+            ],
+            'detection fail UTF 8 with invalid bytes' => [
+                'UTF-8', "\x80\x81\x82"
+            ],
+            'detection fail ISO 8859 1 with invalid sequence' => [
+                'ISO-8859-1', "\xC3\x28"
+            ],
         ];
     }
 
