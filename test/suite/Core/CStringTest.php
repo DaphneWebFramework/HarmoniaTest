@@ -953,13 +953,13 @@ class CStringTest extends TestCase
 
     #region Private: wrap ------------------------------------------------------
 
-    public function testWrapWithCompatibleEncoding()
+    #[DataProvider('wrapCompatibleEncodingDataProvider')]
+    public function testWrapWithCompatibleEncoding($encoding, $compatibleString)
     {
-        $cstr = new CString('こんにちは', 'UTF-8');
-        $str = 'おはよう';
-        $cstr2 = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$str]);
-        $this->assertInstanceOf(CString::class, $cstr2);
-        $this->assertEquals($str, (string)$cstr2);
+        $cstr = new CString('', $encoding);
+        $wrapped = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$compatibleString]);
+        $this->assertInstanceOf(CString::class, $wrapped);
+        $this->assertEquals($compatibleString, (string)$wrapped);
     }
 
     #[DataProvider('wrapIncompatibleEncodingDataProvider')]
@@ -1190,28 +1190,52 @@ class CStringTest extends TestCase
         );
     }
 
+    static function wrapCompatibleEncodingDataProvider()
+    {
+        return [
+            'compatible UTF-8 with ASCII content' => [
+                'UTF-8', 'Hello'
+            ],
+            'compatible ISO-8859-1 with ASCII content' => [
+                'ISO-8859-1', 'Hello'
+            ],
+            'compatible Windows 1252 with ASCII content' => [
+                'Windows-1252', 'Simple ASCII text'
+            ],
+            'compatible UTF-8 with Japanese text' => [
+                'UTF-8', 'こんにちは'
+            ],
+        ];
+    }
+
     static function wrapIncompatibleEncodingDataProvider()
     {
         return [
-            'visual match ISO 8859 1 e acute in UTF 8' => [
+            'visual match ISO-8859-1 e acute in UTF-8' => [
                 'ISO-8859-1', "\xC3\xA9" // 'é'
             ],
-            'visual match Windows 1252 euro symbol UTF 8' => [
+            'visual match Windows 1252 euro symbol UTF-8' => [
                 'Windows-1252', "\xE2\x82\xAC" // '€'
+            ],
+            'encoding limitation ISO 8859 1 with accented text' => [
+                'ISO-8859-1', "Café"
+            ],
+            'encoding limitation Windows 1252 with euro symbol' => [
+                'Windows-1252', "€ symbol"
             ],
             'encoding mismatch CP1254 with cyrillic text' => [
                 'CP1254', 'Быстрая'
             ],
-            'encoding mismatch ISO 8859 1 with invalid byte fe' => [
+            'encoding mismatch ISO-8859-1 with invalid byte fe' => [
                 'ISO-8859-1', chr(0xfe)
             ],
-            'encoding mismatch ISO 8859 1 with japanese text' => [
+            'encoding mismatch ISO-8859-1 with japanese text' => [
                 'ISO-8859-1', 'こんにちは'
             ],
-            'detection fail UTF 8 with invalid bytes' => [
+            'detection fail UTF-8 with invalid bytes' => [
                 'UTF-8', "\x80\x81\x82"
             ],
-            'detection fail ISO 8859 1 with invalid sequence' => [
+            'detection fail ISO-8859-1 with invalid sequence' => [
                 'ISO-8859-1', "\xC3\x28"
             ],
         ];
