@@ -970,6 +970,23 @@ class CStringTest extends TestCase
         AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString]);
     }
 
+    public function testWrapWithCStringInstance()
+    {
+        $cstr = new CString('', 'UTF-8');
+        $original = new CString('Hello, World!', 'ISO-8859-1');
+        $wrapped = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$original]);
+        $this->assertInstanceOf(CString::class, $wrapped);
+        $this->assertSame((string)$original, (string)$wrapped);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($wrapped, 'encoding')
+        );
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'isSingleByte'),
+            AccessHelper::GetNonPublicProperty($wrapped, 'isSingleByte')
+        );
+    }
+
     #endregion Private: wrap
 
     #region Private: withMultibyteRegexEncoding --------------------------------
