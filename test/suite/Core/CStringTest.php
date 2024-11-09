@@ -760,6 +760,13 @@ class CStringTest extends TestCase
             $caseSensitive));
     }
 
+    function testIndexOfWithCStringInstance()
+    {
+        $cstr = new CString('Hello, World!', 'UTF-8');
+        $searchString = new CString('World', 'UTF-8');
+        $this->assertSame(7, $cstr->IndexOf($searchString));
+    }
+
     function testIndexOfWithInvalidEncoding()
     {
         $cstr = new CString('Hello', 'INVALID-ENCODING');
