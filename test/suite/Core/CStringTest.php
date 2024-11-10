@@ -658,6 +658,41 @@ class CStringTest extends TestCase
 
     #endregion Replace
 
+    #region Split --------------------------------------------------------------
+
+    #[DataProvider('splitDataProvider')]
+    function testSplit(array $expected, string $value, string $encoding,
+        string $delimiter, int $options = CString::SPLIT_OPTION_NONE)
+    {
+        $cstr = new CString($value, $encoding);
+        $substrings = $cstr->Split($delimiter, $options);
+        $result = [];
+        foreach ($substrings as $substring) {
+            $this->assertInstanceOf(CString::class, $substring);
+            $result[] = (string)$substring;
+        }
+        $this->assertSame($expected, $result);
+    }
+
+    #endregion Split
+
+    #region SplitToArray -------------------------------------------------------
+
+    #[DataProvider('splitDataProvider')]
+    function testSplitToArray(array $expected, string $value, string $encoding,
+        string $delimiter, int $options = CString::SPLIT_OPTION_NONE)
+    {
+        $cstr = new CString($value, $encoding);
+        $substrings = $cstr->SplitToArray($delimiter, $options);
+        foreach ($substrings as $substring) {
+            $this->assertInstanceOf(CString::class, $substring);
+        }
+        $result = array_map(fn($substring) => (string)$substring, $substrings);
+        $this->assertSame($expected, $result);
+    }
+
+    #endregion SplitToArray
+
     #region Interface: Stringable ----------------------------------------------
 
     function testToString()
@@ -1825,6 +1860,231 @@ class CStringTest extends TestCase
             ],
             'replace all occurrences (multibyte)' => [
                 'さようならさようなら', 'こんにちはこんにちは', 'UTF-8', 'こんにちは', 'さようなら'
+            ],
+        ];
+    }
+
+    static function splitDataProvider()
+    {
+        return [
+            'single-byte, comma-separated, basic case' => [
+                ['foo', 'bar', 'baz'],
+                'foo,bar,baz',
+                'ASCII',
+                ','
+            ],
+            'single-byte, comma-separated, with leading and trailing delimiter' => [
+                ['', 'foo', 'bar', 'baz', ''],
+                ',foo,bar,baz,',
+                'ASCII',
+                ','
+            ],
+            'single-byte, comma-separated, with leading and trailing delimiter, exclude empty' => [
+                ['foo', 'bar', 'baz'],
+                ',foo,bar,baz,',
+                'ASCII',
+                ',',
+                CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'single-byte, comma-separated, with spaces' => [
+                ['foo', ' bar', ' baz'],
+                'foo, bar, baz',
+                'ASCII',
+                ','
+            ],
+            'single-byte, comma-separated, with spaces, trim' => [
+                ['foo', 'bar', 'baz'],
+                'foo, bar, baz',
+                'ASCII',
+                ',',
+                CString::SPLIT_OPTION_TRIM
+            ],
+            'single-byte, comma-separated, with empty' => [
+                ['', '', 'foo', '', 'bar', '', 'baz', '', ''],
+                ',,foo,,bar,,baz,,',
+                'ASCII',
+                ','
+            ],
+            'single-byte, comma-separated, with empty, exclude empty' => [
+                ['foo', 'bar', 'baz'],
+                ',,foo,,bar,,baz,,',
+                'ASCII',
+                ',',
+                CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'single-byte, comma-separated, with spaces and empty' => [
+                [' ', ' ', ' foo ', ' ', ' bar ', ' ', ' baz ', ' ', ' '],
+                ' , , foo , , bar , , baz , , ',
+                'ASCII',
+                ','
+            ],
+            'single-byte, comma-separated, with spaces and empty, trim' => [
+                ['', '', 'foo', '', 'bar', '', 'baz', '', ''],
+                ' , , foo , , bar , , baz , , ',
+                'ASCII',
+                ',',
+                CString::SPLIT_OPTION_TRIM
+            ],
+            'single-byte, comma-separated, with spaces and empty, exclude empty' => [
+                [' ', ' ', ' foo ', ' ', ' bar ', ' ', ' baz ', ' ', ' '],
+                ' , , foo , , bar , , baz , , ',
+                'ASCII',
+                ',',
+                CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'single-byte, comma-separated, with spaces and empty, trim and exclude empty' => [
+                ['foo', 'bar', 'baz'],
+                ' , , foo , , bar , , baz , , ',
+                'ASCII',
+                ',',
+                CString::SPLIT_OPTION_TRIM | CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'single-byte, lorem ipsum' => [
+                ['', '', 'Orci', 'varius', '', 'natoque', '', '', 'penatibus', '', '', '', ''],
+                '  Orci varius  natoque   penatibus    ',
+                'ASCII',
+                ' '
+            ],
+            'single-byte, lorem ipsum, trim' => [
+                ['', '', 'Orci', 'varius', '', 'natoque', '', '', 'penatibus', '', '', '', ''],
+                '  Orci varius  natoque   penatibus    ',
+                'ASCII',
+                ' ',
+                CString::SPLIT_OPTION_TRIM
+            ],
+            'single-byte, lorem ipsum, exclude empty' => [
+                ['Orci', 'varius', 'natoque', 'penatibus'],
+                '  Orci varius  natoque   penatibus    ',
+                'ASCII',
+                ' ',
+                CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'single-byte, lorem ipsum, trim and exclude empty' => [
+                ['Orci', 'varius', 'natoque', 'penatibus'],
+                '  Orci varius  natoque   penatibus    ',
+                'ASCII',
+                ' ',
+                CString::SPLIT_OPTION_TRIM | CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'single-byte, http header' => [
+                ['application/json', ' charset=utf-8'],
+                'application/json; charset=utf-8',
+                'ASCII',
+                ';'
+            ],
+            'single-byte, http header, trim' => [
+                ['application/json', 'charset=utf-8'],
+                'application/json; charset=utf-8',
+                'ASCII',
+                ';',
+                CString::SPLIT_OPTION_TRIM
+            ],
+            'single-byte, etc passwd' => [
+                ['foo', '*', '1023', '1000', '', '/home/foo', '/bin/sh'],
+                'foo:*:1023:1000::/home/foo:/bin/sh',
+                'ASCII',
+                ':'
+            ],
+            'single-byte, etc passwd, exclude empty' => [
+                ['foo', '*', '1023', '1000', '/home/foo', '/bin/sh'],
+                'foo:*:1023:1000::/home/foo:/bin/sh',
+                'ASCII',
+                ':',
+                CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'single-byte, empty delimiter' => [
+                [],
+                'sample text',
+                'ASCII',
+                ''
+            ],
+            'single-byte, empty delimiter, trim' => [
+                [],
+                'sample text',
+                'ASCII',
+                '',
+                CString::SPLIT_OPTION_TRIM
+            ],
+            'single-byte, empty delimiter, exclude empty' => [
+                [],
+                'sample text',
+                'ASCII',
+                '',
+                CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'single-byte, empty delimiter, trim and exclude empty' => [
+                [],
+                'sample text',
+                'ASCII',
+                '',
+                CString::SPLIT_OPTION_TRIM | CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'multibyte, mixed languages, comma-separated, basic case' => [
+                ['Hello', '伝統', 'Résumé'],
+                'Hello,伝統,Résumé',
+                'UTF-8',
+                ','
+            ],
+            'multibyte, turkish, comma-separated, basic case' => [
+                ['çayı', 'balığı', 'öğrenmek', 'üşümek', 'şüphe', 'ızgara', 'ölmek', 'ığdır', 'göğüs'],
+                'çayı,balığı,öğrenmek,üşümek,şüphe,ızgara,ölmek,ığdır,göğüs',
+                'UTF-8',
+                ','
+            ],
+            'multibyte, turkish, comma-separated, with spaces, trim' => [
+                ['çayı', 'balığı', 'öğrenmek', 'üşümek', 'şüphe', 'ızgara', 'ölmek', 'ığdır', 'göğüs'],
+                'çayı, balığı, öğrenmek, üşümek, şüphe, ızgara, ölmek, ığdır, göğüs',
+                'UTF-8',
+                ',',
+                CString::SPLIT_OPTION_TRIM
+            ],
+            'multibyte, turkish, comma-separated, with leading and trailing delimiter, exclude empty' => [
+                ['çayı', 'balığı', 'öğrenmek'],
+                ',çayı,balığı,öğrenmek,',
+                'UTF-8',
+                ',',
+                CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'multibyte, japanese, comma-separated, basic case' => [
+                ['こんにちは', 'すし', '魚', '例', 'ありがとう', '試験', '物語', '伝統'],
+                'こんにちは、すし、魚、例、ありがとう、試験、物語、伝統',
+                'UTF-8',
+                '、'
+            ],
+            'multibyte, japanese, comma-separated, with spaces, trim' => [
+                ['こんにちは', 'すし', '魚', '例', 'ありがとう', '試験', '物語', '伝統'],
+                'こんにちは 、 すし 、 魚 、 例 、 ありがとう 、 試験 、 物語 、 伝統 ',
+                'UTF-8',
+                '、',
+                CString::SPLIT_OPTION_TRIM
+            ],
+            'multibyte, japanese, comma-separated, with leading and trailing delimiter, exclude empty' => [
+                ['伝統', '文化', '試験'],
+                '、伝統、文化、試験、',
+                'UTF-8',
+                '、',
+                CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'multibyte, japanese, space-delimited, trim' => [
+                ['ありがとう', '文化', '試験', '例'],
+                'ありがとう　文化　試験　例',
+                'UTF-8',
+                '　',
+                CString::SPLIT_OPTION_TRIM
+            ],
+            'multibyte, japanese, lorem ipsum' => [
+                ['伝統', '文化', '芸術', 'ありがとう', '食べ物', 'すし', '魚', '日本'],
+                ' 伝統 文化 芸術 ありがとう 食べ物 すし 魚 日本 ',
+                'UTF-8',
+                ' ',
+                CString::SPLIT_OPTION_TRIM | CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+            'multibyte, japanese, lorem ipsum, trim and exclude empty' => [
+                ['伝統', '文化', '芸術', 'ありがとう', '食べ物', 'すし', '魚', '日本'],
+                '  伝統  文化   芸術    ありがとう   食べ物    すし    魚   日本 ',
+                'UTF-8',
+                ' ',
+                CString::SPLIT_OPTION_TRIM | CString::SPLIT_OPTION_EXCLUDE_EMPTY
             ],
         ];
     }
