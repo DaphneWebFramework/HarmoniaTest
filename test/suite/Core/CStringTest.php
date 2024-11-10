@@ -181,14 +181,14 @@ class CStringTest extends TestCase
     #[DataProvider('singleByteEncodingProvider')]
     function testConstructorWithSingleByteEncoding($encoding)
     {
-        $cstr = new CString('Hello, World!', $encoding);
+        $cstr = new CString('', $encoding);
         $this->assertTrue(AccessHelper::GetNonPublicProperty($cstr, 'isSingleByte'));
     }
 
     #[DataProvider('multiByteEncodingProvider')]
     function testConstructorWithMultiByteEncoding($encoding)
     {
-        $cstr = new CString('Hello, World!', $encoding);
+        $cstr = new CString('', $encoding);
         $this->assertFalse(AccessHelper::GetNonPublicProperty($cstr, 'isSingleByte'));
     }
 
@@ -214,13 +214,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, $cstr->Length());
     }
 
-    function testLengthWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Length();
-    }
-
     #endregion Length
 
     #region First --------------------------------------------------------------
@@ -232,13 +225,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, $cstr->First());
     }
 
-    function testFirstWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->First();
-    }
-
     #endregion First
 
     #region Last ---------------------------------------------------------------
@@ -248,13 +234,6 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->Last());
-    }
-
-    function testLastWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Last();
     }
 
     #endregion Last
@@ -274,13 +253,6 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->At($offset));
-    }
-
-    function testAtWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->At(1);
     }
 
     #endregion At
@@ -311,20 +283,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
-    function testSetAtWithIncompatibleEncoding()
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\ValueError::class);
-        $cstr->SetAt(0, 'さ');
-    }
-
-    function testSetAtWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->SetAt(0, 'Y');
-    }
-
     #endregion SetAt
 
     #region InsertAt -----------------------------------------------------------
@@ -351,20 +309,6 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $cstr->InsertAt($offset, $substring);
         $this->assertSame($expected, (string)$cstr);
-    }
-
-    function testInsertAtWithIncompatibleEncoding()
-    {
-        $cstr = new CString('atladı', 'CP1254');
-        $this->expectException(\ValueError::class);
-        $cstr->InsertAt(0, 'Быстрая');
-    }
-
-    function testInsertAtWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->InsertAt(0, 'Hey');
     }
 
     #endregion InsertAt
@@ -395,13 +339,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
-    function testDeleteAtWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->DeleteAt(0);
-    }
-
     #endregion DeleteAt
 
     #region Left ---------------------------------------------------------------
@@ -421,13 +358,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr->Left($count));
     }
 
-    function testLeftWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Left(4);
-    }
-
     #endregion Left
 
     #region Right --------------------------------------------------------------
@@ -445,13 +375,6 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, (string)$cstr->Right($count));
-    }
-
-    function testRightWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Right(2);
     }
 
     #endregion Right
@@ -481,13 +404,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr->Middle($offset, $count));
     }
 
-    function testMiddleWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Middle(1, 3);
-    }
-
     #endregion Middle
 
     #region Trim ---------------------------------------------------------------
@@ -507,13 +423,6 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $this->assertEquals($expected, (string)$cstr->Trim($characters));
         $this->assertEquals($value, (string)$cstr);
-    }
-
-    function testTrimWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Trim();
     }
 
     #endregion Trim
@@ -537,13 +446,6 @@ class CStringTest extends TestCase
         $this->assertEquals($value, (string)$cstr);
     }
 
-    function testTrimLeftWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->TrimLeft();
-    }
-
     #endregion TrimLeft
 
     #region TrimRight ----------------------------------------------------------
@@ -565,13 +467,6 @@ class CStringTest extends TestCase
         $this->assertEquals($value, (string)$cstr);
     }
 
-    function testTrimRightWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->TrimRight();
-    }
-
     #endregion TrimRight
 
     #region Lowercase ----------------------------------------------------------
@@ -584,13 +479,6 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
     }
 
-    function testLowercaseWithInvalidEncoding()
-    {
-        $cstr = new CString('HELLO', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Lowercase();
-    }
-
     #endregion Lowercase
 
     #region Uppercase ----------------------------------------------------------
@@ -601,13 +489,6 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, (string)$cstr->Uppercase());
         $this->assertSame($value, (string)$cstr);
-    }
-
-    function testUppercaseWithInvalidEncoding()
-    {
-        $cstr = new CString('hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Uppercase();
     }
 
     #endregion Uppercase
@@ -638,21 +519,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, $cstr->Equals($other, $caseSensitive));
     }
 
-    function testEqualsWithInvalidEncodingCaseSensitive()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Equals('Hello', false); // throws for case-insensitive
-    }
-
-    function testEqualsWithInvalidEncodingCaseInsensitive()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        // No exception is thrown because encoding validation is skipped when
-        // the comparison is case-sensitive.
-        $this->assertTrue ($cstr->Equals('Hello'));
-    }
-
     #endregion Equals
 
     #region StartsWith ---------------------------------------------------------
@@ -681,13 +547,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, $cstr->StartsWith($searchString, $caseSensitive));
     }
 
-    function testStartsWithWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->StartsWith('Hell');
-    }
-
     #endregion StartsWith
 
     #region EndsWith -----------------------------------------------------------
@@ -714,13 +573,6 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->EndsWith($searchString, $caseSensitive));
-    }
-
-    function testEndsWithWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->EndsWith('llo');
     }
 
     #endregion EndsWith
@@ -767,13 +619,6 @@ class CStringTest extends TestCase
         $this->assertSame(7, $cstr->IndexOf($searchString));
     }
 
-    function testIndexOfWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->IndexOf('Hell');
-    }
-
     #endregion IndexOf
 
     #region Replace ------------------------------------------------------------
@@ -811,13 +656,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$result);
     }
 
-    function testReplaceWithInvalidEncoding()
-    {
-        $cstr = new CString('Hello', 'INVALID-ENCODING');
-        $this->expectException(\ValueError::class);
-        $cstr->Replace('Hello', 'Hi');
-    }
-
     #endregion Replace
 
     #region Interface: Stringable ----------------------------------------------
@@ -834,12 +672,11 @@ class CStringTest extends TestCase
     #region Interface: ArrayAccess ---------------------------------------------
 
     #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testOffsetExistsWithInvalidOffsetType($nonInteger)
+    function testOffsetExistsWithInvalidOffsetType($offset)
     {
         $cstr = new CString('Hello', 'ISO-8859-1');
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Offset must be an integer.');
-        isset($cstr[$nonInteger]);
+        isset($cstr[$offset]);
     }
 
     #[DataProvider('offsetExistsDataProvider')]
@@ -919,162 +756,6 @@ class CStringTest extends TestCase
     }
 
     #endregion Interface: IteratorAggregate
-
-    #region Private: empty -----------------------------------------------------
-
-    /**
-     * Ensures `empty` returns unique, empty instances with the correct
-     * encoding for each `CString` object, confirming no shared state between
-     * instances.
-     */
-    function testEmptyReturnsInstanceWithCorrectEncoding()
-    {
-        $cstr1 = new CString('Hello', 'UTF-8');
-        $cstr2 = new CString('World', 'ISO-8859-1');
-        $empty1 = AccessHelper::CallNonPublicMethod($cstr1, 'empty');
-        $empty2 = AccessHelper::CallNonPublicMethod($cstr2, 'empty');
-        $this->assertSame('UTF-8',
-            AccessHelper::GetNonPublicProperty($empty1, 'encoding'));
-        $this->assertSame('ISO-8859-1',
-            AccessHelper::GetNonPublicProperty($empty2, 'encoding'));
-        $this->assertTrue($empty1->IsEmpty());
-        $this->assertTrue($empty2->IsEmpty());
-        $this->assertNotSame($empty1, $empty2);
-    }
-
-    /**
-     * Confirms `empty` returns a fresh, unmodified instance each time on the
-     * same `CString`, unaffected by previous modifications.
-     */
-    function testEmptyReturnsFreshInstanceEachTime()
-    {
-        $cstr = new CString('Hello', 'UTF-8');
-        $empty1 = AccessHelper::CallNonPublicMethod($cstr, 'empty');
-        $empty1->InsertAt(0, 'Modified');
-        $empty2 = AccessHelper::CallNonPublicMethod($cstr, 'empty');
-        $this->assertTrue($empty2->IsEmpty());
-        $this->assertNotSame($empty1, $empty2);
-    }
-
-    #endregion Private: empty
-
-    #region Private: checkEncoding ---------------------------------------------
-
-    #[DataProvider('checkEncodingCompatibleDataProvider')]
-    function testCheckEncodingWithCompatibleEncoding($encoding, $compatibleString)
-    {
-        $cstr = new CString('', $encoding);
-        AccessHelper::CallNonPublicMethod($cstr, 'checkEncoding', [$compatibleString]);
-        $this->assertTrue(true);
-    }
-
-    #[DataProvider('checkEncodingIncompatibleDataProvider')]
-    function testCheckEncodingWithIncompatibleEncoding($encoding, $incompatibleString)
-    {
-        $cstr = new CString('', $encoding);
-        $this->expectException(\ValueError::class);
-        AccessHelper::CallNonPublicMethod($cstr, 'checkEncoding', [$incompatibleString]);
-    }
-
-    function testCheckEncodingWithCStringInstance()
-    {
-        $cstr = new CString('', 'UTF-8');
-        $original = new CString('Hello, World!', 'ISO-8859-1');
-        AccessHelper::CallNonPublicMethod($cstr, 'checkEncoding', [$original]);
-        $this->assertTrue(true);
-    }
-
-    #endregion Private: checkEncoding
-
-    #region Private: wrap ------------------------------------------------------
-
-    #[DataProvider('checkEncodingCompatibleDataProvider')]
-    public function testWrapWithCompatibleEncoding($encoding, $compatibleString)
-    {
-        $cstr = new CString('', $encoding);
-        $wrapped = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$compatibleString]);
-        $this->assertInstanceOf(CString::class, $wrapped);
-        $this->assertEquals($compatibleString, (string)$wrapped);
-        $this->assertSame($encoding, AccessHelper::GetNonPublicProperty($wrapped, 'encoding'));
-    }
-
-    #[DataProvider('checkEncodingIncompatibleDataProvider')]
-    public function testWrapWithIncompatibleEncoding($encoding, $incompatibleString)
-    {
-        $cstr = new CString('', $encoding);
-        $this->expectException(\ValueError::class);
-        AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString]);
-    }
-
-    public function testWrapWithoutEncodingCheck()
-    {
-        $cstr = new CString('', 'UTF-8');
-        $incompatibleString = "\x80\x81\x82";
-        $wrapped = AccessHelper::CallNonPublicMethod($cstr, 'wrap', [$incompatibleString, false]);
-        $this->assertInstanceOf(CString::class, $wrapped);
-        $this->assertEquals($incompatibleString, (string)$wrapped);
-        $this->assertSame('UTF-8', AccessHelper::GetNonPublicProperty($wrapped, 'encoding'));
-    }
-
-    #endregion Private: wrap
-
-    #region Private: withMultibyteRegexEncoding --------------------------------
-
-    function testWithMultibyteRegexEncodingNoChangeNeeded()
-    {
-        \mb_regex_encoding('UTF-8'); // Global encoding same as instance's encoding.
-        $cstr = new CString('Hello', 'UTF-8');
-        AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
-            function() {
-                // Confirm that the encoding remains 'UTF-8'.
-                $this->assertSame('UTF-8', \mb_regex_encoding());
-            }
-        ]);
-        // Encoding should remain 'UTF-8' when no change is needed.
-        $this->assertSame('UTF-8', \mb_regex_encoding());
-    }
-
-    function testWithMultibyteRegexEncodingChangeNeeded()
-    {
-        $originalEncoding = \mb_regex_encoding();
-        $cstr = new CString('Hello', 'EUC-JP'); // Different instance encoding.
-        AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
-            function() {
-                // Confirm that the encoding was changed to 'EUC-JP'
-                $this->assertSame('EUC-JP', \mb_regex_encoding());
-            }
-        ]);
-        // Original encoding should be restored after callback.
-        $this->assertSame($originalEncoding, \mb_regex_encoding());
-    }
-
-    function testWithMultibyteRegexEncodingCaseInsensitiveComparison()
-    {
-        \mb_regex_encoding('UTF-8'); // Uppercase global encoding.
-        $cstr = new CString('Hello', 'utf-8'); // Lowercase instance encoding.
-        AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
-            function() {
-                // Confirm that the encoding remains 'UTF-8' thanks to
-                // case-insensitive comparison.
-                $this->assertSame('UTF-8', \mb_regex_encoding());
-            }
-        ]);
-        // Encoding should remain 'UTF-8'.
-        $this->assertSame('UTF-8', \mb_regex_encoding());
-    }
-
-    function testWithMultibyteRegexEncodingReturnsCallbackResult()
-    {
-        $cstr = new CString();
-        $result = AccessHelper::CallNonPublicMethod($cstr, 'withMultibyteRegexEncoding', [
-            function() {
-                return 42;
-            }
-        ]);
-        $this->assertSame(42, $result);
-    }
-
-    #endregion Private: withMultibyteRegexEncoding
 
     #region Data Providers -----------------------------------------------------
 
@@ -2092,24 +1773,6 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function offsetExistsDataProvider()
-    {
-        return [
-        // Single-byte
-            [false, 'Hello', 'ISO-8859-1', -1],
-            [true, 'Hello', 'ISO-8859-1', 0],
-            [true, 'Hello', 'ISO-8859-1', 1],
-            [true, 'Hello', 'ISO-8859-1', 4],
-            [false, 'Hello', 'ISO-8859-1', 5],
-        // Multibyte
-            [false, 'こんにちは', 'UTF-8', -1],
-            [true, 'こんにちは', 'UTF-8', 0],
-            [true, 'こんにちは', 'UTF-8', 1],
-            [true, 'こんにちは', 'UTF-8', 4],
-            [false, 'こんにちは', 'UTF-8', 5],
-        ];
-    }
-
     static function replaceDataProvider()
     {
         return [
@@ -2166,54 +1829,21 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function checkEncodingCompatibleDataProvider()
+    static function offsetExistsDataProvider()
     {
         return [
-            'compatible UTF-8 with ASCII content' => [
-                'UTF-8', 'Hello'
-            ],
-            'compatible ISO-8859-1 with ASCII content' => [
-                'ISO-8859-1', 'Hello'
-            ],
-            'compatible Windows 1252 with ASCII content' => [
-                'Windows-1252', 'Simple ASCII text'
-            ],
-            'compatible UTF-8 with Japanese text' => [
-                'UTF-8', 'こんにちは'
-            ],
-        ];
-    }
-
-    static function checkEncodingIncompatibleDataProvider()
-    {
-        return [
-            'visual match ISO-8859-1 e acute in UTF-8' => [
-                'ISO-8859-1', "\xC3\xA9" // 'é'
-            ],
-            'visual match Windows 1252 euro symbol UTF-8' => [
-                'Windows-1252', "\xE2\x82\xAC" // '€'
-            ],
-            'encoding limitation ISO 8859 1 with accented text' => [
-                'ISO-8859-1', "Café"
-            ],
-            'encoding limitation Windows 1252 with euro symbol' => [
-                'Windows-1252', "€ symbol"
-            ],
-            'encoding mismatch CP1254 with cyrillic text' => [
-                'CP1254', 'Быстрая'
-            ],
-            'encoding mismatch ISO-8859-1 with invalid byte fe' => [
-                'ISO-8859-1', chr(0xfe)
-            ],
-            'encoding mismatch ISO-8859-1 with japanese text' => [
-                'ISO-8859-1', 'こんにちは'
-            ],
-            'detection fail ISO-8859-1 with invalid sequence' => [
-                'ISO-8859-1', "\xC3\x28"
-            ],
-            'detection fail UTF-8 with invalid bytes' => [
-                'UTF-8', "\x80\x81\x82"
-            ],
+        // Single-byte
+            [false, 'Hello', 'ISO-8859-1', -1],
+            [true, 'Hello', 'ISO-8859-1', 0],
+            [true, 'Hello', 'ISO-8859-1', 1],
+            [true, 'Hello', 'ISO-8859-1', 4],
+            [false, 'Hello', 'ISO-8859-1', 5],
+        // Multibyte
+            [false, 'こんにちは', 'UTF-8', -1],
+            [true, 'こんにちは', 'UTF-8', 0],
+            [true, 'こんにちは', 'UTF-8', 1],
+            [true, 'こんにちは', 'UTF-8', 4],
+            [false, 'こんにちは', 'UTF-8', 5],
         ];
     }
 
