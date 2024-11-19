@@ -62,6 +62,50 @@ class CPathTest extends TestCase
 
     #endregion __construct
 
+    #region EnsureLeadingSlash -------------------------------------------------
+
+    #[DataProvider('ensureLeadingSlashDataProvider')]
+    function testEnsureLeadingSlash(string $expected, string $str)
+    {
+        $path = new CPath($str);
+        $this->assertSame($expected, (string)$path->EnsureLeadingSlash());
+    }
+
+    #endregion EnsureLeadingSlash
+
+    #region EnsureTrailingSlash ------------------------------------------------
+
+    #[DataProvider('ensureTrailingSlashDataProvider')]
+    function testEnsureTrailingSlash(string $expected, string $str)
+    {
+        $path = new CPath($str);
+        $this->assertSame($expected, (string)$path->EnsureTrailingSlash());
+    }
+
+    #endregion EnsureTrailingSlash
+
+    #region TrimLeadingSlashes -------------------------------------------------
+
+    #[DataProvider('trimLeadingSlashesDataProvider')]
+    function testTrimLeadingSlashes(string $expected, string $str)
+    {
+        $path = new CPath($str);
+        $this->assertSame($expected, (string)$path->TrimLeadingSlashes());
+    }
+
+    #endregion TrimLeadingSlashes
+
+    #region TrimTrailingSlashes ------------------------------------------------
+
+    #[DataProvider('trimTrailingSlashesDataProvider')]
+    function testTrimTrailingSlashes(string $expected, string $str)
+    {
+        $path = new CPath($str);
+        $this->assertSame($expected, (string)$path->TrimTrailingSlashes());
+    }
+
+    #endregion TrimTrailingSlashes
+
     #region Interface: Stringable ----------------------------------------------
 
     function testToString()
@@ -72,4 +116,232 @@ class CPathTest extends TestCase
     }
 
     #endregion Interface: Stringable
+
+    #region Data Providers -----------------------------------------------------
+
+    static function ensureLeadingSlashDataProvider()
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            return [
+                ['\\foo', 'foo'],
+                ['/foo', '/foo'],
+                ['\\foo/', 'foo/'],
+                ['/foo/', '/foo/'],
+                ['//foo', '//foo'],
+                ['\\foo//', 'foo//'],
+                ['//foo//', '//foo//'],
+                ['\\foo', '\\foo'],
+                ['\\foo\\', 'foo\\'],
+                ['\\foo\\', '\\foo\\'],
+                ['\\\\foo', '\\\\foo'],
+                ['\\foo\\\\', 'foo\\\\'],
+                ['\\\\foo\\\\', '\\\\foo\\\\'],
+                ['/', '/'],
+                ['/\\', '/\\'],
+                ['/\\/', '/\\/'],
+                ['/\\/\\', '/\\/\\'],
+                ['\\', '\\'],
+                ['\\/', '\\/'],
+                ['\\/\\', '\\/\\'],
+                ['\\/\\/', '\\/\\/'],
+                ['\\', ''],
+            ];
+        } else {
+            return [
+                ['/foo', 'foo'],
+                ['/foo', '/foo'],
+                ['/foo/', 'foo/'],
+                ['/foo/', '/foo/'],
+                ['//foo', '//foo'],
+                ['/foo//', 'foo//'],
+                ['//foo//', '//foo//'],
+                ['/\\foo', '\\foo'],
+                ['/foo\\', 'foo\\'],
+                ['/\\foo\\', '\\foo\\'],
+                ['/\\\\foo', '\\\\foo'],
+                ['/foo\\\\', 'foo\\\\'],
+                ['/\\\\foo\\\\', '\\\\foo\\\\'],
+                ['/', '/'],
+                ['//', '//'],
+                ['///', '///'],
+                ['////', '////'],
+                ['/', ''],
+            ];
+        }
+    }
+
+    static function ensureTrailingSlashDataProvider()
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            return [
+                ['foo\\', 'foo'],
+                ['/foo\\', '/foo'],
+                ['foo/', 'foo/'],
+                ['/foo/', '/foo/'],
+                ['//foo\\', '//foo'],
+                ['foo//', 'foo//'],
+                ['//foo//', '//foo//'],
+                ['\\foo\\', '\\foo'],
+                ['foo\\', 'foo\\'],
+                ['\\foo\\', '\\foo\\'],
+                ['\\\\foo\\', '\\\\foo'],
+                ['foo\\\\', 'foo\\\\'],
+                ['\\\\foo\\\\', '\\\\foo\\\\'],
+                ['/', '/'],
+                ['/\\', '/\\'],
+                ['/\\/', '/\\/'],
+                ['/\\/\\', '/\\/\\'],
+                ['\\', '\\'],
+                ['\\/', '\\/'],
+                ['\\/\\', '\\/\\'],
+                ['\\/\\/', '\\/\\/'],
+                ['\\', ''],
+            ];
+        } else {
+            return [
+                ['foo/', 'foo'],
+                ['/foo/', '/foo'],
+                ['foo/', 'foo/'],
+                ['/foo/', '/foo/'],
+                ['//foo/', '//foo'],
+                ['foo//', 'foo//'],
+                ['//foo//', '//foo//'],
+                ['\\foo/', '\\foo'],
+                ['foo\\/', 'foo\\'],
+                ['\\foo\\/', '\\foo\\'],
+                ['\\\\foo/', '\\\\foo'],
+                ['foo\\\\/', 'foo\\\\'],
+                ['\\\\foo\\\\/', '\\\\foo\\\\'],
+                ['/', '/'],
+                ['//', '//'],
+                ['///', '///'],
+                ['////', '////'],
+                ['/', ''],
+            ];
+        }
+    }
+
+    static function trimLeadingSlashesDataProvider()
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            return [
+                ['foo', '/foo'],
+                ['foo/', 'foo/'],
+                ['foo/', '/foo/'],
+                ['foo', '//foo'],
+                ['foo//', 'foo//'],
+                ['foo//', '//foo//'],
+                ['foo', '\\foo'],
+                ['foo\\', 'foo\\'],
+                ['foo\\', '\\foo\\'],
+                ['foo', '\\\\foo'],
+                ['foo\\\\', 'foo\\\\'],
+                ['foo\\\\', '\\\\foo\\\\'],
+                ['foo', '\\/\\/foo'],
+                ['foo\\/\\/', 'foo\\/\\/'],
+                ['foo\\/\\/', '\\/\\/foo\\/\\/'],
+                ['foo', '/\\/\\foo'],
+                ['foo/\\/\\', 'foo/\\/\\'],
+                ['foo/\\/\\', '/\\/\\foo/\\/\\'],
+                ['', '/'],
+                ['', '/\\'],
+                ['', '/\\/'],
+                ['', '/\\/\\'],
+                ['', '\\'],
+                ['', '\\/'],
+                ['', '\\/\\'],
+                ['', '\\/\\/'],
+                ['', ''],
+            ];
+        } else {
+            return [
+                ['foo', '/foo'],
+                ['foo/', 'foo/'],
+                ['foo/', '/foo/'],
+                ['foo', '//foo'],
+                ['foo//', 'foo//'],
+                ['foo//', '//foo//'],
+                ['\\foo', '\\foo'],
+                ['foo\\', 'foo\\'],
+                ['\\foo\\', '\\foo\\'],
+                ['\\\\foo', '\\\\foo'],
+                ['foo\\\\', 'foo\\\\'],
+                ['\\\\foo\\\\', '\\\\foo\\\\'],
+                ['\\/\\/foo', '\\/\\/foo'],
+                ['foo\\/\\/', 'foo\\/\\/'],
+                ['\\/\\/foo\\/\\/', '\\/\\/foo\\/\\/'],
+                ['\\/\\foo', '/\\/\\foo'],
+                ['foo/\\/\\', 'foo/\\/\\'],
+                ['\\/\\foo/\\/\\', '/\\/\\foo/\\/\\'],
+                ['', '/'],
+                ['', '//'],
+                ['', '///'],
+                ['', '////'],
+                ['', ''],
+            ];
+        }
+    }
+
+    static function trimTrailingSlashesDataProvider()
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            return [
+                ['/foo', '/foo'],
+                ['foo', 'foo/'],
+                ['/foo', '/foo/'],
+                ['//foo', '//foo'],
+                ['foo', 'foo//'],
+                ['//foo', '//foo//'],
+                ['\\foo', '\\foo'],
+                ['foo', 'foo\\'],
+                ['\\foo', '\\foo\\'],
+                ['\\\\foo', '\\\\foo'],
+                ['foo', 'foo\\\\'],
+                ['\\\\foo', '\\\\foo\\\\'],
+                ['\\/\\/foo', '\\/\\/foo'],
+                ['foo', 'foo\\/\\/'],
+                ['\\/\\/foo', '\\/\\/foo\\/\\/'],
+                ['/\\/\\foo', '/\\/\\foo'],
+                ['foo', 'foo/\\/\\'],
+                ['/\\/\\foo', '/\\/\\foo/\\/\\'],
+                ['', '/'],
+                ['', '/\\'],
+                ['', '/\\/'],
+                ['', '/\\/\\'],
+                ['', '\\'],
+                ['', '\\/'],
+                ['', '\\/\\'],
+                ['', '\\/\\/'],
+                ['', ''],
+            ];
+        } else {
+            return [
+                ['/foo', '/foo'],
+                ['foo', 'foo/'],
+                ['/foo', '/foo/'],
+                ['//foo', '//foo'],
+                ['foo', 'foo//'],
+                ['//foo', '//foo//'],
+                ['\\foo', '\\foo'],
+                ['foo\\', 'foo\\'],
+                ['\\foo\\', '\\foo\\'],
+                ['\\\\foo', '\\\\foo'],
+                ['foo\\\\', 'foo\\\\'],
+                ['\\\\foo\\\\', '\\\\foo\\\\'],
+                ['\\/\\/foo', '\\/\\/foo'],
+                ['foo\\/\\', 'foo\\/\\/'],
+                ['\\/\\/foo\\/\\', '\\/\\/foo\\/\\/'],
+                ['/\\/\\foo', '/\\/\\foo'],
+                ['foo/\\/\\', 'foo/\\/\\'],
+                ['/\\/\\foo/\\/\\', '/\\/\\foo/\\/\\'],
+                ['', '/'],
+                ['', '//'],
+                ['', '///'],
+                ['', '////'],
+                ['', ''],
+            ];
+        }
+    }
+
+    #endregion Data Providers
 }
