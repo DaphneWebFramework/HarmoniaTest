@@ -341,6 +341,27 @@ class CStringTest extends TestCase
 
     #endregion DeleteAt
 
+    #region Append -------------------------------------------------------------
+
+    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
+    function testAppendWithInvalidSubstringType($substring)
+    {
+        $cstr = new CString('Hello', 'ISO-8859-1');
+        $this->expectException(\TypeError::class);
+        $cstr->Append($substring);
+    }
+
+    #[DataProvider('appendDataProvider')]
+    function testAppend(string $expected, string $value, string $encoding,
+        string $substring)
+    {
+        $cstr = new CString($value, $encoding);
+        $cstr->Append($substring);
+        $this->assertSame($expected, (string)$cstr);
+    }
+
+    #endregion Append
+
     #region Left ---------------------------------------------------------------
 
     #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
@@ -1281,6 +1302,20 @@ class CStringTest extends TestCase
             'empty string, multiple characters (multibyte)' => [
                 '', '', 'UTF-8', 0, 3
             ],
+        ];
+    }
+
+    static function appendDataProvider()
+    {
+        return [
+        // Single-byte
+            ['Hello World!', 'Hello', 'ISO-8859-1', ' World!'],
+            ['Hello', 'Hello', 'ISO-8859-1', ''],
+            [' World!', '', 'ISO-8859-1', ' World!'],
+        // Multibyte
+            ['こんにちは世界', 'こんにちは', 'UTF-8', '世界'],
+            ['こんにちは', 'こんにちは', 'UTF-8', ''],
+            ['世界', '', 'UTF-8', '世界'],
         ];
     }
 
