@@ -86,39 +86,6 @@ class CStringTest extends TestCase
         );
     }
 
-    function testConstructorWithNativeString()
-    {
-        $str = 'Hello, World!';
-        $cstr = new CString($str);
-        $this->assertSame($str, (string)$cstr);
-        $this->assertSame(
-            \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
-        );
-    }
-
-    function testConstructorWithNativeStringAndNullEncoding()
-    {
-        $str = 'Hello, World!';
-        $cstr = new CString($str, null);
-        $this->assertSame($str, (string)$cstr);
-        $this->assertSame(
-            \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
-        );
-    }
-
-    function testConstructorWithNativeStringAndSpecifiedEncoding()
-    {
-        $str = 'Hello, World!';
-        $cstr = new CString($str, 'ISO-8859-1');
-        $this->assertSame($str, (string)$cstr);
-        $this->assertSame(
-            'ISO-8859-1',
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
-        );
-    }
-
     function testConstructorWithStringable()
     {
         $stringable = new class() implements \Stringable {
@@ -158,6 +125,39 @@ class CStringTest extends TestCase
         };
         $cstr = new CString($stringable, 'ISO-8859-1');
         $this->assertSame('I am Stringable', (string)$cstr);
+        $this->assertSame(
+            'ISO-8859-1',
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+        );
+    }
+
+    function testConstructorWithNativeString()
+    {
+        $str = 'Hello, World!';
+        $cstr = new CString($str);
+        $this->assertSame($str, (string)$cstr);
+        $this->assertSame(
+            \mb_internal_encoding(),
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+        );
+    }
+
+    function testConstructorWithNativeStringAndNullEncoding()
+    {
+        $str = 'Hello, World!';
+        $cstr = new CString($str, null);
+        $this->assertSame($str, (string)$cstr);
+        $this->assertSame(
+            \mb_internal_encoding(),
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+        );
+    }
+
+    function testConstructorWithNativeStringAndSpecifiedEncoding()
+    {
+        $str = 'Hello, World!';
+        $cstr = new CString($str, 'ISO-8859-1');
+        $this->assertSame($str, (string)$cstr);
         $this->assertSame(
             'ISO-8859-1',
             AccessHelper::GetNonPublicProperty($cstr, 'encoding')
@@ -324,8 +324,8 @@ class CStringTest extends TestCase
         ?string $characters = null)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertEquals($expected, (string)$cstr->Trim($characters));
-        $this->assertEquals($value, (string)$cstr);
+        $this->assertSame($expected, (string)$cstr->Trim($characters));
+        $this->assertSame($value, (string)$cstr);
     }
 
     #endregion Trim
@@ -337,8 +337,8 @@ class CStringTest extends TestCase
         ?string $characters = null)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertEquals($expected, (string)$cstr->TrimLeft($characters));
-        $this->assertEquals($value, (string)$cstr);
+        $this->assertSame($expected, (string)$cstr->TrimLeft($characters));
+        $this->assertSame($value, (string)$cstr);
     }
 
     #endregion TrimLeft
@@ -350,8 +350,8 @@ class CStringTest extends TestCase
         ?string $characters = null)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertEquals($expected, (string)$cstr->TrimRight($characters));
-        $this->assertEquals($value, (string)$cstr);
+        $this->assertSame($expected, (string)$cstr->TrimRight($characters));
+        $this->assertSame($value, (string)$cstr);
     }
 
     #endregion TrimRight
@@ -558,7 +558,7 @@ class CStringTest extends TestCase
         foreach ($cstr as $char) {
             $result[] = $char;
         }
-        $this->assertEquals(['H', 'e', 'l', 'l', 'o'], $result);
+        $this->assertSame(['H', 'e', 'l', 'l', 'o'], $result);
     }
 
     function testGetIteratorForMultiByteEncoding()
@@ -568,7 +568,7 @@ class CStringTest extends TestCase
         foreach ($cstr as $char) {
             $result[] = $char;
         }
-        $this->assertEquals(['こ', 'ん', 'に', 'ち', 'は'], $result);
+        $this->assertSame(['こ', 'ん', 'に', 'ち', 'は'], $result);
     }
 
     function testGetIteratorForEmptyString()

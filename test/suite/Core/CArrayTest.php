@@ -209,7 +209,7 @@ class CArrayTest extends TestCase
         foreach ($carr as $element) {
             $result[] = $element;
         }
-        $this->assertEquals([1, 2, 3, 4, 5], $result);
+        $this->assertSame([1, 2, 3, 4, 5], $result);
     }
 
     public function testGetIteratorForAssociativeArray()
@@ -219,7 +219,7 @@ class CArrayTest extends TestCase
         foreach ($carr as $key => $value) {
             $result[$key] = $value;
         }
-        $this->assertEquals(['a' => 'apple', 'b' => 'banana', 'c' => 'cherry'], $result);
+        $this->assertSame(['a' => 'apple', 'b' => 'banana', 'c' => 'cherry'], $result);
     }
 
     public function testGetIteratorForEmptyArray()
