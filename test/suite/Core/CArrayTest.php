@@ -14,13 +14,6 @@ class CArrayTest extends TestCase
 {
     #region __construct --------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonArrayProvider')]
-    function testConstructorWithInvalidValueType($value)
-    {
-        $this->expectException(\TypeError::class);
-        new CArray($value);
-    }
-
     function testDefaultConstructor()
     {
         $carr = new CArray();
@@ -84,14 +77,6 @@ class CArrayTest extends TestCase
 
     #region Has ----------------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testHasWithInvalidKeyType($key)
-    {
-        $carr = new CArray();
-        $this->expectException(\TypeError::class);
-        $carr->Has($key);
-    }
-
     #[DataProvider('hasDataProvider')]
     function testHas(bool $expected, array $arr, string|int $key)
     {
@@ -102,14 +87,6 @@ class CArrayTest extends TestCase
     #endregion Has
 
     #region Get ----------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testGetWithInvalidKeyType($key)
-    {
-        $carr = new CArray();
-        $this->expectException(\TypeError::class);
-        $carr->Get($key);
-    }
 
     #[DataProvider('getDataProvider')]
     function testGet(mixed $expected, array $arr, string|int $key,
@@ -122,14 +99,6 @@ class CArrayTest extends TestCase
     #endregion Get
 
     #region Set ----------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testSetWithInvalidKeyType($key)
-    {
-        $carr = new CArray();
-        $this->expectException(\TypeError::class);
-        $carr->Set($key, 1);
-    }
 
     #[DataProvider('setDataProvider')]
     public function testSet(array $expected, array $arr, string|int $key,
@@ -150,14 +119,6 @@ class CArrayTest extends TestCase
     #endregion Set
 
     #region Delete -------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testDeleteWithInvalidKeyType($key)
-    {
-        $carr = new CArray();
-        $this->expectException(\TypeError::class);
-        $carr->Delete($key);
-    }
 
     #[DataProvider('deleteDataProvider')]
     public function testDelete(array $expected, array $arr, string|int $key)

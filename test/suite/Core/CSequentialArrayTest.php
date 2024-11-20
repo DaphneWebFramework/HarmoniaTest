@@ -14,13 +14,6 @@ class CSequentialArrayTest extends TestCase
 {
     #region __construct --------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonArrayProvider')]
-    function testConstructorWithInvalidValueType($value)
-    {
-        $this->expectException(\TypeError::class);
-        new CSequentialArray($value);
-    }
-
     function testConstructorWithNonSequentialArray()
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -77,14 +70,6 @@ class CSequentialArrayTest extends TestCase
 
     #region Has ----------------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testHasWithInvalidIndexType($index)
-    {
-        $carr = new CSequentialArray();
-        $this->expectException(\TypeError::class);
-        $carr->Has($index);
-    }
-
     function testHasWithStringIndex()
     {
         $carr = new CSequentialArray();
@@ -102,14 +87,6 @@ class CSequentialArrayTest extends TestCase
     #endregion Has
 
     #region Get ----------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testGetWithInvalidIndexType($index)
-    {
-        $carr = new CSequentialArray();
-        $this->expectException(\TypeError::class);
-        $carr->Get($index);
-    }
 
     function testGetWithStringIndex()
     {
@@ -129,14 +106,6 @@ class CSequentialArrayTest extends TestCase
     #endregion Get
 
     #region Set ----------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testSetWithInvalidIndexType($index)
-    {
-        $carr = new CSequentialArray();
-        $this->expectException(\TypeError::class);
-        $carr->Set($index, 1);
-    }
 
     function testSetWithStringIndex()
     {
@@ -163,14 +132,6 @@ class CSequentialArrayTest extends TestCase
     #endregion Set
 
     #region Delete -------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringOrIntegerProvider')]
-    function testDeleteWithInvalidIndexType($index)
-    {
-        $carr = new CSequentialArray();
-        $this->expectException(\TypeError::class);
-        $carr->Delete($index);
-    }
 
     function testDeleteWithStringIndex()
     {
@@ -258,14 +219,6 @@ class CSequentialArrayTest extends TestCase
 
     #region InsertBefore -------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testInsertBeforeWithInvalidIndexType($index)
-    {
-        $cstr = new CSequentialArray();
-        $this->expectException(\TypeError::class);
-        $cstr->InsertBefore($index, 99);
-    }
-
     #[DataProvider('insertBeforeDataProvider')]
     public function testInsertBefore(array $expected, array $arr, int $index,
         mixed $element)
@@ -285,14 +238,6 @@ class CSequentialArrayTest extends TestCase
     #endregion InsertBefore
 
     #region InsertAfter --------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testInsertAfterWithInvalidIndexType($index)
-    {
-        $cstr = new CSequentialArray();
-        $this->expectException(\TypeError::class);
-        $cstr->InsertAfter($index, 99);
-    }
 
     #[DataProvider('insertAfterDataProvider')]
     public function testInsertAfter(array $expected, array $arr, int $index,

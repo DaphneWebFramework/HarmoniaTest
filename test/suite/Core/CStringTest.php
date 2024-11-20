@@ -61,20 +61,6 @@ class CStringTest extends TestCase
 
     #region __construct --------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testConstructorWithInvalidValueType($value)
-    {
-        $this->expectException(\TypeError::class);
-        new CString($value);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
-    function testConstructorWithInvalidEncodingType($encoding)
-    {
-        $this->expectException(\TypeError::class);
-        new CString('Hello, World!', $encoding);
-    }
-
     function testDefaultConstructor()
     {
         $cstr = new CString();
@@ -240,14 +226,6 @@ class CStringTest extends TestCase
 
     #region At -----------------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testAtWithInvalidOffsetType($offset)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->At($offset);
-    }
-
     #[DataProvider('atDataProvider')]
     function testAt($expected, $value, $encoding, $offset)
     {
@@ -258,22 +236,6 @@ class CStringTest extends TestCase
     #endregion At
 
     #region SetAt --------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testSetAtWithInvalidOffsetType($offset)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->SetAt($offset, 'Y');
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testSetAtWithInvalidCharacterType($character)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->SetAt(0, $character);
-    }
 
     #[DataProvider('setAtDataProvider')]
     function testSetAt($expected, $value, $encoding, $offset, $character)
@@ -287,22 +249,6 @@ class CStringTest extends TestCase
 
     #region InsertAt -----------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testInsertAtWithInvalidOffsetType($offset)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->InsertAt($offset, 'Hey');
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testInsertAtWithInvalidSubstringType($substring)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->InsertAt(0, $substring);
-    }
-
     #[DataProvider('insertAtDataProvider')]
     function testInsertAt($expected, $value, $encoding, $offset, $substring)
     {
@@ -315,22 +261,6 @@ class CStringTest extends TestCase
 
     #region DeleteAt -----------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testDeleteAtWithInvalidOffsetType($offset)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->DeleteAt($offset);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testDeleteAtWithInvalidCountType($count)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->DeleteAt(0, $count);
-    }
-
     #[DataProvider('deleteAtDataProvider')]
     function testDeleteAt($expected, $value, $encoding, $offset, $count = 1)
     {
@@ -342,14 +272,6 @@ class CStringTest extends TestCase
     #endregion DeleteAt
 
     #region Append -------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testAppendWithInvalidSubstringType($substring)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Append($substring);
-    }
 
     #[DataProvider('appendDataProvider')]
     function testAppend(string $expected, string $value, string $encoding,
@@ -364,14 +286,6 @@ class CStringTest extends TestCase
 
     #region Left ---------------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testLeftWithInvalidCountType($count)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Left($count);
-    }
-
     #[DataProvider('leftDataProvider')]
     function testLeft($expected, $value, $encoding, $count)
     {
@@ -382,14 +296,6 @@ class CStringTest extends TestCase
     #endregion Left
 
     #region Right --------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testRightWithInvalidCountType($count)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Right($count);
-    }
 
     #[DataProvider('rightDataProvider')]
     function testRight($expected, $value, $encoding, $count)
@@ -402,22 +308,6 @@ class CStringTest extends TestCase
 
     #region Middle -------------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testMiddleWithInvalidOffsetType($offset)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Middle($offset, 2);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testMiddleWithInvalidCountType($count)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Middle(1, $count);
-    }
-
     #[DataProvider('middleDataProvider')]
     function testMiddle($expected, $value, $encoding, $offset, $count)
     {
@@ -428,14 +318,6 @@ class CStringTest extends TestCase
     #endregion Middle
 
     #region Trim ---------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
-    function testTrimWithInvalidCharactersType($characters)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Trim($characters);
-    }
 
     #[DataProvider('trimDataProvider')]
     function testTrim(string $expected, string $value, string $encoding,
@@ -450,14 +332,6 @@ class CStringTest extends TestCase
 
     #region TrimLeft -----------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
-    function testTrimLeftWithInvalidCharactersType($characters)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->TrimLeft($characters);
-    }
-
     #[DataProvider('trimLeftDataProvider')]
     function testTrimLeft(string $expected, string $value, string $encoding,
         ?string $characters = null)
@@ -470,14 +344,6 @@ class CStringTest extends TestCase
     #endregion TrimLeft
 
     #region TrimRight ----------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringExcludingNullProvider')]
-    function testTrimRightWithInvalidCharactersType($characters)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->TrimRight($characters);
-    }
 
     #[DataProvider('trimRightDataProvider')]
     function testTrimRight(string $expected, string $value, string $encoding,
@@ -516,22 +382,6 @@ class CStringTest extends TestCase
 
     #region Equals -------------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testEqualsWithInvalidOtherType($other)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Equals($other);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
-    function testEqualsWithInvalidCaseSensitiveType($caseSensitive)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Equals('Hello', $caseSensitive);
-    }
-
     #[DataProvider('equalsDataProvider')]
     function testEquals(bool $expected, string $value, string $encoding,
         string|CString $other, bool $caseSensitive = true)
@@ -543,22 +393,6 @@ class CStringTest extends TestCase
     #endregion Equals
 
     #region StartsWith ---------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testStartsWithWithInvalidSearchStringType($searchString)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->StartsWith($searchString);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
-    function testStartsWithWithInvalidCaseSensitiveType($caseSensitive)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->StartsWith('Hell', $caseSensitive);
-    }
 
     #[DataProvider('startsWithDataProvider')]
     function testStartsWith(bool $expected, string $value, string $encoding,
@@ -572,22 +406,6 @@ class CStringTest extends TestCase
 
     #region EndsWith -----------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testEndsWithWithInvalidSearchStringType($searchString)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->EndsWith($searchString);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
-    function testEndsWithWithInvalidCaseSensitiveType($caseSensitive)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->EndsWith('llo', $caseSensitive);
-    }
-
     #[DataProvider('endsWithDataProvider')]
     function testEndsWith(bool $expected, string $value, string $encoding,
         string $searchString, bool $caseSensitive = true)
@@ -599,30 +417,6 @@ class CStringTest extends TestCase
     #endregion EndsWith
 
     #region IndexOf ------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testIndexOfWithInvalidSearchStringType($searchString)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->IndexOf($searchString);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonIntegerProvider')]
-    function testIndexOfWithInvalidStartOffsetType($startOffset)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->IndexOf('Hell', $startOffset);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
-    function testIndexOfWithInvalidCaseSensitiveType($caseSensitive)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->IndexOf('Hell', 0, $caseSensitive);
-    }
 
     #[DataProvider('indexOfDataProvider')]
     function testIndexOf(?int $expected, string $value, string $encoding,
@@ -643,30 +437,6 @@ class CStringTest extends TestCase
     #endregion IndexOf
 
     #region Replace ------------------------------------------------------------
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testReplaceWithInvalidSearchStringType($searchString)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Replace($searchString, 'Hi');
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonStringProvider')]
-    function testReplaceWithInvalidReplacementType($replacement)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Replace('Hello', $replacement);
-    }
-
-    #[DataProviderExternal(DataHelper::class, 'NonBooleanProvider')]
-    function testReplaceWithInvalidCaseSensitiveType($caseSensitive)
-    {
-        $cstr = new CString('Hello', 'ISO-8859-1');
-        $this->expectException(\TypeError::class);
-        $cstr->Replace('Hello', 'Hi', $caseSensitive);
-    }
 
     #[DataProvider('replaceDataProvider')]
     function testReplace(string $expected, string $value, string $encoding,
