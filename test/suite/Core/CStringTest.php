@@ -282,6 +282,18 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
+    function testAppendWithStringable()
+    {
+        $cstr = new CString('Hello!', 'ISO-8859-1');
+        $stringable = new class() implements \Stringable {
+            function __toString() {
+                return ' I am Stringable';
+            }
+        };
+        $cstr->Append($stringable);
+        $this->assertSame('Hello! I am Stringable', (string)$cstr);
+    }
+
     #endregion Append
 
     #region Left ---------------------------------------------------------------
