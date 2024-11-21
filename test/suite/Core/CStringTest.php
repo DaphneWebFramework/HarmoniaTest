@@ -257,6 +257,18 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
+    function testInsertAtWithStringable()
+    {
+        $cstr = new CString('World!');
+        $stringable = new class() implements \Stringable {
+            function __toString() {
+                return 'Hello, ';
+            }
+        };
+        $cstr->InsertAt(0, $stringable);
+        $this->assertSame('Hello, World!', (string)$cstr);
+    }
+
     #endregion InsertAt
 
     #region DeleteAt -----------------------------------------------------------
@@ -402,6 +414,26 @@ class CStringTest extends TestCase
         $this->assertSame($expected, $cstr->Equals($other, $caseSensitive));
     }
 
+    function testEqualsWithStringable()
+    {
+        $cstr = new CString('Hello');
+        $other = new class() implements \Stringable {
+            function __toString() {
+                return 'hELLO';
+            }
+        };
+        $this->assertFalse($cstr->Equals($other));
+        $this->assertTrue($cstr->Equals($other, false));
+    }
+
+    function testEqualsWithCstring()
+    {
+        $cstr = new CString('Hello');
+        $other = new CString('hELLO');
+        $this->assertFalse($cstr->Equals($other));
+        $this->assertTrue($cstr->Equals($other, false));
+    }
+
     #endregion Equals
 
     #region StartsWith ---------------------------------------------------------
@@ -414,6 +446,26 @@ class CStringTest extends TestCase
         $this->assertSame($expected, $cstr->StartsWith($searchString, $caseSensitive));
     }
 
+    function testStartsWithWithStringable()
+    {
+        $cstr = new CString('Hello, World!');
+        $searchString = new class() implements \Stringable {
+            function __toString() {
+                return 'hELLO';
+            }
+        };
+        $this->assertFalse($cstr->StartsWith($searchString));
+        $this->assertTrue($cstr->StartsWith($searchString, false));
+    }
+
+    function testStartsWithWithCstring()
+    {
+        $cstr = new CString('Hello, World!');
+        $searchString = new CString('hELLO');
+        $this->assertFalse($cstr->StartsWith($searchString));
+        $this->assertTrue($cstr->StartsWith($searchString, false));
+    }
+
     #endregion StartsWith
 
     #region EndsWith -----------------------------------------------------------
@@ -424,6 +476,26 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($expected, $cstr->EndsWith($searchString, $caseSensitive));
+    }
+
+    function testEndsWithWithStringable()
+    {
+        $cstr = new CString('Hello, World!');
+        $searchString = new class() implements \Stringable {
+            function __toString() {
+                return 'wORLD!';
+            }
+        };
+        $this->assertFalse($cstr->EndsWith($searchString));
+        $this->assertTrue($cstr->EndsWith($searchString, false));
+    }
+
+    function testEndsWithWithCstring()
+    {
+        $cstr = new CString('Hello, World!');
+        $searchString = new CString('wORLD!');
+        $this->assertFalse($cstr->EndsWith($searchString));
+        $this->assertTrue($cstr->EndsWith($searchString, false));
     }
 
     #endregion EndsWith
@@ -439,11 +511,16 @@ class CStringTest extends TestCase
             $caseSensitive));
     }
 
-    function testIndexOfWithCStringInstance()
+    function testIndexOfWithStringable()
     {
-        $cstr = new CString('Hello, World!', 'UTF-8');
-        $searchString = new CString('World', 'UTF-8');
-        $this->assertSame(7, $cstr->IndexOf($searchString));
+        $cstr = new CString('Hello, World!');
+        $searchString = new class() implements \Stringable {
+            function __toString() {
+                return 'wORLD!';
+            }
+        };
+        $this->assertNull($cstr->IndexOf($searchString));
+        $this->assertSame(7, $cstr->IndexOf($searchString, 0, false));
     }
 
     #endregion IndexOf
@@ -457,6 +534,25 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $result = $cstr->Replace($searchString, $replacement, $caseSensitive);
         $this->assertSame($expected, (string)$result);
+    }
+
+    function testReplaceWithStringable()
+    {
+        $cstr = new CString('Hello, World!');
+        $searchString = new class() implements \Stringable {
+            function __toString() {
+                return 'wORLD!';
+            }
+        };
+        $replacement = new class() implements \Stringable {
+            function __toString() {
+                return 'Universe!';
+            }
+        };
+        $this->assertSame('Hello, World!',
+            (string)$cstr->Replace($searchString, $replacement));
+        $this->assertSame('Hello, Universe!',
+            (string)$cstr->Replace($searchString, $replacement, false));
     }
 
     #endregion Replace
