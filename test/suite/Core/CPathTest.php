@@ -443,6 +443,7 @@ class CPathTest extends TestCase
                 ['\\\\foo', '\\\\foo'],
                 ['\\foo\\\\', 'foo\\\\'],
                 ['\\\\foo\\\\', '\\\\foo\\\\'],
+                ['\\', ''],
                 ['/', '/'],
                 ['/\\', '/\\'],
                 ['/\\/', '/\\/'],
@@ -451,7 +452,6 @@ class CPathTest extends TestCase
                 ['\\/', '\\/'],
                 ['\\/\\', '\\/\\'],
                 ['\\/\\/', '\\/\\/'],
-                ['\\', ''],
             ];
         } else {
             return [
@@ -468,11 +468,11 @@ class CPathTest extends TestCase
                 ['/\\\\foo', '\\\\foo'],
                 ['/foo\\\\', 'foo\\\\'],
                 ['/\\\\foo\\\\', '\\\\foo\\\\'],
+                ['/', ''],
                 ['/', '/'],
                 ['//', '//'],
                 ['///', '///'],
                 ['////', '////'],
-                ['/', ''],
             ];
         }
     }
@@ -494,6 +494,7 @@ class CPathTest extends TestCase
                 ['\\\\foo\\', '\\\\foo'],
                 ['foo\\\\', 'foo\\\\'],
                 ['\\\\foo\\\\', '\\\\foo\\\\'],
+                ['\\', ''],
                 ['/', '/'],
                 ['/\\', '/\\'],
                 ['/\\/', '/\\/'],
@@ -502,7 +503,6 @@ class CPathTest extends TestCase
                 ['\\/', '\\/'],
                 ['\\/\\', '\\/\\'],
                 ['\\/\\/', '\\/\\/'],
-                ['\\', ''],
             ];
         } else {
             return [
@@ -519,11 +519,11 @@ class CPathTest extends TestCase
                 ['\\\\foo/', '\\\\foo'],
                 ['foo\\\\/', 'foo\\\\'],
                 ['\\\\foo\\\\/', '\\\\foo\\\\'],
+                ['/', ''],
                 ['/', '/'],
                 ['//', '//'],
                 ['///', '///'],
                 ['////', '////'],
-                ['/', ''],
             ];
         }
     }
@@ -532,6 +532,7 @@ class CPathTest extends TestCase
     {
         if (PHP_OS_FAMILY === 'Windows') {
             return [
+                ['foo', 'foo'],
                 ['foo', '/foo'],
                 ['foo/', 'foo/'],
                 ['foo/', '/foo/'],
@@ -550,6 +551,7 @@ class CPathTest extends TestCase
                 ['foo', '/\\/\\foo'],
                 ['foo/\\/\\', 'foo/\\/\\'],
                 ['foo/\\/\\', '/\\/\\foo/\\/\\'],
+                ['', ''],
                 ['', '/'],
                 ['', '/\\'],
                 ['', '/\\/'],
@@ -558,10 +560,10 @@ class CPathTest extends TestCase
                 ['', '\\/'],
                 ['', '\\/\\'],
                 ['', '\\/\\/'],
-                ['', ''],
             ];
         } else {
             return [
+                ['foo', 'foo'],
                 ['foo', '/foo'],
                 ['foo/', 'foo/'],
                 ['foo/', '/foo/'],
@@ -580,11 +582,11 @@ class CPathTest extends TestCase
                 ['\\/\\foo', '/\\/\\foo'],
                 ['foo/\\/\\', 'foo/\\/\\'],
                 ['\\/\\foo/\\/\\', '/\\/\\foo/\\/\\'],
+                ['', ''],
                 ['', '/'],
                 ['', '//'],
                 ['', '///'],
                 ['', '////'],
-                ['', ''],
             ];
         }
     }
@@ -593,6 +595,7 @@ class CPathTest extends TestCase
     {
         if (PHP_OS_FAMILY === 'Windows') {
             return [
+                ['foo', 'foo'],
                 ['/foo', '/foo'],
                 ['foo', 'foo/'],
                 ['/foo', '/foo/'],
@@ -611,6 +614,7 @@ class CPathTest extends TestCase
                 ['/\\/\\foo', '/\\/\\foo'],
                 ['foo', 'foo/\\/\\'],
                 ['/\\/\\foo', '/\\/\\foo/\\/\\'],
+                ['', ''],
                 ['', '/'],
                 ['', '/\\'],
                 ['', '/\\/'],
@@ -619,10 +623,10 @@ class CPathTest extends TestCase
                 ['', '\\/'],
                 ['', '\\/\\'],
                 ['', '\\/\\/'],
-                ['', ''],
             ];
         } else {
             return [
+                ['foo', 'foo'],
                 ['/foo', '/foo'],
                 ['foo', 'foo/'],
                 ['/foo', '/foo/'],
@@ -641,11 +645,11 @@ class CPathTest extends TestCase
                 ['/\\/\\foo', '/\\/\\foo'],
                 ['foo/\\/\\', 'foo/\\/\\'],
                 ['/\\/\\foo/\\/\\', '/\\/\\foo/\\/\\'],
+                ['', ''],
                 ['', '/'],
                 ['', '//'],
                 ['', '///'],
                 ['', '////'],
-                ['', ''],
             ];
         }
     }
