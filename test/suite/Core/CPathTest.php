@@ -27,20 +27,11 @@ class CPathTest extends TestCase
         $copy = new CPath($original);
         $this->assertSame((string)$original, (string)$copy);
         // Ensure modifying the original does not affect the copy.
-        AccessHelper::GetNonPublicProperty($original, 'value')->Append('/bin');
+        $value = AccessHelper::GetNonPublicProperty($original, 'value');
+        $value .= '/bin';
+        AccessHelper::SetNonPublicProperty($original, 'value', $value);
         $this->assertSame('/usr/local/bin', (string)$original);
         $this->assertSame('/usr/local', (string)$copy);
-    }
-
-    public function testConstructWithCstring()
-    {
-        $cstr = new CString('/etc/config');
-        $path = new CPath($cstr);
-        $this->assertSame((string)$cstr, (string)$path);
-        // Ensure modifying the original does not affect the copy.
-        $cstr->Append('/extra');
-        $this->assertSame('/etc/config/extra', (string)$cstr);
-        $this->assertSame('/etc/config', (string)$path);
     }
 
     function testConstructorWithStringable()
@@ -58,6 +49,12 @@ class CPathTest extends TestCase
     {
         $path = new CPath('/var/www');
         $this->assertSame('/var/www', (string)$path);
+    }
+
+    function testConstructorTrimsWhitespace()
+    {
+        $path = new CPath('   /usr/local   ');
+        $this->assertSame('/usr/local', (string)$path);
     }
 
     #endregion __construct
@@ -271,6 +268,9 @@ class CPathTest extends TestCase
                 ['foo\\bar', ['foo', '\\/\\', 'bar']],
                 ['foo\\bar', ['foo', '\\/\\/', 'bar']],
 
+                ['C:\foo\bar/baz', ['   C:\\foo   ', 'bar/   ', 'baz   ']],
+                ['C:\foo\bar   /', ['   C:\\foo   ', 'bar   /']],
+
                 ['', ['']],
                 ['', ['', '']],
                 ['', ['', '', '']],
@@ -401,6 +401,9 @@ class CPathTest extends TestCase
                 ['foo/bar', ['foo', '', 'bar']],
                 ['foo/bar', ['foo', '/', 'bar']],
                 ['foo/bar', ['foo', '//', 'bar']],
+
+                ['/foo/bar/baz', ['   /foo   ', 'bar/   ', 'baz   ']],
+                ['/foo/bar   /', ['   /foo   ', 'bar   /']],
 
                 ['', ['']],
                 ['', ['', '']],
