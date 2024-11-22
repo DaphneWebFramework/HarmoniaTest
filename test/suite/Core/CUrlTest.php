@@ -27,20 +27,11 @@ class CUrlTest extends TestCase
         $copy = new CUrl($original);
         $this->assertSame((string)$original, (string)$copy);
         // Ensure modifying the original does not affect the copy.
-        AccessHelper::GetNonPublicProperty($original, 'value')->Append('/extra');
+        $value = AccessHelper::GetNonPublicProperty($original, 'value');
+        $value .= '/extra';
+        AccessHelper::SetNonPublicProperty($original, 'value', $value);
         $this->assertSame('https://example.com/path/extra', (string)$original);
         $this->assertSame('https://example.com/path', (string)$copy);
-    }
-
-    public function testConstructWithCString()
-    {
-        $cstr = new CString('http://test.local');
-        $url = new CUrl($cstr);
-        $this->assertSame((string)$cstr, (string)$url);
-        // Ensure modifying the original does not affect the copy.
-        $cstr->Append('/api');
-        $this->assertSame('http://test.local/api', (string)$cstr);
-        $this->assertSame('http://test.local', (string)$url);
     }
 
     function testConstructorWithStringable()
@@ -57,6 +48,12 @@ class CUrlTest extends TestCase
     function testConstructorWithNativeString()
     {
         $url = new CUrl('https://openai.com');
+        $this->assertSame('https://openai.com', (string)$url);
+    }
+
+    function testConstructorTrimsWhitespace()
+    {
+        $url = new CUrl('   https://openai.com   ');
         $this->assertSame('https://openai.com', (string)$url);
     }
 
@@ -216,6 +213,9 @@ class CUrlTest extends TestCase
             ['foo/bar', ['foo', '//', 'bar']],
             ['foo/bar', ['foo', '///', 'bar']],
             ['foo/bar', ['foo', '////', 'bar']],
+
+            ['/foo/bar/baz', ['   /foo   ', 'bar/   ', 'baz   ']],
+            ['/foo/bar   /', ['   /foo   ', 'bar   /']],
 
             ['', ['']],
             ['', ['', '']],
