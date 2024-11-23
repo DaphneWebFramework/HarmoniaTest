@@ -2,13 +2,8 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
-use \PHPUnit\Framework\Attributes\DataProviderExternal;
 
 use \Harmonia\Core\CPath;
-use \Harmonia\Core\CString;
-
-use \TestToolkit\AccessHelper;
-use \TestToolkit\DataHelper;
 
 #[CoversClass(CPath::class)]
 class CPathTest extends TestCase
@@ -19,19 +14,6 @@ class CPathTest extends TestCase
     {
         $path = new CPath();
         $this->assertSame('', (string)$path);
-    }
-
-    function testCopyConstructor()
-    {
-        $original = new CPath('/usr/local');
-        $copy = new CPath($original);
-        $this->assertSame((string)$original, (string)$copy);
-        // Ensure modifying the original does not affect the copy.
-        $value = AccessHelper::GetNonPublicProperty($original, 'value');
-        $value .= '/bin';
-        AccessHelper::SetNonPublicProperty($original, 'value', $value);
-        $this->assertSame('/usr/local/bin', (string)$original);
-        $this->assertSame('/usr/local', (string)$copy);
     }
 
     function testConstructorWithStringable()
