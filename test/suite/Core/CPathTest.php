@@ -8,6 +8,25 @@ use \Harmonia\Core\CPath;
 #[CoversClass(CPath::class)]
 class CPathTest extends TestCase
 {
+    static ?string $originalWorkingDirectory = null;
+
+    static function setUpBeforeClass(): void
+    {
+        $cwd = \getcwd();
+        if (\basename($cwd) !== 'test') {
+            \chdir('test');
+            self::$originalWorkingDirectory = $cwd;
+        }
+    }
+
+    static function tearDownAfterClass(): void
+    {
+        if (self::$originalWorkingDirectory !== null) {
+            \chdir(self::$originalWorkingDirectory);
+            self::$originalWorkingDirectory = null;
+        }
+    }
+
     #region __construct --------------------------------------------------------
 
     function testDefaultConstructor()
