@@ -413,29 +413,49 @@ class CStringTest extends TestCase
 
     #endregion TrimRight, TrimRightInPlace
 
-    #region Lowercase ----------------------------------------------------------
+    #region Lowercase, LowercaseInPlace ----------------------------------------
 
     #[DataProvider('lowercaseDataProvider')]
     function testLowercase(string $expected, string $value, string $encoding)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, (string)$cstr->Lowercase());
+        $lowercased = $cstr->Lowercase();
+        $this->assertNotSame($cstr, $lowercased);
         $this->assertSame($value, (string)$cstr);
+        $this->assertSame($expected, (string)$lowercased);
     }
 
-    #endregion Lowercase
+    #[DataProvider('lowercaseDataProvider')]
+    function testLowercaseInPlace(string $expected, string $value, string $encoding)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($cstr, $cstr->LowercaseInPlace());
+        $this->assertSame($expected, (string)$cstr);
+    }
 
-    #region Uppercase ----------------------------------------------------------
+    #endregion Lowercase, LowercaseInPlace
+
+    #region Uppercase, UppercaseInPlace ----------------------------------------
 
     #[DataProvider('uppercaseDataProvider')]
     function testUppercase(string $expected, string $value, string $encoding)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, (string)$cstr->Uppercase());
+        $uppercased = $cstr->Uppercase();
+        $this->assertNotSame($cstr, $uppercased);
         $this->assertSame($value, (string)$cstr);
+        $this->assertSame($expected, (string)$uppercased);
     }
 
-    #endregion Uppercase
+    #[DataProvider('uppercaseDataProvider')]
+    function testUppercaseInPlace(string $expected, string $value, string $encoding)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($cstr, $cstr->UppercaseInPlace());
+        $this->assertSame($expected, (string)$cstr);
+    }
+
+    #endregion Uppercase, UppercaseInPlace
 
     #region Equals -------------------------------------------------------------
 
