@@ -283,14 +283,25 @@ class CStringTest extends TestCase
 
     #endregion DeleteAt
 
-    #region Append -------------------------------------------------------------
+    #region Append, AppendInPlace ----------------------------------------------
 
     #[DataProvider('appendDataProvider')]
     function testAppend(string $expected, string $value, string $encoding,
         string $substring)
     {
         $cstr = new CString($value, $encoding);
-        $cstr->Append($substring);
+        $appended = $cstr->Append($substring);
+        $this->assertNotSame($cstr, $appended);
+        $this->assertSame($value, (string)$cstr);
+        $this->assertSame($expected, (string)$appended);
+    }
+
+    #[DataProvider('appendDataProvider')]
+    function testAppendInPlace(string $expected, string $value, string $encoding,
+        string $substring)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($cstr, $cstr->AppendInPlace($substring));
         $this->assertSame($expected, (string)$cstr);
     }
 
@@ -302,11 +313,23 @@ class CStringTest extends TestCase
                 return ' I am Stringable';
             }
         };
-        $cstr->Append($stringable);
-        $this->assertSame('Hello! I am Stringable', (string)$cstr);
+        $this->assertSame('Hello! I am Stringable',
+            (string)$cstr->Append($stringable));
     }
 
-    #endregion Append
+    function testAppendInPlaceWithStringable()
+    {
+        $cstr = new CString('Hello!', 'ISO-8859-1');
+        $stringable = new class() implements \Stringable {
+            function __toString() {
+                return ' I am Stringable';
+            }
+        };
+        $this->assertSame('Hello! I am Stringable',
+            (string)$cstr->AppendInPlace($stringable));
+    }
+
+    #endregion Append, AppendInPlace
 
     #region Left ---------------------------------------------------------------
 
@@ -618,10 +641,25 @@ class CStringTest extends TestCase
             (string)$cstr->Replace($searchString, $replacement));
         $this->assertSame('Hello, Universe!',
             (string)$cstr->Replace($searchString, $replacement, false));
+    }
 
-        $this->assertSame($cstr,
-            $cstr->ReplaceInPlace($searchString, $replacement, false));
-        $this->assertSame('Hello, Universe!', (string)$cstr);
+    function testReplaceInPlaceWithStringable()
+    {
+        $cstr = new CString('Hello, World!');
+        $searchString = new class() implements \Stringable {
+            function __toString() {
+                return 'wORLD!';
+            }
+        };
+        $replacement = new class() implements \Stringable {
+            function __toString() {
+                return 'Universe!';
+            }
+        };
+        $this->assertSame('Hello, World!',
+            (string)$cstr->ReplaceInPlace($searchString, $replacement));
+        $this->assertSame('Hello, Universe!',
+            (string)$cstr->ReplaceInPlace($searchString, $replacement, false));
     }
 
     #endregion Replace, ReplaceInPlace
