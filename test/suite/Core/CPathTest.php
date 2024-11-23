@@ -97,16 +97,43 @@ class CPathTest extends TestCase
 
     #endregion TrimTrailingSlashes
 
-    #region Interface: Stringable ----------------------------------------------
+    #region IsFile -------------------------------------------------------------
 
-    function testToString()
+    #[DataProvider('isFileDataProvider')]
+    function testIsFile($expected, $value)
     {
-        $str = '/usr/bin';
-        $path = new CPath($str);
-        $this->assertSame($str, (string)$path);
+        $path = new CPath($value);
+        $this->assertSame($expected, $path->IsFile());
     }
 
-    #endregion Interface: Stringable
+    #endregion IsFile
+
+    #region IsDirectory --------------------------------------------------------
+
+    #[DataProvider('isDirectoryDataProvider')]
+    function testIsDirectory($expected, $value)
+    {
+        $path = new CPath($value);
+        $this->assertSame($expected, $path->IsDirectory());
+    }
+
+    #endregion IsDirectory
+
+    #region ToAbsolute ---------------------------------------------------------
+
+    #[DataProvider('toAbsoluteDataProvider')]
+    function testToAbsolute($expected, $value)
+    {
+        $path = new CPath($value);
+        $absolutePath = $path->ToAbsolute();
+        if ($expected === null) {
+            $this->assertNull($absolutePath);
+        } else {
+            $this->assertSame($expected, (string)$absolutePath);
+        }
+    }
+
+    #endregion ToAbsolute
 
     #region Data Providers -----------------------------------------------------
 
@@ -637,6 +664,67 @@ class CPathTest extends TestCase
                 ['', '////'],
             ];
         }
+    }
+
+    static function isFileDataProvider()
+    {
+        return [
+            'existing file' => [true, 'phpunit.xml'],
+            'existing directory' => [false, 'suite'],
+            'non existing path' => [false, 'non_existing'],
+            'path with invalid characters' => [false, '<>:"|?*'],
+            'empty path' => [false, ''],
+        ];
+    }
+
+    static function isDirectoryDataProvider()
+    {
+        return [
+            'existing directory' => [true, 'suite'],
+            'existing file' => [false, 'phpunit.xml'],
+            'non existing path' => [false, 'non_existing'],
+            'path with invalid characters' => [false, '<>:"|?*'],
+            'empty path' => [false, ''],
+        ];
+    }
+
+    static function toAbsoluteDataProvider()
+    {
+        $cwd = \getcwd(); // Current Working Directory
+        return [
+            'existing file' => [
+                (string)CPath::Join($cwd, 'phpunit.xml'),
+                'phpunit.xml'
+            ],
+            'existing directory' => [
+                (string)CPath::Join($cwd, 'suite'),
+                'suite'
+            ],
+            'path with dotted segments' => [
+                (string)CPath::Join($cwd, 'phpunit.xml'),
+                './suite/../phpunit.xml'
+            ],
+            'path with extra separator' => [
+                (string)CPath::Join($cwd, 'suite', '.gitkeep'),
+                'suite//.gitkeep'
+            ],
+            'already absolute path' => [
+                (string)CPath::Join($cwd, 'suite', '.gitkeep'),
+                (string)CPath::Join($cwd, 'suite', '.gitkeep'),
+            ],
+            'non existing path' => [
+                null,
+                'non_existing'
+            ],
+            'path with invalid characters' => [
+                null,
+                '<>:"|?*'
+            ],
+            'empty path' => [
+                $cwd,
+                ''
+            ],
+        ];
     }
 
     #endregion Data Providers
