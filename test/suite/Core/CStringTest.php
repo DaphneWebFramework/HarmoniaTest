@@ -578,15 +578,27 @@ class CStringTest extends TestCase
 
     #endregion IndexOf
 
-    #region Replace ------------------------------------------------------------
+    #region Replace, ReplaceInPlace --------------------------------------------
 
     #[DataProvider('replaceDataProvider')]
     function testReplace(string $expected, string $value, string $encoding,
         string $searchString, string $replacement, bool $caseSensitive = true)
     {
         $cstr = new CString($value, $encoding);
-        $result = $cstr->Replace($searchString, $replacement, $caseSensitive);
-        $this->assertSame($expected, (string)$result);
+        $replaced = $cstr->Replace($searchString, $replacement, $caseSensitive);
+        $this->assertNotSame($cstr, $replaced);
+        $this->assertSame($value, (string)$cstr);
+        $this->assertSame($expected, (string)$replaced);
+    }
+
+    #[DataProvider('replaceDataProvider')]
+    function testReplaceInPlace(string $expected, string $value, string $encoding,
+        string $searchString, string $replacement, bool $caseSensitive = true)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($cstr, $cstr->ReplaceInPlace($searchString, $replacement,
+            $caseSensitive));
+        $this->assertSame($expected, (string)$cstr);
     }
 
     function testReplaceWithStringable()
@@ -606,9 +618,13 @@ class CStringTest extends TestCase
             (string)$cstr->Replace($searchString, $replacement));
         $this->assertSame('Hello, Universe!',
             (string)$cstr->Replace($searchString, $replacement, false));
+
+        $this->assertSame($cstr,
+            $cstr->ReplaceInPlace($searchString, $replacement, false));
+        $this->assertSame('Hello, Universe!', (string)$cstr);
     }
 
-    #endregion Replace
+    #endregion Replace, ReplaceInPlace
 
     #region Split --------------------------------------------------------------
 
