@@ -341,44 +341,77 @@ class CStringTest extends TestCase
 
     #endregion Middle
 
-    #region Trim ---------------------------------------------------------------
+    #region Trim, TrimInPlace --------------------------------------------------
 
     #[DataProvider('trimDataProvider')]
     function testTrim(string $expected, string $value, string $encoding,
         ?string $characters = null)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, (string)$cstr->Trim($characters));
+        $trimmed = $cstr->Trim($characters);
+        $this->assertNotSame($cstr, $trimmed);
         $this->assertSame($value, (string)$cstr);
+        $this->assertSame($expected, (string)$trimmed);
     }
 
-    #endregion Trim
+    #[DataProvider('trimDataProvider')]
+    function testTrimInPlace(string $expected, string $value, string $encoding,
+        ?string $characters = null)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($cstr, $cstr->TrimInPlace($characters));
+        $this->assertSame($expected, (string)$cstr);
+    }
 
-    #region TrimLeft -----------------------------------------------------------
+    #endregion Trim, TrimInPlace
+
+    #region TrimLeft, TrimLeftInPlace ------------------------------------------
 
     #[DataProvider('trimLeftDataProvider')]
     function testTrimLeft(string $expected, string $value, string $encoding,
         ?string $characters = null)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, (string)$cstr->TrimLeft($characters));
+        $trimmed = $cstr->TrimLeft($characters);
+        $this->assertNotSame($cstr, $trimmed);
         $this->assertSame($value, (string)$cstr);
+        $this->assertSame($expected, (string)$trimmed);
     }
 
-    #endregion TrimLeft
+    #[DataProvider('trimLeftDataProvider')]
+    function testTrimLeftInPlace(string $expected, string $value, string $encoding,
+        ?string $characters = null)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($cstr, $cstr->TrimLeftInPlace($characters));
+        $this->assertSame($expected, (string)$cstr);
+    }
 
-    #region TrimRight ----------------------------------------------------------
+    #endregion TrimLeft, TrimLeftInPlace
+
+    #region TrimRight, TrimRightInPlace ----------------------------------------
 
     #[DataProvider('trimRightDataProvider')]
     function testTrimRight(string $expected, string $value, string $encoding,
         ?string $characters = null)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, (string)$cstr->TrimRight($characters));
+        $trimmed = $cstr->TrimRight($characters);
+        $this->assertNotSame($cstr, $trimmed);
         $this->assertSame($value, (string)$cstr);
+        $this->assertSame($expected, (string)$trimmed);
     }
 
-    #endregion TrimRight
+    #[DataProvider('trimRightDataProvider')]
+    function testTrimRightInPlace(string $expected, string $value, string $encoding,
+        ?string $characters = null)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($cstr, $cstr->TrimRightInPlace($characters));
+        $this->assertSame($expected, (string)$cstr);
+    }
+
+    #endregion TrimRight, TrimRightInPlace
 
     #region Lowercase ----------------------------------------------------------
 
