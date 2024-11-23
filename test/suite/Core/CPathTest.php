@@ -709,7 +709,14 @@ class CPathTest extends TestCase
 
     static function toAbsoluteDataProvider()
     {
-        $cwd = \getcwd(); // Current Working Directory
+        // Fix: Data providers run before `setUpBeforeClass()`, using the
+        // initial working directory, which may not be "test". Adjust to ensure
+        // paths align with the "test" directory set in `setUpBeforeClass()`.
+        $cwd = \getcwd();
+        if (\basename($cwd) !== 'test') {
+            $cwd = (string)CPath::Join($cwd, 'test');
+        }
+
         return [
             'existing file' => [
                 (string)CPath::Join($cwd, 'phpunit.xml'),
