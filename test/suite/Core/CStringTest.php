@@ -283,6 +283,54 @@ class CStringTest extends TestCase
 
     #endregion DeleteAt
 
+    #region Prepend, PrependInPlace --------------------------------------------
+
+    #[DataProvider('prependDataProvider')]
+    function testPrepend(string $expected, string $value, string $encoding,
+        string $substring)
+    {
+        $cstr = new CString($value, $encoding);
+        $prepended = $cstr->Prepend($substring);
+        $this->assertNotSame($cstr, $prepended);
+        $this->assertSame($value, (string)$cstr);
+        $this->assertSame($expected, (string)$prepended);
+    }
+
+    #[DataProvider('prependDataProvider')]
+    function testPrependInPlace(string $expected, string $value, string $encoding,
+        string $substring)
+    {
+        $cstr = new CString($value, $encoding);
+        $this->assertSame($cstr, $cstr->PrependInPlace($substring));
+        $this->assertSame($expected, (string)$cstr);
+    }
+
+    function testPrependWithStringable()
+    {
+        $cstr = new CString('World!', 'ISO-8859-1');
+        $stringable = new class() implements \Stringable {
+            function __toString() {
+                return 'Hello, ';
+            }
+        };
+        $this->assertSame('Hello, World!',
+            (string)$cstr->Prepend($stringable));
+    }
+
+    function testPrependInPlaceWithStringable()
+    {
+        $cstr = new CString('World!', 'ISO-8859-1');
+        $stringable = new class() implements \Stringable {
+            function __toString() {
+                return 'Hello, ';
+            }
+        };
+        $this->assertSame('Hello, World!',
+            (string)$cstr->PrependInPlace($stringable));
+    }
+
+    #endregion Prepend, PrependInPlace
+
     #region Append, AppendInPlace ----------------------------------------------
 
     #[DataProvider('appendDataProvider')]
@@ -307,25 +355,25 @@ class CStringTest extends TestCase
 
     function testAppendWithStringable()
     {
-        $cstr = new CString('Hello!', 'ISO-8859-1');
+        $cstr = new CString('Hello', 'ISO-8859-1');
         $stringable = new class() implements \Stringable {
             function __toString() {
-                return ' I am Stringable';
+                return ', World!';
             }
         };
-        $this->assertSame('Hello! I am Stringable',
+        $this->assertSame('Hello, World!',
             (string)$cstr->Append($stringable));
     }
 
     function testAppendInPlaceWithStringable()
     {
-        $cstr = new CString('Hello!', 'ISO-8859-1');
+        $cstr = new CString('Hello', 'ISO-8859-1');
         $stringable = new class() implements \Stringable {
             function __toString() {
-                return ' I am Stringable';
+                return ', World!';
             }
         };
-        $this->assertSame('Hello! I am Stringable',
+        $this->assertSame('Hello, World!',
             (string)$cstr->AppendInPlace($stringable));
     }
 
@@ -1290,13 +1338,27 @@ class CStringTest extends TestCase
         ];
     }
 
+    static function prependDataProvider()
+    {
+        return [
+        // Single-byte
+            ['Hello, World!', 'World!', 'ISO-8859-1', 'Hello, '],
+            ['Hello', 'Hello', 'ISO-8859-1', ''],
+            ['World!', '', 'ISO-8859-1', 'World!'],
+        // Multibyte
+            ['こんにちは世界', '世界', 'UTF-8', 'こんにちは'],
+            ['こんにちは', 'こんにちは', 'UTF-8', ''],
+            ['世界', '', 'UTF-8', '世界'],
+        ];
+    }
+
     static function appendDataProvider()
     {
         return [
         // Single-byte
             ['Hello World!', 'Hello', 'ISO-8859-1', ' World!'],
             ['Hello', 'Hello', 'ISO-8859-1', ''],
-            [' World!', '', 'ISO-8859-1', ' World!'],
+            ['World!', '', 'ISO-8859-1', 'World!'],
         // Multibyte
             ['こんにちは世界', 'こんにちは', 'UTF-8', '世界'],
             ['こんにちは', 'こんにちは', 'UTF-8', ''],
