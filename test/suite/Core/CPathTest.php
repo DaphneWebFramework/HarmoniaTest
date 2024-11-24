@@ -12,6 +12,9 @@ class CPathTest extends TestCase
 
     static function setUpBeforeClass(): void
     {
+        // Ensure tests run within the "test" directory. The working directory
+        // varies between environments: locally, it is often already "test",
+        // but in GitHub Actions, it is typically the project root.
         $cwd = \getcwd();
         if (\basename($cwd) !== 'test') {
             \chdir('test');
@@ -21,6 +24,8 @@ class CPathTest extends TestCase
 
     static function tearDownAfterClass(): void
     {
+        // Restore the original working directory after the test suite completes,
+        // but only if it was changed during `setUpBeforeClass`.
         if (self::$originalWorkingDirectory !== null) {
             \chdir(self::$originalWorkingDirectory);
             self::$originalWorkingDirectory = null;
@@ -709,9 +714,10 @@ class CPathTest extends TestCase
 
     static function toAbsoluteDataProvider()
     {
-        // Fix: Data providers run before `setUpBeforeClass()`, using the
-        // initial working directory, which may not be "test". Adjust to ensure
-        // paths align with the "test" directory set in `setUpBeforeClass()`.
+        // Data providers are executed before any test setup logic and rely on
+        // the initial working directory. This adjustment ensures paths are
+        // consistent with the "test" directory, which will later be set as the
+        // current directory during `setUpBeforeClass`.
         $cwd = \getcwd();
         if (\basename($cwd) !== 'test') {
             $cwd = (string)CPath::Join($cwd, 'test');

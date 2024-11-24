@@ -4,6 +4,7 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Core\CUrl;
+use \Harmonia\Core\CArray;
 
 #[CoversClass(CUrl::class)]
 class CUrlTest extends TestCase
@@ -97,16 +98,61 @@ class CUrlTest extends TestCase
 
     #endregion TrimTrailingSlashes
 
-    #region Interface: Stringable ----------------------------------------------
+    #region Components ---------------------------------------------------------
 
-    function testToString()
+    function testComponentsWithFullUrl()
     {
-        $str = 'https://example.com';
-        $url = new CUrl($str);
-        $this->assertSame($str, (string)$url);
+        $url = new CUrl('http://username:password@hostname:9090/path?arg=value#anchor');
+        $components = $url->Components();
+        $this->assertInstanceOf(CArray::class, $components);
+        $this->assertSame('http', $components->Get('scheme'));
+        $this->assertSame('username', $components->Get('user'));
+        $this->assertSame('password', $components->Get('pass'));
+        $this->assertSame('hostname', $components->Get('host'));
+        $this->assertSame(9090, $components->Get('port'));
+        $this->assertSame('/path', $components->Get('path'));
+        $this->assertSame('arg=value', $components->Get('query'));
+        $this->assertSame('anchor', $components->Get('fragment'));
     }
 
-    #endregion Interface: Stringable
+    function testComponentsWithEmptyUrl()
+    {
+        $url = new CUrl('');
+        $components = $url->Components();
+        $this->assertInstanceOf(CArray::class, $components);
+        $this->assertFalse($components->Has('scheme'));
+        $this->assertFalse($components->Has('user'));
+        $this->assertFalse($components->Has('pass'));
+        $this->assertFalse($components->Has('host'));
+        $this->assertFalse($components->Has('port'));
+        $this->assertSame('', $components->Get('path'));
+        $this->assertFalse($components->Has('query'));
+        $this->assertFalse($components->Has('fragment'));
+    }
+
+    function testComponentsWithRelativeUrl()
+    {
+        $url = new CUrl('/index.php');
+        $components = $url->Components();
+        $this->assertInstanceOf(CArray::class, $components);
+        $this->assertFalse($components->Has('scheme'));
+        $this->assertFalse($components->Has('user'));
+        $this->assertFalse($components->Has('pass'));
+        $this->assertFalse($components->Has('host'));
+        $this->assertFalse($components->Has('port'));
+        $this->assertSame('/index.php', $components->Get('path'));
+        $this->assertFalse($components->Has('query'));
+        $this->assertFalse($components->Has('fragment'));
+    }
+
+    function testComponentsWithInvalidUrl()
+    {
+        $url = new CUrl('http://:-123456');
+        $components = $url->Components();
+        $this->assertNull($components);
+    }
+
+    #endregion Components
 
     #region Data Providers -----------------------------------------------------
 
