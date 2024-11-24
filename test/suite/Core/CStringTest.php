@@ -747,6 +747,116 @@ class CStringTest extends TestCase
 
     #endregion SplitToArray
 
+    #region Apply, ApplyInPlace ------------------------------------------------
+
+    function testApplyWithoutAdditionalArguments()
+    {
+        $cstr = new CString('hello world', 'ASCII');
+        $applied = $cstr->Apply('rawurlencode');
+        $this->assertNotSame($cstr, $applied);
+        $this->assertSame('hello%20world', (string)$applied);
+        $this->assertSame('hello world', (string)$cstr);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($applied, 'encoding')
+        );
+    }
+
+    function testApplyWithAdditionalArguments()
+    {
+        $cstr = new CString('hello world');
+        $applied = $cstr->Apply('substr', 6, 5);
+        $this->assertNotSame($cstr, $applied);
+        $this->assertSame('world', (string)$applied);
+        $this->assertSame('hello world', (string)$cstr);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($applied, 'encoding')
+        );
+    }
+
+    function testApplyWithLambdaWithoutAdditionalArguments()
+    {
+        $cstr = new CString('hello');
+        $applied = $cstr->Apply(
+            function (string $value) {
+                return str_replace('ll', 'xx', $value);
+            }
+        );
+        $this->assertNotSame($cstr, $applied);
+        $this->assertSame('hexxo', (string)$applied);
+        $this->assertSame('hello', (string)$cstr);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($applied, 'encoding')
+        );
+    }
+
+    function testApplyWithLambdaWithAdditionalArguments()
+    {
+        $cstr = new CString('hello');
+        $applied = $cstr->Apply(
+            function (string $value, string $prefix, string $suffix) {
+                return $prefix . $value . $suffix;
+            },
+            '<',
+            '>'
+        );
+        $this->assertNotSame($cstr, $applied);
+        $this->assertSame('hello', (string)$cstr);
+        $this->assertSame('<hello>', (string)$applied);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($applied, 'encoding')
+        );
+    }
+
+    function testApplyInPlaceWithoutAdditionalArguments()
+    {
+        $cstr = new CString('hello world');
+        $this->assertSame($cstr, $cstr->ApplyInPlace('rawurlencode'));
+        $this->assertSame('hello%20world', (string)$cstr);
+    }
+
+    function testApplyInPlaceWithAdditionalArguments()
+    {
+        $cstr = new CString('hello world');
+        $this->assertSame($cstr, $cstr->ApplyInPlace('substr', 6, 5));
+        $this->assertSame('world', (string)$cstr);
+    }
+
+    function testApplyInPlaceWithLambdaWithoutAdditionalArguments()
+    {
+        $cstr = new CString('hello');
+        $this->assertSame(
+            $cstr,
+            $cstr->ApplyInPlace(
+                function (string $value) {
+                    return str_replace('ll', 'xx', $value);
+                }
+            )
+        );
+        $this->assertSame('hexxo', (string)$cstr);
+    }
+
+    function testApplyInPlaceWithLambdaWithAdditionalArguments()
+    {
+        $cstr = new CString('hello');
+        $this->assertSame(
+            $cstr,
+            $cstr->ApplyInPlace(
+                function (string $value, string $prefix, string $suffix) {
+                    return $prefix . $value . $suffix;
+                },
+                '<',
+                '>'
+            )
+        );
+        $this->assertSame('<hello>', (string)$cstr);
+    }
+
+    #endregion Apply, ApplyInPlace
+
     #region Interface: Stringable ----------------------------------------------
 
     function testToString()
