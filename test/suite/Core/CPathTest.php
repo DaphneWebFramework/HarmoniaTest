@@ -157,6 +157,43 @@ class CPathTest extends TestCase
         }
     }
 
+    function testToAbsoluteWithBasePath()
+    {
+        $path = new CPath('.gitkeep');
+        // First, call ToAbsolute without providing a base path. This should
+        // fail because '.gitkeep' cannot be resolved in the current working
+        // directory.
+        $this->assertNull($path->ToAbsolute());
+        // Then, call ToAbsolute with a valid base path (where '.gitkeep' is
+        // located). This should resolve the path correctly relative to the
+        // provided base path.
+        $this->assertSame((string)CPath::Join(\getcwd(), 'suite', '.gitkeep'),
+            (string)$path->ToAbsolute('suite'));
+        // Finally, ensure the original working directory is restored after
+        // calling ToAbsolute with a base path. This confirms that the base
+        // path was only temporarily set and the current working directory
+        // remains unchanged.
+        $this->assertNull($path->ToAbsolute());
+    }
+
+    function testToAbsoluteWithStringableBasePath()
+    {
+        $basePath = new class implements \Stringable {
+            public function __toString(): string {
+                return 'suite';
+            }
+        };
+        $path = new CPath('.gitkeep');
+        $this->assertSame((string)CPath::Join(\getcwd(), 'suite', '.gitkeep'),
+            (string)$path->ToAbsolute($basePath));
+    }
+
+    function testToAbsoluteWithNonExistentBasePath()
+    {
+        $path = new CPath('phpunit.xml');
+        $this->assertNull($path->ToAbsolute('non_existent_base_path'));
+    }
+
     #endregion ToAbsolute
 
     #region Data Providers -----------------------------------------------------
