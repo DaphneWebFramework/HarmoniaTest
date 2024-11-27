@@ -4,6 +4,8 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Patterns\Singleton;
 
+use \TestToolkit\AccessHelper;
+
 class SingletonUnderTest extends Singleton {}
 class AnotherSingletonUnderTest extends Singleton {}
 
@@ -40,6 +42,27 @@ class SingletonTest extends TestCase
     {
         $this->expectException(\Error::class);
         new SingletonUnderTest();
+    }
+
+    function testReplaceInstanceReturnsPreviousInstance()
+    {
+        $original = SingletonUnderTest::Instance();
+        $replacement = AccessHelper::CallNonPublicConstructor(SingletonUnderTest::class);
+        $previous = SingletonUnderTest::ReplaceInstance($replacement);
+        $this->assertSame($previous, $original);
+        $this->assertNotSame($original, SingletonUnderTest::Instance());
+        $this->assertSame($replacement, SingletonUnderTest::Instance());
+    }
+
+    function testReplaceInstanceWhenNoPreviousInstanceExists()
+    {
+        $instances = AccessHelper::GetNonPublicStaticProperty(Singleton::class, 'instances');
+        unset($instances[SingletonUnderTest::class]);
+        AccessHelper::SetNonPublicStaticProperty(Singleton::class, 'instances', $instances);
+        $replacement = AccessHelper::CallNonPublicConstructor(SingletonUnderTest::class);
+        $previous = SingletonUnderTest::ReplaceInstance($replacement);
+        $this->assertNull($previous);
+        $this->assertSame($replacement, SingletonUnderTest::Instance());
     }
 
     function testConstructorIsNotPublic()
