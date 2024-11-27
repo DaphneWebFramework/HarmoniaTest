@@ -65,6 +65,15 @@ class SingletonTest extends TestCase
         $this->assertSame($replacement, SingletonUnderTest::Instance());
     }
 
+    function testReplaceInstanceWithNullResetsInstance()
+    {
+        $original = SingletonUnderTest::Instance();
+        $previous = SingletonUnderTest::ReplaceInstance(null);
+        $this->assertSame($previous, $original);
+        $this->assertArrayNotHasKey(SingletonUnderTest::class,
+            AccessHelper::GetNonPublicStaticProperty(Singleton::class, 'instances'));
+    }
+
     function testConstructorIsNotPublic()
     {
         $reflectionClass = new \ReflectionClass(SingletonUnderTest::class);
