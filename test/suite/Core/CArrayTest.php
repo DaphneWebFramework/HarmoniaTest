@@ -45,14 +45,14 @@ class CArrayTest extends TestCase
 
     #region ToArray ------------------------------------------------------------
 
-    public function testToArrayReturnsIdenticalCopy()
+    function testToArrayReturnsIdenticalCopy()
     {
         $arr = ['a' => 1, 'b' => 2, 'c' => 3];
         $carr = new CArray($arr);
         $this->assertSame($arr, $carr->ToArray());
     }
 
-    public function testToArrayModificationDoesNotAffectInternalArray()
+    function testToArrayModificationDoesNotAffectInternalArray()
     {
         $arr = ['a' => 1, 'b' => 2, 'c' => 3];
         $carr = new CArray($arr);
@@ -67,7 +67,7 @@ class CArrayTest extends TestCase
     #region IsEmpty ------------------------------------------------------------
 
     #[DataProvider('isEmptyDataProvider')]
-    public function testIsEmpty($expected, array $arr)
+    function testIsEmpty($expected, array $arr)
     {
         $carr = new CArray($arr);
         $this->assertSame($expected, $carr->IsEmpty());
@@ -86,22 +86,29 @@ class CArrayTest extends TestCase
 
     #endregion Has
 
-    #region Get ----------------------------------------------------------------
+    #region Get, GetOrDefault --------------------------------------------------
 
     #[DataProvider('getDataProvider')]
-    function testGet(mixed $expected, array $arr, string|int $key,
-        mixed $defaultValue = null)
+    function testGet(mixed $expected, array $arr, string|int $key)
     {
         $carr = new CArray($arr);
-        $this->assertSame($expected, $carr->Get($key, $defaultValue));
+        $this->assertSame($expected, $carr->Get($key));
     }
 
-    #endregion Get
+    #[DataProvider('getOrDefaultDataProvider')]
+    function testGetOrDefault(mixed $expected, array $arr, string|int $key,
+        mixed $defaultValue)
+    {
+        $carr = new CArray($arr);
+        $this->assertSame($expected, $carr->GetOrDefault($key, $defaultValue));
+    }
+
+    #endregion Get, GetOrDefault
 
     #region Set ----------------------------------------------------------------
 
     #[DataProvider('setDataProvider')]
-    public function testSet(array $expected, array $arr, string|int $key,
+    function testSet(array $expected, array $arr, string|int $key,
         mixed $value)
     {
         $carr = new CArray($arr);
@@ -121,7 +128,7 @@ class CArrayTest extends TestCase
     #region Delete -------------------------------------------------------------
 
     #[DataProvider('deleteDataProvider')]
-    public function testDelete(array $expected, array $arr, string|int $key)
+    function testDelete(array $expected, array $arr, string|int $key)
     {
         $carr = new CArray($arr);
         $carr->Delete($key);
@@ -190,7 +197,7 @@ class CArrayTest extends TestCase
     #region Interface: Countable -----------------------------------------------
 
     #[DataProvider('countDataProvider')]
-    public function testCount(int $expected, array $arr)
+    function testCount(int $expected, array $arr)
     {
         $carr = new CArray($arr);
         $this->assertSame($expected, count($carr));
@@ -202,7 +209,7 @@ class CArrayTest extends TestCase
 
     #region Interface: IteratorAggregate ---------------------------------------
 
-    public function testGetIteratorForSequentialArray()
+    function testGetIteratorForSequentialArray()
     {
         $carr = new CArray([1, 2, 3, 4, 5]);
         $result = [];
@@ -212,7 +219,7 @@ class CArrayTest extends TestCase
         $this->assertSame([1, 2, 3, 4, 5], $result);
     }
 
-    public function testGetIteratorForAssociativeArray()
+    function testGetIteratorForAssociativeArray()
     {
         $carr = new CArray(['a' => 'apple', 'b' => 'banana', 'c' => 'cherry']);
         $result = [];
@@ -222,7 +229,7 @@ class CArrayTest extends TestCase
         $this->assertSame(['a' => 'apple', 'b' => 'banana', 'c' => 'cherry'], $result);
     }
 
-    public function testGetIteratorForEmptyArray()
+    function testGetIteratorForEmptyArray()
     {
         $carr = new CArray();
         $result = [];
@@ -278,20 +285,14 @@ class CArrayTest extends TestCase
             'existing string key' => [
                 42, ['a' => 42, 'b' => 24], 'a'
             ],
-            'non-existing string key with null default' => [
+            'non-existing string key' => [
                 null, ['a' => 42, 'b' => 24], 'c'
-            ],
-            'non-existing string key with non-null default' => [
-                'default', ['a' => 42, 'b' => 24], 'c', 'default'
             ],
             'existing integer key' => [
                 'one', [1 => 'one', 2 => 'two'], 1
             ],
-            'non-existing integer key with null default' => [
+            'non-existing integer key' => [
                 null, [1 => 'one', 2 => 'two'], 3
-            ],
-            'non-existing integer key with non-null default' => [
-                'three', [1 => 'one', 2 => 'two'], 3, 'three'
             ],
             'existing integer key accessed as string' => [
                 'one', [1 => 'one', 2 => 'two'], '1'
@@ -299,11 +300,35 @@ class CArrayTest extends TestCase
             'existing numeric string key accessed as integer' => [
                 'one', ['1' => 'one', '2' => 'two'], 1
             ],
-            'empty array with null default' => [
+            'empty array' => [
                 null, [], 'missing'
             ],
-            'empty array with default value' => [
-                'empty', [], 'missing', 'empty'
+        ];
+    }
+
+    static function getOrDefaultDataProvider()
+    {
+        return [
+            'existing string key' => [
+                42, ['a' => 42, 'b' => 24], 'a', 0
+            ],
+            'non-existing string key' => [
+                0, ['a' => 42, 'b' => 24], 'c', 0
+            ],
+            'existing integer key' => [
+                'one', [1 => 'one', 2 => 'two'], 1, 0
+            ],
+            'non-existing integer key' => [
+                '', [1 => 'one', 2 => 'two'], 3, ''
+            ],
+            'existing integer key accessed as string' => [
+                'one', [1 => 'one', 2 => 'two'], '1', ''
+            ],
+            'existing numeric string key accessed as integer' => [
+                'one', ['1' => 'one', '2' => 'two'], 1, ''
+            ],
+            'empty array' => [
+                -1, [], 'missing', -1
             ],
         ];
     }

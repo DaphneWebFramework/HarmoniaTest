@@ -68,7 +68,7 @@ class CPathTest extends TestCase
     #region Join ---------------------------------------------------------------
 
     #[DataProvider('joinDataProvider')]
-    public function testJoin(string $expected, array $segments): void
+    function testJoin(string $expected, array $segments): void
     {
         $joined = CPath::Join(...$segments);
         $this->assertInstanceOf(CPath::class, $joined);
@@ -179,7 +179,7 @@ class CPathTest extends TestCase
     function testToAbsoluteWithStringableBasePath()
     {
         $basePath = new class implements \Stringable {
-            public function __toString(): string {
+            function __toString(): string {
                 return 'suite';
             }
         };

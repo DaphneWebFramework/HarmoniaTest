@@ -86,7 +86,7 @@ class CSequentialArrayTest extends TestCase
 
     #endregion Has
 
-    #region Get ----------------------------------------------------------------
+    #region Get, GetOrDefault --------------------------------------------------
 
     function testGetWithStringIndex()
     {
@@ -96,14 +96,28 @@ class CSequentialArrayTest extends TestCase
     }
 
     #[DataProvider('getDataProvider')]
-    function testGet(mixed $expected, array $arr, string|int $index,
-        mixed $defaultValue = null)
+    function testGet(mixed $expected, array $arr, string|int $index)
     {
         $carr = new CSequentialArray($arr);
-        $this->assertSame($expected, $carr->Get($index, $defaultValue));
+        $this->assertSame($expected, $carr->Get($index));
     }
 
-    #endregion Get
+    function testGetOrDefaultWithStringIndex()
+    {
+        $carr = new CSequentialArray();
+        $this->expectException(\InvalidArgumentException::class);
+        $carr->GetOrDefault('key', null);
+    }
+
+    #[DataProvider('getOrDefaultDataProvider')]
+    function testGetOrDefault(mixed $expected, array $arr, string|int $index,
+        mixed $defaultValue)
+    {
+        $carr = new CSequentialArray($arr);
+        $this->assertSame($expected, $carr->GetOrDefault($index, $defaultValue));
+    }
+
+    #endregion Get, GetOrDefault
 
     #region Set ----------------------------------------------------------------
 
@@ -115,7 +129,7 @@ class CSequentialArrayTest extends TestCase
     }
 
     #[DataProvider('setDataProvider')]
-    public function testSet(array $expected, array $arr, string|int $index, mixed $value)
+    function testSet(array $expected, array $arr, string|int $index, mixed $value)
     {
         $carr = new CSequentialArray($arr);
         $carr->Set($index, $value);
@@ -141,7 +155,7 @@ class CSequentialArrayTest extends TestCase
     }
 
     #[DataProvider('deleteDataProvider')]
-    public function testDelete(array $expected, array $arr, string|int $index)
+    function testDelete(array $expected, array $arr, string|int $index)
     {
         $carr = new CSequentialArray($arr);
         $carr->Delete($index);
@@ -220,7 +234,7 @@ class CSequentialArrayTest extends TestCase
     #region InsertBefore -------------------------------------------------------
 
     #[DataProvider('insertBeforeDataProvider')]
-    public function testInsertBefore(array $expected, array $arr, int $index,
+    function testInsertBefore(array $expected, array $arr, int $index,
         mixed $element)
     {
         $carr = new CSequentialArray($arr);
@@ -240,7 +254,7 @@ class CSequentialArrayTest extends TestCase
     #region InsertAfter --------------------------------------------------------
 
     #[DataProvider('insertAfterDataProvider')]
-    public function testInsertAfter(array $expected, array $arr, int $index,
+    function testInsertAfter(array $expected, array $arr, int $index,
         mixed $element)
     {
         $carr = new CSequentialArray($arr);
@@ -339,14 +353,32 @@ class CSequentialArrayTest extends TestCase
             'existing index' => [
                 101, [100, 101, 102], 1
             ],
-            'non-existing index with null default' => [
+            'non-existing negative index' => [
+                null, [100, 101, 102], -1
+            ],
+            'non-existing positive index' => [
                 null, [100, 101, 102], 3
             ],
-            'non-existing index with non-null default' => [
-                'default', [100, 101, 102], 3, 'default'
+            'empty array' => [
+                null, [], 0
             ],
-            'empty array with default value' => [
-                'empty', [], 0, 'empty'
+        ];
+    }
+
+    static function getOrDefaultDataProvider()
+    {
+        return [
+            'existing index' => [
+                101, [100, 101, 102], 1, 0
+            ],
+            'non-existing negative index' => [
+                0, [100, 101, 102], -1, 0
+            ],
+            'non-existing positive index' => [
+                0, [100, 101, 102], 3, 0
+            ],
+            'empty array' => [
+                -1, [], 0, -1
             ],
         ];
     }

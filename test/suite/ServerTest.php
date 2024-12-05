@@ -161,8 +161,8 @@ class ServerTest extends TestCase
     #[BackupGlobals(true)]
     function testHostUrlWithHttps()
     {
-        $_SERVER['SERVER_NAME'] = 'example.com';
         $_SERVER['HTTPS'] = 'on';
+        $_SERVER['SERVER_NAME'] = 'example.com';
         $this->assertSame('https://example.com', Server::Instance()->HostUrl());
     }
 
