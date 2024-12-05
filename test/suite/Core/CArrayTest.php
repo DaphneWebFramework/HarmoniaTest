@@ -200,7 +200,7 @@ class CArrayTest extends TestCase
     function testCount(int $expected, array $arr)
     {
         $carr = new CArray($arr);
-        $this->assertSame($expected, count($carr));
+        $this->assertSame($expected, \count($carr));
         $this->assertSame($expected, $carr->count());
         $this->assertSame($expected, $carr->Count());
     }

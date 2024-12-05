@@ -200,7 +200,7 @@ class CPathTest extends TestCase
 
     static function joinDataProvider()
     {
-        if (PHP_OS_FAMILY === 'Windows') {
+        if (\PHP_OS_FAMILY === 'Windows') {
             return [
                 ['C:', ['C:']],
                 ['C:\\', ['C:\\']],
@@ -501,7 +501,7 @@ class CPathTest extends TestCase
 
     static function ensureLeadingSlashDataProvider()
     {
-        if (PHP_OS_FAMILY === 'Windows') {
+        if (\PHP_OS_FAMILY === 'Windows') {
             return [
                 ['\\foo', 'foo'],
                 ['/foo', '/foo'],
@@ -552,7 +552,7 @@ class CPathTest extends TestCase
 
     static function ensureTrailingSlashDataProvider()
     {
-        if (PHP_OS_FAMILY === 'Windows') {
+        if (\PHP_OS_FAMILY === 'Windows') {
             return [
                 ['foo\\', 'foo'],
                 ['/foo\\', '/foo'],
@@ -603,7 +603,7 @@ class CPathTest extends TestCase
 
     static function trimLeadingSlashesDataProvider()
     {
-        if (PHP_OS_FAMILY === 'Windows') {
+        if (\PHP_OS_FAMILY === 'Windows') {
             return [
                 ['foo', 'foo'],
                 ['foo', '/foo'],
@@ -666,7 +666,7 @@ class CPathTest extends TestCase
 
     static function trimTrailingSlashesDataProvider()
     {
-        if (PHP_OS_FAMILY === 'Windows') {
+        if (\PHP_OS_FAMILY === 'Windows') {
             return [
                 ['foo', 'foo'],
                 ['/foo', '/foo'],

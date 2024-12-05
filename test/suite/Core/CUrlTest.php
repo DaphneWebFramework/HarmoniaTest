@@ -527,7 +527,7 @@ class CUrlTest extends TestCase
                 (string)CPath::Join($cwd, 'suite')
             ],
         ];
-        if (PHP_OS_FAMILY === 'Windows') {
+        if (\PHP_OS_FAMILY === 'Windows') {
             $data += [
                 'case-insensitive file url (windows)' => [
                     'https://example.com/phpunit.xml',
