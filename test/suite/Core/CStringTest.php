@@ -224,40 +224,40 @@ class CStringTest extends TestCase
 
     #endregion Last
 
-    #region At -----------------------------------------------------------------
+    #region Get ----------------------------------------------------------------
 
-    #[DataProvider('atDataProvider')]
-    function testAt($expected, $value, $encoding, $offset)
+    #[DataProvider('getDataProvider')]
+    function testGet($expected, $value, $encoding, $offset)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, $cstr->At($offset));
+        $this->assertSame($expected, $cstr->Get($offset));
     }
 
-    #endregion At
+    #endregion Get
 
-    #region SetAt --------------------------------------------------------------
+    #region SetInPlace ---------------------------------------------------------
 
-    #[DataProvider('setAtDataProvider')]
-    function testSetAt($expected, $value, $encoding, $offset, $character)
+    #[DataProvider('setDataProvider')]
+    function testSetInPlace($expected, $value, $encoding, $offset, $character)
     {
         $cstr = new CString($value, $encoding);
-        $cstr->SetAt($offset, $character);
+        $cstr->SetInPlace($offset, $character);
         $this->assertSame($expected, (string)$cstr);
     }
 
-    #endregion SetAt
+    #endregion SetInPlace
 
-    #region InsertAt -----------------------------------------------------------
+    #region InsertInPlace ------------------------------------------------------
 
-    #[DataProvider('insertAtDataProvider')]
-    function testInsertAt($expected, $value, $encoding, $offset, $substring)
+    #[DataProvider('insertDataProvider')]
+    function testInsertInPlace($expected, $value, $encoding, $offset, $substring)
     {
         $cstr = new CString($value, $encoding);
-        $cstr->InsertAt($offset, $substring);
+        $cstr->InsertInPlace($offset, $substring);
         $this->assertSame($expected, (string)$cstr);
     }
 
-    function testInsertAtWithStringable()
+    function testInsertInPlaceWithStringable()
     {
         $cstr = new CString('World!');
         $stringable = new class() implements \Stringable {
@@ -265,23 +265,11 @@ class CStringTest extends TestCase
                 return 'Hello, ';
             }
         };
-        $cstr->InsertAt(0, $stringable);
+        $cstr->InsertInPlace(0, $stringable);
         $this->assertSame('Hello, World!', (string)$cstr);
     }
 
-    #endregion InsertAt
-
-    #region DeleteAt -----------------------------------------------------------
-
-    #[DataProvider('deleteAtDataProvider')]
-    function testDeleteAt($expected, $value, $encoding, $offset, $count = 1)
-    {
-        $cstr = new CString($value, $encoding);
-        $cstr->DeleteAt($offset, $count);
-        $this->assertSame($expected, (string)$cstr);
-    }
-
-    #endregion DeleteAt
+    #endregion InsertInPlace
 
     #region Prepend, PrependInPlace --------------------------------------------
 
@@ -378,6 +366,18 @@ class CStringTest extends TestCase
     }
 
     #endregion Append, AppendInPlace
+
+    #region DeleteInPlace ------------------------------------------------------
+
+    #[DataProvider('deleteDataProvider')]
+    function testDeleteInPlace($expected, $value, $encoding, $offset, $count = 1)
+    {
+        $cstr = new CString($value, $encoding);
+        $cstr->DeleteInPlace($offset, $count);
+        $this->assertSame($expected, (string)$cstr);
+    }
+
+    #endregion DeleteInPlace
 
     #region Left ---------------------------------------------------------------
 
@@ -889,10 +889,10 @@ class CStringTest extends TestCase
     function testOffsetGet()
     {
         $cstr = $this->getMockBuilder(CString::class)
-            ->onlyMethods(['At'])
+            ->onlyMethods(['Get'])
             ->getMock();
         $cstr->expects($this->once())
-            ->method('At')
+            ->method('Get')
             ->with(1)
             ->willReturn('e');
         $this->assertSame('e', $cstr[1]);
@@ -901,10 +901,10 @@ class CStringTest extends TestCase
     function testOffsetSet()
     {
         $cstr = $this->getMockBuilder(CString::class)
-            ->onlyMethods(['SetAt'])
+            ->onlyMethods(['SetInPlace'])
             ->getMock();
         $cstr->expects($this->once())
-            ->method('SetAt')
+            ->method('SetInPlace')
             ->with(1, 'a');
         $cstr[1] = 'a';
     }
@@ -912,10 +912,10 @@ class CStringTest extends TestCase
     function testOffsetUnset()
     {
         $cstr = $this->getMockBuilder(CString::class)
-            ->onlyMethods(['DeleteAt'])
+            ->onlyMethods(['DeleteInPlace'])
             ->getMock();
         $cstr->expects($this->once())
-            ->method('DeleteAt')
+            ->method('DeleteInPlace')
             ->with(1);
         unset($cstr[1]);
     }
@@ -1188,7 +1188,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function atDataProvider()
+    static function getDataProvider()
     {
         return [
         // Single-byte
@@ -1232,7 +1232,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function setAtDataProvider()
+    static function setDataProvider()
     {
         return [
         // Single-byte
@@ -1300,7 +1300,7 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function insertAtDataProvider()
+    static function insertDataProvider()
     {
         return [
         // Single-byte
@@ -1350,7 +1350,35 @@ class CStringTest extends TestCase
         ];
     }
 
-    static function deleteAtDataProvider()
+    static function prependDataProvider()
+    {
+        return [
+        // Single-byte
+            ['Hello, World!', 'World!', 'ISO-8859-1', 'Hello, '],
+            ['Hello', 'Hello', 'ISO-8859-1', ''],
+            ['World!', '', 'ISO-8859-1', 'World!'],
+        // Multibyte
+            ['こんにちは世界', '世界', 'UTF-8', 'こんにちは'],
+            ['こんにちは', 'こんにちは', 'UTF-8', ''],
+            ['世界', '', 'UTF-8', '世界'],
+        ];
+    }
+
+    static function appendDataProvider()
+    {
+        return [
+        // Single-byte
+            ['Hello World!', 'Hello', 'ISO-8859-1', ' World!'],
+            ['Hello', 'Hello', 'ISO-8859-1', ''],
+            ['World!', '', 'ISO-8859-1', 'World!'],
+        // Multibyte
+            ['こんにちは世界', 'こんにちは', 'UTF-8', '世界'],
+            ['こんにちは', 'こんにちは', 'UTF-8', ''],
+            ['世界', '', 'UTF-8', '世界'],
+        ];
+    }
+
+    static function deleteDataProvider()
     {
         return [
         // Single-byte
@@ -1445,34 +1473,6 @@ class CStringTest extends TestCase
             'empty string, multiple characters (multibyte)' => [
                 '', '', 'UTF-8', 0, 3
             ],
-        ];
-    }
-
-    static function prependDataProvider()
-    {
-        return [
-        // Single-byte
-            ['Hello, World!', 'World!', 'ISO-8859-1', 'Hello, '],
-            ['Hello', 'Hello', 'ISO-8859-1', ''],
-            ['World!', '', 'ISO-8859-1', 'World!'],
-        // Multibyte
-            ['こんにちは世界', '世界', 'UTF-8', 'こんにちは'],
-            ['こんにちは', 'こんにちは', 'UTF-8', ''],
-            ['世界', '', 'UTF-8', '世界'],
-        ];
-    }
-
-    static function appendDataProvider()
-    {
-        return [
-        // Single-byte
-            ['Hello World!', 'Hello', 'ISO-8859-1', ' World!'],
-            ['Hello', 'Hello', 'ISO-8859-1', ''],
-            ['World!', '', 'ISO-8859-1', 'World!'],
-        // Multibyte
-            ['こんにちは世界', 'こんにちは', 'UTF-8', '世界'],
-            ['こんにちは', 'こんにちは', 'UTF-8', ''],
-            ['世界', '', 'UTF-8', '世界'],
         ];
     }
 
