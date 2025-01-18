@@ -70,7 +70,7 @@ class CUrlTest extends TestCase
     #region Join ---------------------------------------------------------------
 
     #[DataProvider('joinDataProvider')]
-    function testJoin(string $expected, array $segments): void
+    function testJoin(string $expected, array $segments)
     {
         $joined = CUrl::Join(...$segments);
         $this->assertInstanceOf(CUrl::class, $joined);

@@ -282,6 +282,10 @@ class CStringTest extends TestCase
         $this->assertNotSame($cstr, $prepended);
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$prepended);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($prepended, 'encoding'),
+        );
     }
 
     #[DataProvider('prependDataProvider')]
@@ -330,6 +334,10 @@ class CStringTest extends TestCase
         $this->assertNotSame($cstr, $appended);
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$appended);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($appended, 'encoding'),
+        );
     }
 
     #[DataProvider('appendDataProvider')]
@@ -385,7 +393,12 @@ class CStringTest extends TestCase
     function testLeft($expected, $value, $encoding, $count)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, (string)$cstr->Left($count));
+        $left = $cstr->Left($count);
+        $this->assertSame($expected, (string)$left);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($left, 'encoding'),
+        );
     }
 
     #endregion Left
@@ -396,7 +409,12 @@ class CStringTest extends TestCase
     function testRight($expected, $value, $encoding, $count)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, (string)$cstr->Right($count));
+        $right = $cstr->Right($count);
+        $this->assertSame($expected, (string)$right);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($right, 'encoding'),
+        );
     }
 
     #endregion Right
@@ -407,7 +425,12 @@ class CStringTest extends TestCase
     function testMiddle($expected, $value, $encoding, $offset, $count)
     {
         $cstr = new CString($value, $encoding);
-        $this->assertSame($expected, (string)$cstr->Middle($offset, $count));
+        $middle = $cstr->Middle($offset, $count);
+        $this->assertSame($expected, (string)$middle);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($middle, 'encoding'),
+        );
     }
 
     #endregion Middle
@@ -423,6 +446,10 @@ class CStringTest extends TestCase
         $this->assertNotSame($cstr, $trimmed);
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$trimmed);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($trimmed, 'encoding'),
+        );
     }
 
     #[DataProvider('trimDataProvider')]
@@ -447,6 +474,10 @@ class CStringTest extends TestCase
         $this->assertNotSame($cstr, $trimmed);
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$trimmed);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($trimmed, 'encoding'),
+        );
     }
 
     #[DataProvider('trimLeftDataProvider')]
@@ -471,6 +502,10 @@ class CStringTest extends TestCase
         $this->assertNotSame($cstr, $trimmed);
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$trimmed);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($trimmed, 'encoding'),
+        );
     }
 
     #[DataProvider('trimRightDataProvider')]
@@ -494,6 +529,10 @@ class CStringTest extends TestCase
         $this->assertNotSame($cstr, $lowercased);
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$lowercased);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($lowercased, 'encoding'),
+        );
     }
 
     #[DataProvider('lowercaseDataProvider')]
@@ -516,6 +555,10 @@ class CStringTest extends TestCase
         $this->assertNotSame($cstr, $uppercased);
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$uppercased);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($uppercased, 'encoding'),
+        );
     }
 
     #[DataProvider('uppercaseDataProvider')]
@@ -660,6 +703,10 @@ class CStringTest extends TestCase
         $this->assertNotSame($cstr, $replaced);
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$replaced);
+        $this->assertSame(
+            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
+            AccessHelper::GetNonPublicProperty($replaced, 'encoding'),
+        );
     }
 
     #[DataProvider('replaceDataProvider')]

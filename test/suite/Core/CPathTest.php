@@ -68,7 +68,7 @@ class CPathTest extends TestCase
     #region Join ---------------------------------------------------------------
 
     #[DataProvider('joinDataProvider')]
-    function testJoin(string $expected, array $segments): void
+    function testJoin(string $expected, array $segments)
     {
         $joined = CPath::Join(...$segments);
         $this->assertInstanceOf(CPath::class, $joined);
