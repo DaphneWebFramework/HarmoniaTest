@@ -437,10 +437,10 @@ class CUrlTest extends TestCase
 
         $data = [
             'existing file' => [
-                'https://example.com/phpunit.xml',
-                'phpunit.xml',
-                'https://example.com',
-                $cwd
+                'https://example.com/phpunit.xml', // expected
+                'phpunit.xml',                     // value
+                'https://example.com',             // baseUrl
+                $cwd                               // basePath
             ],
             'existing file in subdirectory' => [
                 'https://example.com/suite/Core/CUrlTest.php',

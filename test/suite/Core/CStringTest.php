@@ -461,6 +461,16 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
+    function testTrimInPlaceWithInvalidPatternUnderEncoding()
+    {
+        $cstr = new CString("\xC7\xCF\xB0\xA1", 'EUC-KR');
+        // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
+        // under EUC-KR encoding"
+        @$cstr->TrimInPlace("\xC7\xCF\xB0");
+        // Assert the value remains unchanged due to invalid pattern.
+        $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
+    }
+
     #endregion Trim, TrimInPlace
 
     #region TrimLeft, TrimLeftInPlace ------------------------------------------
@@ -489,6 +499,16 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
+    function testTrimLeftInPlaceWithInvalidPatternUnderEncoding()
+    {
+        $cstr = new CString("\xC7\xCF\xB0\xA1", 'EUC-KR');
+        // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
+        // under EUC-KR encoding"
+        @$cstr->TrimLeftInPlace("\xC7\xCF\xB0");
+        // Assert the value remains unchanged due to invalid pattern.
+        $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
+    }
+
     #endregion TrimLeft, TrimLeftInPlace
 
     #region TrimRight, TrimRightInPlace ----------------------------------------
@@ -515,6 +535,16 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->TrimRightInPlace($characters));
         $this->assertSame($expected, (string)$cstr);
+    }
+
+    function testTrimRightInPlaceWithInvalidPatternUnderEncoding()
+    {
+        $cstr = new CString("\xC7\xCF\xB0\xA1", 'EUC-KR');
+        // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
+        // under EUC-KR encoding"
+        @$cstr->TrimRightInPlace("\xC7\xCF\xB0");
+        // Assert the value remains unchanged due to invalid pattern.
+        $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
     }
 
     #endregion TrimRight, TrimRightInPlace
@@ -755,6 +785,16 @@ class CStringTest extends TestCase
             (string)$cstr->ReplaceInPlace($searchString, $replacement));
         $this->assertSame('Hello, Universe!',
             (string)$cstr->ReplaceInPlace($searchString, $replacement, false));
+    }
+
+    function testReplaceInPlaceWithInvalidPatternUnderEncoding()
+    {
+        $cstr = new CString("\xC7\xCF\xB0\xA1", 'EUC-KR');
+        // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
+        // under EUC-KR encoding"
+        @$cstr->ReplaceInPlace("\xC7\xCF\xB0", "\xC7\xCF");
+        // Assert the value remains unchanged due to invalid pattern.
+        $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
     }
 
     #endregion Replace, ReplaceInPlace
@@ -2099,6 +2139,28 @@ class CStringTest extends TestCase
             ],
             'replace all occurrences (multibyte)' => [
                 'さようならさようなら', 'こんにちはこんにちは', 'UTF-8', 'こんにちは', 'さようなら'
+            ],
+        // Multibyte Extras
+            'exact match replace (BIG-5)' => [
+                "\xA4\xA4\xA4\xE5\xAC\xDB", // "教育部" ("Jiao Yu Bu" - "Ministry of Education")
+                "\xA4\xA4\xA4\xE5\xA4\xEB", // "教育局" ("Jiao Yu Ju" - "Education Bureau")
+                'BIG-5',
+                "\xA4\xEB", // "局" ("Ju" - "Bureau")
+                "\xAC\xDB", // "部" ("Bu" - "Ministry")
+            ],
+            'exact match replace (CP932)' => [
+                "\x93\xFA\x96\x7B\x8C\xEA", // "東京大学" ("Tokyo Daigaku" - "University of Tokyo")
+                "\x93\xFA\x96\x7B\x89\xE3", // "東京京都" ("Tokyo Kyouto" - "Tokyo Kyoto")
+                'CP932',
+                "\x89\xE3", // "京都" ("Kyouto" - "Kyoto")
+                "\x8C\xEA", // "大学" ("Daigaku" - "University")
+            ],
+            'exact match replace (EUC-KR)' => [
+                "\xC7\xCF\xB1\xD7", // "한국" ("Hanguk" - "Korea")
+                "\xC7\xCF\xB0\xA1", // "하가" ("Ha-ga")
+                'EUC-KR',
+                "\xB0\xA1", // "가" ("Ga")
+                "\xB1\xD7", // "국" ("Guk" - "Country")
             ],
         ];
     }
