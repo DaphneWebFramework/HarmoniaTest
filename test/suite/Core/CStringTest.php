@@ -467,6 +467,9 @@ class CStringTest extends TestCase
         // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
         // under EUC-KR encoding"
         @$cstr->TrimInPlace("\xC7\xCF\xB0");
+        //++
+        echo 'TrimInPlace: ' . bin2hex((string)$cstr);
+        //--
         // Assert the value remains unchanged due to invalid pattern.
         $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
     }
@@ -505,6 +508,9 @@ class CStringTest extends TestCase
         // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
         // under EUC-KR encoding"
         @$cstr->TrimLeftInPlace("\xC7\xCF\xB0");
+        //++
+        echo 'TrimLeftInPlace: ' . bin2hex((string)$cstr);
+        //--
         // Assert the value remains unchanged due to invalid pattern.
         $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
     }
@@ -543,6 +549,9 @@ class CStringTest extends TestCase
         // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
         // under EUC-KR encoding"
         @$cstr->TrimRightInPlace("\xC7\xCF\xB0");
+        //++
+        echo 'TrimRightInPlace: ' . bin2hex((string)$cstr);
+        //--
         // Assert the value remains unchanged due to invalid pattern.
         $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
     }
