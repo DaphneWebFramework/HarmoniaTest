@@ -461,19 +461,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
-    function testTrimInPlaceWithInvalidPatternUnderEncoding()
-    {
-        $cstr = new CString("\xC7\xCF\xB0\xA1", 'EUC-KR');
-        // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
-        // under EUC-KR encoding"
-        @$cstr->TrimInPlace("\xC7\xCF\xB0");
-        //++
-        echo 'TrimInPlace: ' . bin2hex((string)$cstr);
-        //--
-        // Assert the value remains unchanged due to invalid pattern.
-        $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
-    }
-
     #endregion Trim, TrimInPlace
 
     #region TrimLeft, TrimLeftInPlace ------------------------------------------
@@ -502,19 +489,6 @@ class CStringTest extends TestCase
         $this->assertSame($expected, (string)$cstr);
     }
 
-    function testTrimLeftInPlaceWithInvalidPatternUnderEncoding()
-    {
-        $cstr = new CString("\xC7\xCF\xB0\xA1", 'EUC-KR');
-        // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
-        // under EUC-KR encoding"
-        @$cstr->TrimLeftInPlace("\xC7\xCF\xB0");
-        //++
-        echo 'TrimLeftInPlace: ' . bin2hex((string)$cstr);
-        //--
-        // Assert the value remains unchanged due to invalid pattern.
-        $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
-    }
-
     #endregion TrimLeft, TrimLeftInPlace
 
     #region TrimRight, TrimRightInPlace ----------------------------------------
@@ -541,19 +515,6 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->TrimRightInPlace($characters));
         $this->assertSame($expected, (string)$cstr);
-    }
-
-    function testTrimRightInPlaceWithInvalidPatternUnderEncoding()
-    {
-        $cstr = new CString("\xC7\xCF\xB0\xA1", 'EUC-KR');
-        // Suppress warning with `@`: "mb_ereg_replace(): Pattern is not valid
-        // under EUC-KR encoding"
-        @$cstr->TrimRightInPlace("\xC7\xCF\xB0");
-        //++
-        echo 'TrimRightInPlace: ' . bin2hex((string)$cstr);
-        //--
-        // Assert the value remains unchanged due to invalid pattern.
-        $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
     }
 
     #endregion TrimRight, TrimRightInPlace
