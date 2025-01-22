@@ -14,12 +14,13 @@ class CUrlTest extends TestCase
 
     static function setUpBeforeClass(): void
     {
-        // Ensure tests run within the "test" directory. The working directory
-        // varies between environments: locally, it is often already "test",
-        // but in GitHub Actions, it is typically the project root.
+        // Ensure tests run within the "test/backend" directory. The working
+        // directory varies between environments: locally, it is often already
+        // "test/backend", but in GitHub Actions, it is typically the project
+        // root.
         $cwd = \getcwd();
-        if (\basename($cwd) !== 'test') {
-            \chdir('test');
+        if (\basename($cwd) !== 'backend') {
+            \chdir((string)CPath::Join($cwd, 'test', 'backend'));
             self::$originalWorkingDirectory = $cwd;
         }
     }
@@ -428,11 +429,11 @@ class CUrlTest extends TestCase
     {
         // Data providers are executed before any test setup logic and rely on
         // the initial working directory. This adjustment ensures paths are
-        // consistent with the "test" directory, which will later be set as the
-        // current directory during `setUpBeforeClass`.
+        // consistent with the "test/backend" directory, which will later be set
+        // as the current directory during `setUpBeforeClass`.
         $cwd = \getcwd();
-        if (\basename($cwd) !== 'test') {
-            $cwd = (string)CPath::Join($cwd, 'test');
+        if (\basename($cwd) !== 'backend') {
+            $cwd = (string)CPath::Join($cwd, 'test', 'backend');
         }
 
         $data = [
