@@ -9,34 +9,114 @@ use \Harmonia\Core\CPath;
 #[CoversClass(CFileSystem::class)]
 class CFileSystemTest extends TestCase
 {
-    static function setUpBeforeClass(): void
+    private string $testDirectoryPath;
+
+    protected function setUp(): void
     {
-        self::assertTrue(\basename(__DIR__) === 'Core');
+        $this->testDirectoryPath = (string)CPath::Join(__DIR__, 'test-directory');
+        $this->cleanUp();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->cleanUp();
+    }
+
+    private function cleanUp()
+    {
+        if (\is_dir($this->testDirectoryPath)) {
+            $this->assertTrue(CFileSystem::Instance()->DeleteDirectory(
+                $this->testDirectoryPath));
+        }
+    }
+
+    private static function createDirectoryStructure(
+        string $parentDirectoryPath,
+        array $structure
+    ) {
+        @\mkdir($parentDirectoryPath, 0755, true);
+        foreach ($structure as $key => $value) {
+            $path = (string)CPath::Join($parentDirectoryPath, $key);
+            if (\is_array($value)) {
+                \mkdir($path, 0755, true);
+                self::createDirectoryStructure($path, $value);
+            } else {
+                \file_put_contents($path, $value);
+            }
+        }
     }
 
     #region CreateDirectory ----------------------------------------------------
 
     function testCreateDirectoryWithExistingDirectory()
     {
-        $directoryPath = CPath::Join(__DIR__, 'test-directory');
-        if (!\is_dir((string)$directoryPath)) {
-            $this->assertTrue(\mkdir((string)$directoryPath));
-        }
-        $this->assertTrue(CFileSystem::Instance()->CreateDirectory($directoryPath));
-        $this->assertTrue(\is_dir((string)$directoryPath));
-        $this->assertTrue(\rmdir((string)$directoryPath));
+        $this->assertTrue(\mkdir($this->testDirectoryPath));
+        $this->assertTrue(\is_dir($this->testDirectoryPath));
+        $this->assertTrue(CFileSystem::Instance()->CreateDirectory($this->testDirectoryPath));
+        $this->assertTrue(\is_dir($this->testDirectoryPath));
     }
 
     function testCreateDirectoryWithNonExistingDirectory()
     {
-        $directoryPath = CPath::Join(__DIR__, 'test-directory');
-        if (\is_dir((string)$directoryPath)) {
-            $this->assertTrue(\rmdir((string)$directoryPath));
-        }
-        $this->assertTrue(CFileSystem::Instance()->CreateDirectory($directoryPath));
-        $this->assertTrue(\is_dir((string)$directoryPath));
-        $this->assertTrue(\rmdir((string)$directoryPath));
+        $this->assertFalse(\is_dir($this->testDirectoryPath));
+        $this->assertTrue(CFileSystem::Instance()->CreateDirectory($this->testDirectoryPath));
+        $this->assertTrue(\is_dir($this->testDirectoryPath));
+    }
+
+    function testCreateDirectoryWithNestedPath()
+    {
+        $nestedPath = (string)CPath::Join($this->testDirectoryPath, 'foo', 'bar');
+        $this->assertFalse(\is_dir($nestedPath));
+        $this->assertTrue(CFileSystem::Instance()->CreateDirectory($nestedPath));
+        $this->assertTrue(\is_dir($nestedPath));
     }
 
     #endregion CreateDirectory
+
+    #region DeleteDirectory ----------------------------------------------------
+
+    function testDeleteDirectoryWithNonExistingDirectory()
+    {
+        $this->assertFalse(\is_dir($this->testDirectoryPath));
+        $this->assertFalse(CFileSystem::Instance()->DeleteDirectory($this->testDirectoryPath));
+        $this->assertFalse(\is_dir($this->testDirectoryPath));
+    }
+
+    function testDeleteDirectoryWithExistingDirectory()
+    {
+        $this->assertTrue(\mkdir($this->testDirectoryPath));
+        $this->assertTrue(\is_dir($this->testDirectoryPath));
+        $this->assertTrue(CFileSystem::Instance()->DeleteDirectory($this->testDirectoryPath));
+        $this->assertFalse(\is_dir($this->testDirectoryPath));
+    }
+
+    function testDeleteDirectoryWithRecursion()
+    {
+        self::createDirectoryStructure($this->testDirectoryPath, [
+            'file' => 'file content',
+            'subdir1' => [
+                'file1' => 'file1 content',
+                'file2' => 'file2 content'
+            ],
+            'subdir2' => [],
+            'subdir3' => [
+                'subdir4' => [
+                    'file3' => 'file3 content'
+                ]
+            ]
+        ]);
+        // Optional: Verify the directory structure before deletion.
+        $this->assertTrue(\is_dir($this->testDirectoryPath));
+        $this->assertTrue(\is_file((string)CPath::Join($this->testDirectoryPath, 'file')));
+        $this->assertTrue(\is_dir((string)CPath::Join($this->testDirectoryPath, 'subdir1')));
+        $this->assertTrue(\is_file((string)CPath::Join($this->testDirectoryPath, 'subdir1', 'file1')));
+        $this->assertTrue(\is_file((string)CPath::Join($this->testDirectoryPath, 'subdir1', 'file2')));
+        $this->assertTrue(\is_dir((string)CPath::Join($this->testDirectoryPath, 'subdir2')));
+        $this->assertTrue(\is_file((string)CPath::Join($this->testDirectoryPath, 'subdir3', 'subdir4', 'file3')));
+
+        CFileSystem::Instance()->DeleteDirectory($this->testDirectoryPath);
+        $this->assertFalse(\is_dir($this->testDirectoryPath));
+    }
+
+    #endregion DeleteDirectory
 }
