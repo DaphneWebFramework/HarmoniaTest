@@ -12,6 +12,9 @@ class CUrlTest extends TestCase
 {
     static ?string $originalWorkingDirectory = null;
 
+    /**
+     * @todo Replace \getcwd() with __DIR__.
+     */
     static function setUpBeforeClass(): void
     {
         // Ensure tests run within the "test/backend" directory. The working
@@ -425,6 +428,9 @@ class CUrlTest extends TestCase
         ];
     }
 
+    /**
+     * @todo Replace \getcwd() with __DIR__.
+     */
     static function toAbsoluteDataProvider()
     {
         // Data providers are executed before any test setup logic and rely on
