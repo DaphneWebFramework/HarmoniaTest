@@ -10,10 +10,12 @@ use \Harmonia\Core\CPath;
 class CFileSystemTest extends TestCase
 {
     private string $testDirectoryPath;
+    private string $testFilePath;
 
     protected function setUp(): void
     {
         $this->testDirectoryPath = (string)CPath::Join(__DIR__, 'test-directory');
+        $this->testFilePath = (string)CPath::Join(__DIR__, 'test-file');
         $this->cleanUp();
     }
 
@@ -27,6 +29,10 @@ class CFileSystemTest extends TestCase
         if (\is_dir($this->testDirectoryPath)) {
             $this->assertTrue(CFileSystem::Instance()->DeleteDirectory(
                 $this->testDirectoryPath));
+        }
+        if (\is_file($this->testFilePath)) {
+            $this->assertTrue(CFileSystem::Instance()->DeleteFile(
+                $this->testFilePath));
         }
     }
 
@@ -119,4 +125,23 @@ class CFileSystemTest extends TestCase
     }
 
     #endregion DeleteDirectory
+
+    #region DeleteFile ---------------------------------------------------------
+
+    function testDeleteFileWithNonExistingFile()
+    {
+        $this->assertFalse(\is_file($this->testFilePath));
+        $this->assertFalse(CFileSystem::Instance()->DeleteFile($this->testFilePath));
+        $this->assertFalse(\is_file($this->testFilePath));
+    }
+
+    function testDeleteFileWithExistingFile()
+    {
+        $this->assertTrue(\file_put_contents($this->testFilePath, 'file content') !== false);
+        $this->assertTrue(\is_file($this->testFilePath));
+        $this->assertTrue(CFileSystem::Instance()->DeleteFile($this->testFilePath));
+        $this->assertFalse(\is_file($this->testFilePath));
+    }
+
+    #endregion DeleteFile
 }
