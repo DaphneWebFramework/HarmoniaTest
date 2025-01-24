@@ -13,25 +13,27 @@ class CUrlTest extends TestCase
     static ?string $originalWorkingDirectory = null;
 
     /**
-     * @todo Replace \getcwd() with __DIR__.
+     * Ensures tests run within the "test/backend" directory. Locally, the
+     * working directory is often already set correctly, but in CI environments
+     * like GitHub Actions, it typically starts at the project root. This method
+     * checks for the presence of "phpunit.xml" to confirm the correct directory.
+     * If not found, it changes the working directory to "test/backend".
      */
     static function setUpBeforeClass(): void
     {
-        // Ensure tests run within the "test/backend" directory. The working
-        // directory varies between environments: locally, it is often already
-        // "test/backend", but in GitHub Actions, it is typically the project
-        // root.
         $cwd = \getcwd();
-        if (\basename($cwd) !== 'backend') {
-            \chdir((string)CPath::Join($cwd, 'test', 'backend'));
+        if (!CPath::Join($cwd, 'phpunit.xml')->IsFile()) {
+            \chdir((string)CPath::Join(__DIR__, '..', '..'));
             self::$originalWorkingDirectory = $cwd;
         }
     }
 
+    /**
+     * Restore the original working directory after the test suite completes,
+     * but only if it was changed during `setUpBeforeClass`.
+     */
     static function tearDownAfterClass(): void
     {
-        // Restore the original working directory after the test suite completes,
-        // but only if it was changed during `setUpBeforeClass`.
         if (self::$originalWorkingDirectory !== null) {
             \chdir(self::$originalWorkingDirectory);
             self::$originalWorkingDirectory = null;
@@ -428,18 +430,15 @@ class CUrlTest extends TestCase
         ];
     }
 
-    /**
-     * @todo Replace \getcwd() with __DIR__.
-     */
     static function toAbsoluteDataProvider()
     {
-        // Data providers are executed before any test setup logic and rely on
-        // the initial working directory. This adjustment ensures paths are
-        // consistent with the "test/backend" directory, which will later be set
-        // as the current directory during `setUpBeforeClass`.
+        // Data providers run before any test setup and depend on the initial
+        // working directory. To ensure the base path is "test/backend" (set
+        // later by `setUpBeforeClass`, if needed), we check for a specific file
+        // (e.g., "phpunit.xml"). If it's not found, we adjust the path.
         $cwd = \getcwd();
-        if (\basename($cwd) !== 'backend') {
-            $cwd = (string)CPath::Join($cwd, 'test', 'backend');
+        if (!CPath::Join($cwd, 'phpunit.xml')->IsFile()) {
+            $cwd = \realpath((string)CPath::Join(__DIR__, '..', '..'));
         }
 
         $data = [
