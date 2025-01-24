@@ -45,7 +45,8 @@ class ConfigTest extends TestCase
     {
         $this->assertFileDoesNotExist((string)$this->testFilePath);
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("Configuration options file not found: $this->testFilePath");
+        $this->expectExceptionMessage(
+            "Configuration options file not found: $this->testFilePath");
         Config::Instance()->Load($this->testFilePath);
     }
 
@@ -70,4 +71,47 @@ class ConfigTest extends TestCase
     }
 
     #endregion Load
+
+    #region Reload -------------------------------------------------------------
+
+    function testReloadWithoutLoad()
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('No configuration options file is loaded.');
+        Config::Instance()->Reload();
+    }
+
+    function testReload()
+    {
+        $fileContent = <<<PHP
+            <?php
+            return [
+                'key1' => 'value1',
+                'key2' => 'value2'
+            ];
+
+        PHP;
+        $fileContent = \preg_replace('/^[ ]{4}/m', '', $fileContent);
+        \file_put_contents((string)$this->testFilePath, $fileContent);
+        $config = Config::Instance();
+        $config->Load($this->testFilePath);
+        $this->assertSame(['key1' => 'value1', 'key2' => 'value2'],
+            AccessHelper::GetNonPublicProperty($config, 'options')->ToArray());
+        $fileContent = <<<PHP
+            <?php
+            return [
+                'key1' => 'value1',
+                'key2' => 'value2',
+                'key3' => 'value3'
+            ];
+
+        PHP;
+        $fileContent = \preg_replace('/^[ ]{4}/m', '', $fileContent);
+        \file_put_contents((string)$this->testFilePath, $fileContent);
+        $config->Reload();
+        $this->assertSame(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3'],
+            AccessHelper::GetNonPublicProperty($config, 'options')->ToArray());
+    }
+
+    #endregion Reload
 }
