@@ -138,7 +138,7 @@ class CFileSystemTest extends TestCase
 
     function testDeleteFileWithExistingFile()
     {
-        $this->assertTrue(\file_put_contents($this->testFilePath, 'content') !== false);
+        \file_put_contents($this->testFilePath, 'content');
         $this->assertFileExists($this->testFilePath);
         $this->assertTrue(CFileSystem::Instance()->DeleteFile($this->testFilePath));
         $this->assertFileDoesNotExist($this->testFilePath);
