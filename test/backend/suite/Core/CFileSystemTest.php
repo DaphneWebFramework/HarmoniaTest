@@ -183,11 +183,16 @@ class CFileSystemTest extends TestCase
             'subdir' => [
                 'file3.txt' => 'content3',
                 'file4.log' => 'content4',
-            ],
+                'subdir2' => [
+                    'file5.txt' => 'content5',
+                    'file6.log' => 'content6'
+                ]
+            ]
         ]);
         $expectedPaths = [
             CPath::Join($this->testDirectoryPath, 'file1.txt'),
             CPath::Join($this->testDirectoryPath, 'subdir', 'file3.txt'),
+            CPath::Join($this->testDirectoryPath, 'subdir', 'subdir2', 'file5.txt')
         ];
         $actualPaths = [];
         $generator = CFileSystem::Instance()->FindFiles(
@@ -211,7 +216,11 @@ class CFileSystemTest extends TestCase
             'subdir' => [
                 'file3.txt' => 'content3',
                 'file4.log' => 'content4',
-            ],
+                'subdir2' => [
+                    'file5.txt' => 'content5',
+                    'file6.log' => 'content6'
+                ]
+            ]
         ]);
         $expectedPaths = [
             CPath::Join($this->testDirectoryPath, 'file1.txt'),
