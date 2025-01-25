@@ -27,13 +27,29 @@ class ConfigTest extends TestCase
         }
     }
 
+    /**
+     * Writes the specified content to the test file.
+     *
+     * Leading 4-space indentation is removed from each line.
+     *
+     * @param string $fileContent
+     *   The content to write to the test file.
+     */
+    private function createTestFile(string $fileContent): void
+    {
+        \file_put_contents(
+            (string)$this->testFilePath,
+            \preg_replace('/^[ ]{4}/m', '', $fileContent)
+        );
+    }
+
     #region __construct --------------------------------------------------------
 
     function testConstructor()
     {
         $config = Config::Instance();
+        $this->assertCount(0, $config->GetOptions());
         $this->assertNull($config->GetOptionsFilePath());
-        $this->assertNull($config->GetOptions());
     }
 
     #endregion __construct
@@ -51,16 +67,14 @@ class ConfigTest extends TestCase
 
     function testLoadWithExistingFile()
     {
-        $fileContent = <<<PHP
+        $this->createTestFile(<<<PHP
             <?php
             return [
                 'key1' => 'value1',
                 'key2' => 'value2'
             ];
 
-        PHP;
-        $fileContent = \preg_replace('/^[ ]{4}/m', '', $fileContent);
-        \file_put_contents((string)$this->testFilePath, $fileContent);
+        PHP);
         $config = Config::Instance();
         $config->Load($this->testFilePath);
         $this->assertSame($this->testFilePath, $config->GetOptionsFilePath());
@@ -81,21 +95,19 @@ class ConfigTest extends TestCase
 
     function testReload()
     {
-        $fileContent = <<<PHP
+        $this->createTestFile(<<<PHP
             <?php
             return [
                 'key1' => 'value1',
                 'key2' => 'value2'
             ];
 
-        PHP;
-        $fileContent = \preg_replace('/^[ ]{4}/m', '', $fileContent);
-        \file_put_contents((string)$this->testFilePath, $fileContent);
+        PHP);
         $config = Config::Instance();
         $config->Load($this->testFilePath);
         $this->assertSame(['key1' => 'value1', 'key2' => 'value2'],
                           $config->GetOptions()->ToArray());
-        $fileContent = <<<PHP
+        $this->createTestFile(<<<PHP
             <?php
             return [
                 'key1' => 'value1',
@@ -103,13 +115,100 @@ class ConfigTest extends TestCase
                 'key3' => 'value3'
             ];
 
-        PHP;
-        $fileContent = \preg_replace('/^[ ]{4}/m', '', $fileContent);
-        \file_put_contents((string)$this->testFilePath, $fileContent);
+        PHP);
         $config->Reload();
         $this->assertSame(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3'],
                           $config->GetOptions()->ToArray());
     }
 
     #endregion Reload
+
+    #region GetOption ----------------------------------------------------------
+
+    function testGetOptionWithoutLoad()
+    {
+        $config = Config::Instance();
+        $this->assertNull($config->GetOption('key'));
+    }
+
+    function testGetOptionWithLoad()
+    {
+        $this->createTestFile(<<<PHP
+            <?php
+            return [
+                'key1' => 'value1',
+                'key2' => 'value2'
+            ];
+
+        PHP);
+        $config = Config::Instance();
+        $config->Load($this->testFilePath);
+        $this->assertSame('value1', $config->GetOption('key1'));
+        $this->assertSame('value2', $config->GetOption('key2'));
+        $this->assertNull($config->GetOption('key3'));
+    }
+
+    #endregion GetOption
+
+    #region SetOption ----------------------------------------------------------
+
+    function testSetOptionWithoutLoad()
+    {
+        $config = Config::Instance();
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Configuration option not found: key1');
+        $config->SetOption('key1', 'value1');
+    }
+
+    function testSetOptionWithNonExistingKey()
+    {
+        $this->createTestFile(<<<PHP
+            <?php
+            return [
+                'key1' => 'value1',
+                'key2' => 'value2'
+            ];
+
+        PHP);
+        $config = Config::Instance();
+        $config->Load($this->testFilePath);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Configuration option not found: key3');
+        $config->SetOption('key3', 'value3');
+    }
+
+    function testSetOptionWithTypeMismatch()
+    {
+        $this->createTestFile(<<<PHP
+            <?php
+            return [
+                'key1' => 'value1',
+                'key2' => 'value2'
+            ];
+
+        PHP);
+        $config = Config::Instance();
+        $config->Load($this->testFilePath);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Configuration option type mismatch: key1');
+        $config->SetOption('key1', 123);
+    }
+
+    function testSetOption()
+    {
+        $this->createTestFile(<<<PHP
+            <?php
+            return [
+                'key1' => 'value1',
+                'key2' => 'value2'
+            ];
+
+        PHP);
+        $config = Config::Instance();
+        $config->Load($this->testFilePath);
+        $config->SetOption('key1', 'new_value1');
+        $this->assertSame('new_value1', $config->GetOption('key1'));
+    }
+
+    #endregion SetOption
 }
