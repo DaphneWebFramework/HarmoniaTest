@@ -6,23 +6,22 @@ use \Harmonia\Config;
 
 use \Harmonia\Core\CPath;
 use \Harmonia\Core\CFileSystem;
-use \TestToolkit\AccessHelper;
 
 #[CoversClass(Config::class)]
 class ConfigTest extends TestCase
 {
-    private readonly ?Config $previousInstance;
+    private readonly ?Config $originalInstance;
     private CPath $testFilePath;
 
     protected function setUp(): void
     {
-        $this->previousInstance = Config::ReplaceInstance(null);
+        $this->originalInstance = Config::ReplaceInstance(null);
         $this->testFilePath = CPath::Join(__DIR__, 'config_test.inc.php');
     }
 
     protected function tearDown(): void
     {
-        Config::ReplaceInstance($this->previousInstance);
+        Config::ReplaceInstance($this->originalInstance);
         if ($this->testFilePath->IsFile()) {
             $this->assertTrue(CFileSystem::Instance()->DeleteFile($this->testFilePath));
         }
@@ -33,8 +32,8 @@ class ConfigTest extends TestCase
     function testConstructor()
     {
         $config = Config::Instance();
-        $this->assertNull(AccessHelper::GetNonPublicProperty($config, 'optionsFilePath'));
-        $this->assertNull(AccessHelper::GetNonPublicProperty($config, 'options'));
+        $this->assertNull($config->GetOptionsFilePath());
+        $this->assertNull($config->GetOptions());
     }
 
     #endregion __construct
@@ -64,10 +63,9 @@ class ConfigTest extends TestCase
         \file_put_contents((string)$this->testFilePath, $fileContent);
         $config = Config::Instance();
         $config->Load($this->testFilePath);
-        $this->assertSame($this->testFilePath,
-            AccessHelper::GetNonPublicProperty($config, 'optionsFilePath'));
+        $this->assertSame($this->testFilePath, $config->GetOptionsFilePath());
         $this->assertSame(['key1' => 'value1', 'key2' => 'value2'],
-            AccessHelper::GetNonPublicProperty($config, 'options')->ToArray());
+                          $config->GetOptions()->ToArray());
     }
 
     #endregion Load
@@ -96,7 +94,7 @@ class ConfigTest extends TestCase
         $config = Config::Instance();
         $config->Load($this->testFilePath);
         $this->assertSame(['key1' => 'value1', 'key2' => 'value2'],
-            AccessHelper::GetNonPublicProperty($config, 'options')->ToArray());
+                          $config->GetOptions()->ToArray());
         $fileContent = <<<PHP
             <?php
             return [
@@ -110,7 +108,7 @@ class ConfigTest extends TestCase
         \file_put_contents((string)$this->testFilePath, $fileContent);
         $config->Reload();
         $this->assertSame(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3'],
-            AccessHelper::GetNonPublicProperty($config, 'options')->ToArray());
+                          $config->GetOptions()->ToArray());
     }
 
     #endregion Reload

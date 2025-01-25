@@ -8,16 +8,16 @@ use \Harmonia\Server;
 #[CoversClass(Server::class)]
 class ServerTest extends TestCase
 {
-    private readonly ?Server $previousInstance;
+    private readonly ?Server $originalInstance;
 
     protected function setUp(): void
     {
-        $this->previousInstance = Server::ReplaceInstance(null);
+        $this->originalInstance = Server::ReplaceInstance(null);
     }
 
     protected function tearDown(): void
     {
-        Server::ReplaceInstance($this->previousInstance);
+        Server::ReplaceInstance($this->originalInstance);
     }
 
     #[BackupGlobals(true)]
