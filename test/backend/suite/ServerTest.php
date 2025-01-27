@@ -138,62 +138,46 @@ class ServerTest extends TestCase
 
     #endregion IsSecure
 
-    #region HostName -----------------------------------------------------------
-
-    #[BackupGlobals(true)]
-    function testHostNameWithServerName()
-    {
-        $_SERVER['SERVER_NAME'] = 'example.com';
-        $this->assertSame('example.com', Server::Instance()->HostName());
-    }
-
-    #[BackupGlobals(true)]
-    function testHostNameWithNoServerName()
-    {
-        unset($_SERVER['SERVER_NAME']);
-        $this->assertSame('', Server::Instance()->HostName());
-    }
-
     #endregion HostName
 
-    #region HostUrl ------------------------------------------------------------
+    #region Url ----------------------------------------------------------------
 
     #[BackupGlobals(true)]
-    function testHostUrlWithHttps()
+    function testUrlWithHttps()
     {
         $_SERVER['HTTPS'] = 'on';
         $_SERVER['SERVER_NAME'] = 'example.com';
-        $this->assertSame('https://example.com', Server::Instance()->HostUrl());
+        $this->assertSame('https://example.com', Server::Instance()->Url());
     }
 
     #[BackupGlobals(true)]
-    function testHostUrlWithHttp()
+    function testUrlWithHttp()
     {
         unset($_SERVER['HTTPS']);
         unset($_SERVER['SERVER_PORT']);
         unset($_SERVER['REQUEST_SCHEME']);
         unset($_SERVER['HTTP_X_FORWARDED_PROTO']);
         $_SERVER['SERVER_NAME'] = 'example.com';
-        $this->assertSame('http://example.com', Server::Instance()->HostUrl());
+        $this->assertSame('http://example.com', Server::Instance()->Url());
     }
 
-    #endregion HostUrl
+    #endregion Url
 
-    #region RootDirectory ------------------------------------------------------
+    #region Path ---------------------------------------------------------------
 
     #[BackupGlobals(true)]
-    function testRootDirectoryWithDocumentRoot()
+    function testPathWithDocumentRoot()
     {
         $_SERVER['DOCUMENT_ROOT'] = 'path/to/root';
-        $this->assertSame('path/to/root', Server::Instance()->RootDirectory());
+        $this->assertSame('path/to/root', Server::Instance()->Path());
     }
 
     #[BackupGlobals(true)]
-    function testRootDirectoryWithNoDocumentRoot()
+    function testPathWithNoDocumentRoot()
     {
         unset($_SERVER['DOCUMENT_ROOT']);
-        $this->assertSame('', Server::Instance()->RootDirectory());
+        $this->assertSame('', Server::Instance()->Path());
     }
 
-    #endregion RootDirectory
+    #endregion Path
 }
