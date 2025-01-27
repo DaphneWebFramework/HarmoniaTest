@@ -8,16 +8,16 @@ use \Harmonia\Server;
 #[CoversClass(Server::class)]
 class ServerTest extends TestCase
 {
-    private readonly ?Server $originalInstance;
+    private readonly ?Server $originalServer;
 
     protected function setUp(): void
     {
-        $this->originalInstance = Server::ReplaceInstance(null);
+        $this->originalServer = Server::ReplaceInstance(null);
     }
 
     protected function tearDown(): void
     {
-        Server::ReplaceInstance($this->originalInstance);
+        Server::ReplaceInstance($this->originalServer);
     }
 
     #[BackupGlobals(true)]
@@ -138,8 +138,6 @@ class ServerTest extends TestCase
 
     #endregion IsSecure
 
-    #endregion HostName
-
     #region Url ----------------------------------------------------------------
 
     #[BackupGlobals(true)]
@@ -147,7 +145,7 @@ class ServerTest extends TestCase
     {
         $_SERVER['HTTPS'] = 'on';
         $_SERVER['SERVER_NAME'] = 'example.com';
-        $this->assertSame('https://example.com', Server::Instance()->Url());
+        $this->assertSame('https://example.com', (string)Server::Instance()->Url());
     }
 
     #[BackupGlobals(true)]
@@ -158,7 +156,16 @@ class ServerTest extends TestCase
         unset($_SERVER['REQUEST_SCHEME']);
         unset($_SERVER['HTTP_X_FORWARDED_PROTO']);
         $_SERVER['SERVER_NAME'] = 'example.com';
-        $this->assertSame('http://example.com', Server::Instance()->Url());
+        $this->assertSame('http://example.com', (string)Server::Instance()->Url());
+    }
+
+    #[BackupGlobals(true)]
+    function testUrlWithNoServerName()
+    {
+        unset($_SERVER['SERVER_NAME']);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Server name is not set.');
+        Server::Instance()->Url();
     }
 
     #endregion Url
@@ -169,14 +176,16 @@ class ServerTest extends TestCase
     function testPathWithDocumentRoot()
     {
         $_SERVER['DOCUMENT_ROOT'] = 'path/to/root';
-        $this->assertSame('path/to/root', Server::Instance()->Path());
+        $this->assertSame('path/to/root', (string)Server::Instance()->Path());
     }
 
     #[BackupGlobals(true)]
     function testPathWithNoDocumentRoot()
     {
         unset($_SERVER['DOCUMENT_ROOT']);
-        $this->assertSame('', Server::Instance()->Path());
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Document root is not set.');
+        Server::Instance()->Path();
     }
 
     #endregion Path
