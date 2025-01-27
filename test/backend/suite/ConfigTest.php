@@ -10,18 +10,18 @@ use \Harmonia\Core\CFileSystem;
 #[CoversClass(Config::class)]
 class ConfigTest extends TestCase
 {
-    private readonly ?Config $originalInstance;
+    private readonly ?Config $originalConfig;
     private CPath $testFilePath;
 
     protected function setUp(): void
     {
-        $this->originalInstance = Config::ReplaceInstance(null);
+        $this->originalConfig = Config::ReplaceInstance(null);
         $this->testFilePath = CPath::Join(__DIR__, 'config_test.inc.php');
     }
 
     protected function tearDown(): void
     {
-        Config::ReplaceInstance($this->originalInstance);
+        Config::ReplaceInstance($this->originalConfig);
         if ($this->testFilePath->IsFile()) {
             $this->assertTrue(CFileSystem::Instance()->DeleteFile($this->testFilePath));
         }

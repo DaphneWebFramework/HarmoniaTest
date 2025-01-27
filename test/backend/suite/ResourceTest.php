@@ -5,6 +5,7 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 use \Harmonia\Resource;
 
 use \TestToolkit\AccessHelper;
+use \Harmonia\Core\CArray;
 use \Harmonia\Core\CPath;
 use \Harmonia\Core\CUrl;
 use \Harmonia\Server;
@@ -26,6 +27,18 @@ class ResourceTest extends TestCase
         Resource::ReplaceInstance($this->originalResource);
         Server::ReplaceInstance($this->originalServer);
     }
+
+    #region __construct --------------------------------------------------------
+
+    function testConstructor()
+    {
+        $resource = Resource::Instance();
+        $this->assertNull(AccessHelper::GetNonPublicProperty($resource, 'appPath'));
+        $this->assertInstanceOf(CArray::class, AccessHelper::GetNonPublicProperty($resource, 'cache'));
+        $this->assertInstanceOf(Server::class, AccessHelper::GetNonPublicProperty($resource, 'server'));
+    }
+
+    #endregion __construct
 
     #region Initialize ---------------------------------------------------------
 
