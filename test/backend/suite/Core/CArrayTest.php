@@ -243,7 +243,7 @@ class CArrayTest extends TestCase
 
     #region Data Providers -----------------------------------------------------
 
-    public static function isEmptyDataProvider()
+    static function isEmptyDataProvider()
     {
         return [
             'empty array' => [true, []],
@@ -422,7 +422,7 @@ class CArrayTest extends TestCase
         ];
     }
 
-    public static function countDataProvider()
+    static function countDataProvider()
     {
         return [
             'empty array' => [0, []],
