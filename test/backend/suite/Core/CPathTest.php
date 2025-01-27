@@ -81,6 +81,35 @@ class CPathTest extends TestCase
         $this->assertSame($expected, (string)$joined);
     }
 
+    function testJoinWithMixedArguments()
+    {
+        if (\PHP_OS_FAMILY === 'Windows') {
+            $joined = CPath::Join(
+                'C:',
+                new class() implements \Stringable {
+                    function __toString() {
+                        return 'xampp';
+                    }
+                },
+                'htdocs',
+                'index.html'
+            );
+            $this->assertSame('C:\\xampp\\htdocs\\index.html', (string)$joined);
+        } else {
+            $joined = CPath::Join(
+                '/var',
+                new class() implements \Stringable {
+                    function __toString() {
+                        return 'www';
+                    }
+                },
+                'html',
+                'index.html'
+            );
+            $this->assertSame('/var/www/html/index.html', (string)$joined);
+        }
+    }
+
     #endregion Join
 
     #region EnsureLeadingSlash -------------------------------------------------

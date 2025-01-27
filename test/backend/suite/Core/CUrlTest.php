@@ -83,6 +83,22 @@ class CUrlTest extends TestCase
         $this->assertSame($expected, (string)$joined);
     }
 
+    function testJoinWithMixedArguments()
+    {
+        $joined = CUrl::Join(
+            'http://',
+            new class() implements \Stringable {
+                function __toString() {
+                    return 'example.com';
+                }
+            },
+            'path',
+            'to',
+            'file.html'
+        );
+        $this->assertSame('http://example.com/path/to/file.html', (string)$joined);
+    }
+
     #endregion Join
 
     #region EnsureLeadingSlash -------------------------------------------------
