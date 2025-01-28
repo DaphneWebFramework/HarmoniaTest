@@ -42,6 +42,15 @@ class ResourceTest extends TestCase
 
     #region Initialize ---------------------------------------------------------
 
+    function testInitializeWhenAlreadyInitialized()
+    {
+        $resource = Resource::Instance();
+        $resource->Initialize(__DIR__);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Resource is already initialized.');
+        $resource->Initialize(__DIR__);
+    }
+
     function testInitializeWithNonExistingPath()
     {
         $resource = Resource::Instance();
@@ -53,7 +62,7 @@ class ResourceTest extends TestCase
     function testInitializeWithExistingPath()
     {
         $resource = Resource::Instance();
-        $resource->Initialize(new CPath(__DIR__));
+        $resource->Initialize(__DIR__);
         $this->assertEquals(__DIR__, $resource->AppPath());
     }
 
@@ -88,13 +97,25 @@ class ResourceTest extends TestCase
         $resource->AppRelativePath();
     }
 
+    function testAppRelativePathWithNullServerPath()
+    {
+        $resource = Resource::Instance();
+        $serverMock = Server::Instance();
+        $serverMock->method('Path')
+            ->willReturn(null);
+        $resource->Initialize(__DIR__);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Server path not available.');
+        $resource->AppRelativePath();
+    }
+
     function testAppRelativePathWithNonExistingServerPath()
     {
         $resource = Resource::Instance();
         $serverMock = Server::Instance();
         $serverMock->method('Path')
             ->willReturn(new CPath('non_existing_path'));
-        $resource->Initialize(new CPath(__DIR__));
+        $resource->Initialize(__DIR__);
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Failed to resolve server path.');
         $resource->AppRelativePath();
@@ -118,7 +139,7 @@ class ResourceTest extends TestCase
         $serverMock = Server::Instance();
         $serverMock->method('Path')
             ->willReturn(new CPath(__DIR__));
-        $resource->Initialize(new CPath(__DIR__));
+        $resource->Initialize(__DIR__);
         $this->assertTrue($resource->AppRelativePath()->IsEmpty());
     }
 
@@ -126,7 +147,7 @@ class ResourceTest extends TestCase
     {
         $resource = Resource::Instance();
         $serverMock = Server::Instance();
-        $serverMock->expects($this->once())
+        $serverMock->expects($this->once()) // once() is to ensure cache hit
             ->method('Path')
             ->willReturn(new CPath(__DIR__));
         $resource->Initialize(CPath::Join(__DIR__, 'Core'));
@@ -139,11 +160,40 @@ class ResourceTest extends TestCase
 
     #region AppUrl -------------------------------------------------------------
 
+    function testAppUrlWithNullServerUrl()
+    {
+        $resource = Resource::Instance();
+        $serverMock = Server::Instance();
+        $serverMock->method('Url')
+            ->willReturn(null);
+        $resource->Initialize(__DIR__);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Server URL not available.');
+        $resource->AppUrl();
+    }
+
     function testAppUrlWhenNotInitialized()
     {
         $resource = Resource::Instance();
+        $serverMock = Server::Instance();
+        $serverMock->method('Url')
+            ->willReturn(new CUrl()); // empty instance to pass the null check
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Resource is not initialized.');
+        $resource->AppUrl();
+    }
+
+    function testAppUrlWithNullServerPath()
+    {
+        $resource = Resource::Instance();
+        $serverMock = Server::Instance();
+        $serverMock->method('Url')
+            ->willReturn(new CUrl()); // empty instance to pass the null check
+        $serverMock->method('Path')
+            ->willReturn(null);
+        $resource->Initialize(__DIR__);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Server path not available.');
         $resource->AppUrl();
     }
 
@@ -151,9 +201,11 @@ class ResourceTest extends TestCase
     {
         $resource = Resource::Instance();
         $serverMock = Server::Instance();
+        $serverMock->method('Url')
+            ->willReturn(new CUrl()); // empty instance to pass the null check
         $serverMock->method('Path')
             ->willReturn(new CPath('non_existing_path'));
-        $resource->Initialize(new CPath(__DIR__));
+        $resource->Initialize(__DIR__);
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Failed to resolve server path.');
         $resource->AppUrl();
@@ -163,6 +215,8 @@ class ResourceTest extends TestCase
     {
         $resource = Resource::Instance();
         $serverMock = Server::Instance();
+        $serverMock->method('Url')
+            ->willReturn(new CUrl()); // empty instance to pass the null check
         $serverMock->method('Path')
             ->willReturn(new CPath(__DIR__));
         $resource->Initialize(CPath::Join(__DIR__, '..'));
@@ -175,11 +229,11 @@ class ResourceTest extends TestCase
     {
         $resource = Resource::Instance();
         $serverMock = Server::Instance();
-        $serverMock->method('Path')
-            ->willReturn(new CPath(__DIR__));
         $serverMock->method('Url')
             ->willReturn(new CUrl('http://localhost'));
-        $resource->Initialize(new CPath(__DIR__));
+        $serverMock->method('Path')
+            ->willReturn(new CPath(__DIR__));
+        $resource->Initialize(__DIR__);
         $this->assertSame('http://localhost/', (string)$resource->AppUrl());
     }
 
@@ -187,12 +241,12 @@ class ResourceTest extends TestCase
     {
         $resource = Resource::Instance();
         $serverMock = Server::Instance();
-        $serverMock->expects($this->once())
-            ->method('Path')
-            ->willReturn(new CPath(__DIR__));
-        $serverMock->expects($this->once())
+        $serverMock->expects($this->once()) // once() is to ensure cache hit
             ->method('Url')
             ->willReturn(new CUrl('http://localhost/'));
+        $serverMock->expects($this->once()) // once() is to ensure cache hit
+            ->method('Path')
+            ->willReturn(new CPath(__DIR__));
         $resource->Initialize(CPath::Join(__DIR__, 'Core'));
         $this->assertSame('http://localhost/Core/', (string)$resource->AppUrl());
         // Cache hit:

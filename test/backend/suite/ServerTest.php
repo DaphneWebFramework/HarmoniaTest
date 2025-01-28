@@ -163,9 +163,7 @@ class ServerTest extends TestCase
     function testUrlWithNoServerName()
     {
         unset($_SERVER['SERVER_NAME']);
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Server name is not set.');
-        Server::Instance()->Url();
+        $this->assertNull(Server::Instance()->Url());
     }
 
     #endregion Url
@@ -183,9 +181,7 @@ class ServerTest extends TestCase
     function testPathWithNoDocumentRoot()
     {
         unset($_SERVER['DOCUMENT_ROOT']);
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Document root is not set.');
-        Server::Instance()->Path();
+        $this->assertNull(Server::Instance()->Path());
     }
 
     #endregion Path
