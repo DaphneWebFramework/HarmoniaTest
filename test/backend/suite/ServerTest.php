@@ -238,7 +238,8 @@ class ServerTest extends TestCase
     function testRequestUriWithUri()
     {
         $_SERVER['REQUEST_URI'] = '/index.php?foo=bar#section';
-        $this->assertEquals('/index.php?foo=bar#section', Server::Instance()->RequestUri());
+        $this->assertEquals('/index.php?foo=bar#section',
+                            Server::Instance()->RequestUri());
     }
 
     #[BackupGlobals(true)]
