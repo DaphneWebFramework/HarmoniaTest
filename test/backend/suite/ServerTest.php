@@ -145,7 +145,7 @@ class ServerTest extends TestCase
     {
         $_SERVER['HTTPS'] = 'on';
         $_SERVER['SERVER_NAME'] = 'example.com';
-        $this->assertSame('https://example.com', (string)Server::Instance()->Url());
+        $this->assertEquals('https://example.com', Server::Instance()->Url());
     }
 
     #[BackupGlobals(true)]
@@ -156,13 +156,20 @@ class ServerTest extends TestCase
         unset($_SERVER['REQUEST_SCHEME']);
         unset($_SERVER['HTTP_X_FORWARDED_PROTO']);
         $_SERVER['SERVER_NAME'] = 'example.com';
-        $this->assertSame('http://example.com', (string)Server::Instance()->Url());
+        $this->assertEquals('http://example.com', Server::Instance()->Url());
     }
 
     #[BackupGlobals(true)]
     function testUrlWithNoServerName()
     {
         unset($_SERVER['SERVER_NAME']);
+        $this->assertNull(Server::Instance()->Url());
+    }
+
+    #[BackupGlobals(true)]
+    function testUrlWithEmptyServerName()
+    {
+        $_SERVER['SERVER_NAME'] = '';
         $this->assertNull(Server::Instance()->Url());
     }
 
@@ -174,7 +181,7 @@ class ServerTest extends TestCase
     function testPathWithDocumentRoot()
     {
         $_SERVER['DOCUMENT_ROOT'] = 'path/to/root';
-        $this->assertSame('path/to/root', (string)Server::Instance()->Path());
+        $this->assertEquals('path/to/root', Server::Instance()->Path());
     }
 
     #[BackupGlobals(true)]
@@ -184,5 +191,121 @@ class ServerTest extends TestCase
         $this->assertNull(Server::Instance()->Path());
     }
 
+    #[BackupGlobals(true)]
+    function testPathWithEmptyDocumentRoot()
+    {
+        $_SERVER['DOCUMENT_ROOT'] = '';
+        $this->assertNull(Server::Instance()->Path());
+    }
+
     #endregion Path
+
+    #region RequestMethod ------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testRequestMethodWithGet()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->assertEquals('GET', Server::Instance()->RequestMethod());
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestMethodWithPost()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $this->assertEquals('POST', Server::Instance()->RequestMethod());
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestMethodWithNoRequestMethod()
+    {
+        unset($_SERVER['REQUEST_METHOD']);
+        $this->assertNull(Server::Instance()->RequestMethod());
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestMethodWithEmptyRequestMethod()
+    {
+        $_SERVER['REQUEST_METHOD'] = '';
+        $this->assertNull(Server::Instance()->RequestMethod());
+    }
+
+    #endregion RequestMethod
+
+    #region RequestUri ---------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testRequestUriWithUri()
+    {
+        $_SERVER['REQUEST_URI'] = '/index.php?foo=bar#section';
+        $this->assertEquals('/index.php?foo=bar#section', Server::Instance()->RequestUri());
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestUriWithNoRequestUri()
+    {
+        unset($_SERVER['REQUEST_URI']);
+        $this->assertNull(Server::Instance()->RequestUri());
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestUriWithEmptyRequestUri()
+    {
+        $_SERVER['REQUEST_URI'] = '';
+        $this->assertNull(Server::Instance()->RequestUri());
+    }
+
+    #endregion RequestUri
+
+    #region RequestHeaders -----------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testRequestHeadersWithNoHeaders()
+    {
+        $this->assertEmpty(Server::Instance()->RequestHeaders()->ToArray());
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestHeadersWithHeaders()
+    {
+        $_SERVER['HTTP_FOO_BAR'] = 'baz';
+        $_SERVER['HTTP_QUX_QUUX'] = 'corge';
+        $this->assertEquals(
+            ['Foo-Bar' => 'baz', 'Qux-Quux' => 'corge'],
+            Server::Instance()->RequestHeaders()->ToArray()
+        );
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestHeadersWithMixedCaseHeaders()
+    {
+        $_SERVER['http_foo_bar'] = 'baz'; // ignored due to lowercase "http_"
+        $_SERVER['HTTP_qUX_qUUX'] = 'corge';
+        $_SERVER['HTTP_Abc_Def'] = 'ghi';
+        $this->assertEquals(
+            ['Qux-Quux' => 'corge', 'Abc-Def' => 'ghi'],
+            Server::Instance()->RequestHeaders()->ToArray()
+        );
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestHeadersWithSpecialHeaders()
+    {
+        $_SERVER['CONTENT_TYPE'] = 'application/json';
+        $_SERVER['CONTENT_LENGTH'] = '123';
+        $this->assertEquals(
+            ['Content-Type' => 'application/json', 'Content-Length' => '123'],
+            Server::Instance()->RequestHeaders()->ToArray()
+        );
+    }
+
+    #[BackupGlobals(true)]
+    function testRequestHeadersWithSpecialHeadersButImproperCase()
+    {
+        $_SERVER['cONTENT_tYPE'] = 'application/json';
+        $_SERVER['content_length'] = '123';
+        $this->assertEmpty(Server::Instance()->RequestHeaders()->ToArray());
+    }
+
+    #endregion RequestHeaders
 }
