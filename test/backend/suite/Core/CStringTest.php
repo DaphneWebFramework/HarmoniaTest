@@ -914,6 +914,29 @@ class CStringTest extends TestCase
 
     #endregion Apply, ApplyInPlace
 
+    #region Match --------------------------------------------------------------
+
+    #[DataProvider('matchDataProvider')]
+    function testMatch(
+        ?array $expected,
+        string $value,
+        string $encoding,
+        string $pattern,
+        int $options = CString::REGEX_OPTION_NONE,
+        string $delimiter = '/'
+    ) {
+        $cstr = new CString($value, $encoding);
+        $matches = $cstr->Match($pattern, $options, $delimiter);
+        if ($expected === null) {
+            $this->assertNull($matches);
+        } else {
+            $this->assertIsArray($matches);
+            $this->assertSame($expected, $matches);
+        }
+    }
+
+    #endregion Match
+
     #region Interface: Stringable ----------------------------------------------
 
     function testToString()
@@ -2356,6 +2379,76 @@ class CStringTest extends TestCase
                 'UTF-8',
                 ' ',
                 CString::SPLIT_OPTION_TRIM | CString::SPLIT_OPTION_EXCLUDE_EMPTY
+            ],
+        ];
+    }
+
+    static function matchDataProvider()
+    {
+        return [
+            'no match, singlebyte' => [
+                null, 'Hello, World!', 'ASCII', '\d+'
+            ],
+            'no match, multibyte' => [
+                null, 'Hello, World!', 'UTF-8', '\d+'
+            ],
+            'empty string, singlebyte' => [
+                null, '', 'ASCII', '\w+'
+            ],
+            'empty string, multibyte'  => [
+                null, '', 'UTF-8', '\w+'
+            ],
+            'empty match, singlebyte' => [
+                [''], '', 'ASCII', '^$'
+            ],
+            'empty match, multibyte'  => [
+                [false], '', 'UTF-8', '^$'
+            ],
+            'basic match, singlebyte' => [
+                ['Hello'], 'Hello, World!', 'ASCII', '\w+'
+            ],
+            'basic match, multibyte'  => [
+                ['Hello'], 'Hello, World!', 'UTF-8', '\w+'
+            ],
+            'case insensitive, singlebyte' => [
+                ['World'], 'Hello, World!', 'ASCII', 'world', CString::REGEX_OPTION_CASE_INSENSITIVE
+            ],
+            'case insensitive, multibyte'  => [
+                ['World'], 'Hello, World!', 'UTF-8', 'world', CString::REGEX_OPTION_CASE_INSENSITIVE
+            ],
+            'multiline, singlebyte' => [
+                ['W'], "Hello\nWorld!", 'ASCII', '^W', CString::REGEX_OPTION_MULTILINE
+            ],
+            'multiline, multibyte' => [
+                ['W'], "Hello\nWorld!", 'UTF-8', '^W', CString::REGEX_OPTION_MULTILINE
+            ],
+            'capture groups, singlebyte' => [
+                ['2024-06-15', '2024', '06', '15'],
+                'Today is 2024-06-15.',
+                'ASCII',
+                '(\d{4})-(\d{2})-(\d{2})'
+            ],
+            'capture groups, multibyte' => [
+                ['2024-06-15', '2024', '06', '15'],
+                'Today is 2024-06-15.',
+                'UTF-8',
+                '(\d{4})-(\d{2})-(\d{2})'
+            ],
+            'custom delimiter, singlebyte' => [
+                ['/path/to/file/'],
+                '/path/to/file/',
+                'ASCII',
+                '/path/to/file/',
+                CString::REGEX_OPTION_NONE,
+                '#'
+            ],
+            'custom delimiter, multibyte' => [
+                ['/path/to/file/'],
+                '/path/to/file/',
+                'UTF-8',
+                '/path/to/file/',
+                CString::REGEX_OPTION_NONE,
+                '#' // Though ignored in multibyte, it should still work
             ],
         ];
     }
