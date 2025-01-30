@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
+use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Http\Request;
 
@@ -28,43 +29,60 @@ class RequestTest extends TestCase
 
     #region Method -------------------------------------------------------------
 
-    function testMethodWithNullServerRequestMethod()
+    #[DataProvider('methodDataProvider')]
+    public function testMethod(?RequestMethod $expected, ?CString $serverRequestMethod)
     {
         $request = Request::Instance();
         $serverMock = Server::Instance();
         $serverMock->method('RequestMethod')
-            ->willReturn(null);
-        $this->assertNull($request->Method());
+            ->willReturn($serverRequestMethod);
+        $this->assertSame($expected, $request->Method());
     }
-
-    function testMethodWithInvalidServerRequestMethod()
-    {
-        $request = Request::Instance();
-        $serverMock = Server::Instance();
-        $serverMock->method('RequestMethod')
-            ->willReturn(new CString('invalid_method'));
-        $this->assertNull($request->Method());
-    }
-
-    function testMethodWithNonUppercaseServerRequestMethod()
-    {
-        $request = Request::Instance();
-        $serverMock = Server::Instance();
-        $serverMock->method('RequestMethod')
-            ->willReturn(new CString('OpTiOnS'));
-        $this->assertSame(RequestMethod::OPTIONS, $request->Method());
-    }
-
-    function testMethodWithUppercaseServerRequestMethod()
-    {
-        $request = Request::Instance();
-        $serverMock = Server::Instance();
-        $serverMock->method('RequestMethod')
-            ->willReturn(new CString('POST'));
-        $this->assertSame(RequestMethod::POST, $request->Method());
-    }
-
-
 
     #endregion Method
+
+    #region Path ---------------------------------------------------------------
+
+    #[DataProvider('pathDataProvider')]
+    public function testPath(?CString $expected, ?CString $serverRequestUri)
+    {
+        $request = Request::Instance();
+        $serverMock = Server::Instance();
+        $serverMock->method('RequestUri')
+            ->willReturn($serverRequestUri);
+        $this->assertEquals($expected, $request->Path());
+    }
+
+    #endregion Path
+
+    #region Data Providers -----------------------------------------------------
+
+    static function methodDataProvider()
+    {
+        return [
+            [null,                   null],
+            [null,                   new CString('invalid-method')],
+            [RequestMethod::OPTIONS, new CString('OpTiOnS')],
+            [RequestMethod::POST,    new CString('POST')],
+        ];
+    }
+
+    static function pathDataProvider()
+    {
+        return [
+            [null,                             null],
+            [null,                             new CString('')],
+            [null,                             new CString('?query')],
+            [null,                             new CString('#fragment')],
+            [null,                             new CString('?query#fragment')],
+            [new CString('/path/to/resource'), new CString('/path/to/resource?query')],
+            [new CString('/path/to/resource'), new CString('/path/to/resource?query#fragment')],
+            [new CString('/path/to/resource'), new CString('/path/to/resource/?query')],
+            [new CString('/path/to/resource'), new CString('/path/to/resource/?query#fragment')],
+            [new CString('/path/to/resource'), new CString('/path/to/resource')],
+            [new CString('/path/to/resource'), new CString('/path/to/resource/')],
+        ];
+    }
+
+    #endregion Data Providers
 }
