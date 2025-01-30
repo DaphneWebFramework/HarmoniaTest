@@ -48,8 +48,8 @@ class ConfigTest extends TestCase
     function testConstructor()
     {
         $config = Config::Instance();
-        $this->assertCount(0, $config->GetOptions());
-        $this->assertNull($config->GetOptionsFilePath());
+        $this->assertCount(0, $config->Options());
+        $this->assertNull($config->OptionsFilePath());
     }
 
     #endregion __construct
@@ -77,9 +77,9 @@ class ConfigTest extends TestCase
         PHP);
         $config = Config::Instance();
         $config->Load($this->testFilePath);
-        $this->assertSame($this->testFilePath, $config->GetOptionsFilePath());
+        $this->assertSame($this->testFilePath, $config->OptionsFilePath());
         $this->assertSame(['key1' => 'value1', 'key2' => 'value2'],
-                          $config->GetOptions()->ToArray());
+                          $config->Options()->ToArray());
     }
 
     #endregion Load
@@ -106,7 +106,7 @@ class ConfigTest extends TestCase
         $config = Config::Instance();
         $config->Load($this->testFilePath);
         $this->assertSame(['key1' => 'value1', 'key2' => 'value2'],
-                          $config->GetOptions()->ToArray());
+                          $config->Options()->ToArray());
         $this->createTestFile(<<<PHP
             <?php
             return [
@@ -118,20 +118,20 @@ class ConfigTest extends TestCase
         PHP);
         $config->Reload();
         $this->assertSame(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3'],
-                          $config->GetOptions()->ToArray());
+                          $config->Options()->ToArray());
     }
 
     #endregion Reload
 
-    #region GetOption ----------------------------------------------------------
+    #region Option -------------------------------------------------------------
 
-    function testGetOptionWithoutLoad()
+    function testOptionWithoutLoad()
     {
         $config = Config::Instance();
-        $this->assertNull($config->GetOption('key'));
+        $this->assertNull($config->Option('key'));
     }
 
-    function testGetOptionWithLoad()
+    function testOptionWithLoad()
     {
         $this->createTestFile(<<<PHP
             <?php
@@ -143,12 +143,12 @@ class ConfigTest extends TestCase
         PHP);
         $config = Config::Instance();
         $config->Load($this->testFilePath);
-        $this->assertSame('value1', $config->GetOption('key1'));
-        $this->assertSame('value2', $config->GetOption('key2'));
-        $this->assertNull($config->GetOption('key3'));
+        $this->assertSame('value1', $config->Option('key1'));
+        $this->assertSame('value2', $config->Option('key2'));
+        $this->assertNull($config->Option('key3'));
     }
 
-    #endregion GetOption
+    #endregion Option
 
     #region SetOption ----------------------------------------------------------
 
@@ -207,7 +207,7 @@ class ConfigTest extends TestCase
         $config = Config::Instance();
         $config->Load($this->testFilePath);
         $config->SetOption('key1', 'new_value1');
-        $this->assertSame('new_value1', $config->GetOption('key1'));
+        $this->assertSame('new_value1', $config->Option('key1'));
     }
 
     #endregion SetOption
