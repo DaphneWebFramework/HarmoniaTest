@@ -2,12 +2,16 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
+use \PHPUnit\Framework\Attributes\BackupGlobals;
 
 use \Harmonia\Http\Request;
 
+use \Harmonia\Core\CArray;
 use \Harmonia\Core\CString;
 use \Harmonia\Http\RequestMethod;
 use \Harmonia\Server;
+
+require_once 'StreamMockManager.php';
 
 #[CoversClass(Request::class)]
 class RequestTest extends TestCase
@@ -54,6 +58,131 @@ class RequestTest extends TestCase
     }
 
     #endregion Path
+
+    #region QueryParams --------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testQueryParams()
+    {
+        $_GET['key1'] = 'value1';
+        $_GET['key2'] = 'value2';
+        $request = Request::Instance();
+        $this->assertEquals(
+            ['key1' => 'value1', 'key2' => 'value2'],
+            $request->QueryParams()->ToArray()
+        );
+    }
+
+    #endregion QueryParams
+
+    #region FormParams ---------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testFormParams()
+    {
+        $_POST['key1'] = 'value1';
+        $_POST['key2'] = 'value2';
+        $request = Request::Instance();
+        $this->assertEquals(
+            ['key1' => 'value1', 'key2' => 'value2'],
+            $request->FormParams()->ToArray()
+        );
+    }
+
+    #endregion FormParams
+
+    #region Files --------------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testFiles()
+    {
+        $_FILES['key1'] = ['name' => 'file1.txt', 'type' => 'text/plain'];
+        $_FILES['key2'] = ['name' => 'file2.txt', 'type' => 'text/plain'];
+        $request = Request::Instance();
+        $this->assertEquals(
+            ['key1' => ['name' => 'file1.txt', 'type' => 'text/plain'],
+             'key2' => ['name' => 'file2.txt', 'type' => 'text/plain']],
+            $request->Files()->ToArray()
+        );
+    }
+
+    #endregion Files
+
+    #region Cookies ------------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testCookies()
+    {
+        $_COOKIE['key1'] = 'value1';
+        $_COOKIE['key2'] = 'value2';
+        $request = Request::Instance();
+        $this->assertEquals(
+            ['key1' => 'value1', 'key2' => 'value2'],
+            $request->Cookies()->ToArray()
+        );
+    }
+
+    #endregion Cookies
+
+    #region Headers ------------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testHeaders()
+    {
+        $request = Request::Instance();
+        $serverMock = Server::Instance();
+        $serverMock->method('RequestHeaders')
+            ->willReturn(new CArray([
+                'Accept' => 'text/html',
+                'Accept-Encoding' => 'gzip, deflate',
+                'Accept-Language' => 'en-US',
+            ]));
+        $this->assertEquals(
+            ['Accept' => 'text/html',
+             'Accept-Encoding' => 'gzip, deflate',
+             'Accept-Language' => 'en-US' ],
+            $request->Headers()->ToArray()
+        );
+    }
+
+    #endregion Headers
+
+    #region Body ---------------------------------------------------------------
+
+    function testBodyWhenStreamCannotBeOpened()
+    {
+        $request = Request::Instance();
+        $streamMockManager = StreamMockManager::Create();
+        $this->assertTrue($streamMockManager->Write('Hello from request body!'));
+        $streamMockManager->SimulateOpenError();
+        // Suppress the error message: file_get_contents(php://input): Failed to
+        // open stream: "StreamMock::stream_open" call failed
+        $this->assertNull(@$request->Body());
+    }
+
+    function testBodyWhenStreamCannotBeRead()
+    {
+        $request = Request::Instance();
+        $streamMockManager = StreamMockManager::Create();
+        $this->assertTrue($streamMockManager->Write('Hello from request body!'));
+        $streamMockManager->SimulateReadError();
+        // Suppress the error message: file_get_contents(php://input): Failed to
+        // open stream: "StreamMock::stream_open" call failed
+        $this->assertTrue($request->Body()->IsEmpty());
+    }
+
+    function testBodyWithWorkingStream()
+    {
+        $request = Request::Instance();
+        $data = 'Hello from request body!';
+        $streamMockManager = StreamMockManager::Create();
+        $this->assertTrue($streamMockManager->Write($data));
+        $this->assertEquals($data, $request->Body());
+        // Multiple calls should return the same data
+        $this->assertEquals($data, $request->Body());
+    }
+
+    #endregion Body
 
     #region Data Providers -----------------------------------------------------
 
