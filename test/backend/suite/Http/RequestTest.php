@@ -133,14 +133,14 @@ class RequestTest extends TestCase
         $serverMock = Server::Instance();
         $serverMock->method('RequestHeaders')
             ->willReturn(new CArray([
-                'Accept' => 'text/html',
-                'Accept-Encoding' => 'gzip, deflate',
-                'Accept-Language' => 'en-US',
+                'accept' => 'text/html',
+                'accept-encoding' => 'gzip, deflate',
+                'accept-language' => 'en-US',
             ]));
         $this->assertEquals(
-            ['Accept' => 'text/html',
-             'Accept-Encoding' => 'gzip, deflate',
-             'Accept-Language' => 'en-US' ],
+            [ 'accept' => 'text/html',
+              'accept-encoding' => 'gzip, deflate',
+              'accept-language' => 'en-US' ],
             $request->Headers()->ToArray()
         );
     }

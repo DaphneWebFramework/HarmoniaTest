@@ -263,7 +263,7 @@ class ServerTest extends TestCase
     #[BackupGlobals(true)]
     function testRequestHeadersWithNoHeaders()
     {
-        $this->assertEmpty(Server::Instance()->RequestHeaders()->ToArray());
+        $this->assertTrue(Server::Instance()->RequestHeaders()->IsEmpty());
     }
 
     #[BackupGlobals(true)]
@@ -272,7 +272,8 @@ class ServerTest extends TestCase
         $_SERVER['HTTP_FOO_BAR'] = 'baz';
         $_SERVER['HTTP_QUX_QUUX'] = 'corge';
         $this->assertEquals(
-            ['Foo-Bar' => 'baz', 'Qux-Quux' => 'corge'],
+            [ 'foo-bar' => 'baz',
+              'qux-quux' => 'corge' ],
             Server::Instance()->RequestHeaders()->ToArray()
         );
     }
@@ -284,7 +285,8 @@ class ServerTest extends TestCase
         $_SERVER['HTTP_qUX_qUUX'] = 'corge';
         $_SERVER['HTTP_Abc_Def'] = 'ghi';
         $this->assertEquals(
-            ['Qux-Quux' => 'corge', 'Abc-Def' => 'ghi'],
+            [ 'qux-quux' => 'corge',
+              'abc-def' => 'ghi' ],
             Server::Instance()->RequestHeaders()->ToArray()
         );
     }
@@ -295,7 +297,8 @@ class ServerTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/json';
         $_SERVER['CONTENT_LENGTH'] = '123';
         $this->assertEquals(
-            ['Content-Type' => 'application/json', 'Content-Length' => '123'],
+            [ 'content-type' => 'application/json',
+              'content-length' => '123' ],
             Server::Instance()->RequestHeaders()->ToArray()
         );
     }
@@ -305,7 +308,7 @@ class ServerTest extends TestCase
     {
         $_SERVER['cONTENT_tYPE'] = 'application/json';
         $_SERVER['content_length'] = '123';
-        $this->assertEmpty(Server::Instance()->RequestHeaders()->ToArray());
+        $this->assertTrue(Server::Instance()->RequestHeaders()->IsEmpty());
     }
 
     #endregion RequestHeaders
