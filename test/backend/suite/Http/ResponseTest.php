@@ -101,11 +101,11 @@ class ResponseTest extends TestCase
     public function testSendWhenHeadersCannotBeSent()
     {
         $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canHeadersBeSent', 'sendStatusCode', 'sendHeader',
+            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendCookie', 'sendBody'])
             ->getMock();
         $response->expects($this->once())
-            ->method('canHeadersBeSent')
+            ->method('canSendHeaders')
             ->willReturn(false);
         $response->expects($this->never())
             ->method('sendStatusCode');
@@ -121,11 +121,11 @@ class ResponseTest extends TestCase
     public function testSendWhenHeadersCanBeSentWithNoHeadersNoCookiesNoBody()
     {
         $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canHeadersBeSent', 'sendStatusCode', 'sendHeader',
+            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendCookie', 'sendBody'])
             ->getMock();
         $response->expects($this->once())
-            ->method('canHeadersBeSent')
+            ->method('canSendHeaders')
             ->willReturn(true);
         $response->expects($this->once())
             ->method('sendStatusCode');
@@ -141,11 +141,11 @@ class ResponseTest extends TestCase
     public function testSendWhenHeadersCanBeSentWithHeadersNoCookiesNoBody()
     {
         $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canHeadersBeSent', 'sendStatusCode', 'sendHeader',
+            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendCookie', 'sendBody'])
             ->getMock();
         $response->expects($this->once())
-            ->method('canHeadersBeSent')
+            ->method('canSendHeaders')
             ->willReturn(true);
         $response->expects($this->once())
             ->method('sendStatusCode');
@@ -172,11 +172,11 @@ class ResponseTest extends TestCase
     public function testSendWhenHeadersCanBeSentWithCookiesNoHeadersNoBody()
     {
         $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canHeadersBeSent', 'sendStatusCode', 'sendHeader',
+            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendCookie', 'sendBody'])
             ->getMock();
         $response->expects($this->once())
-            ->method('canHeadersBeSent')
+            ->method('canSendHeaders')
             ->willReturn(true);
         $response->expects($this->once())
             ->method('sendStatusCode');
@@ -203,11 +203,11 @@ class ResponseTest extends TestCase
     public function testSendWhenHeadersCanBeSentWithBodyNoHeadersNoCookies()
     {
         $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canHeadersBeSent', 'sendStatusCode', 'sendHeader',
+            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendCookie', 'sendBody'])
             ->getMock();
         $response->expects($this->once())
-            ->method('canHeadersBeSent')
+            ->method('canSendHeaders')
             ->willReturn(true);
         $response->expects($this->once())
             ->method('sendStatusCode');
@@ -225,11 +225,11 @@ class ResponseTest extends TestCase
     public function testSendWhenHeadersCanBeSentWithHeadersCookiesBody()
     {
         $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canHeadersBeSent', 'sendStatusCode', 'sendHeader',
+            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendCookie', 'sendBody'])
             ->getMock();
         $response->expects($this->once())
-            ->method('canHeadersBeSent')
+            ->method('canSendHeaders')
             ->willReturn(true);
         $response->expects($this->once())
             ->method('sendStatusCode');
@@ -266,4 +266,48 @@ class ResponseTest extends TestCase
     }
 
     #endregion Send
+
+    #region Redirect -----------------------------------------------------------
+
+    public function testRedirectWithExitScript()
+    {
+        $response = $this->getMockBuilder(Response::class)
+            ->onlyMethods(['SetStatusCode', 'SetHeader', 'Send', 'exitScript'])
+            ->getMock();
+        $response->expects($this->once())
+            ->method('SetStatusCode')
+            ->with(StatusCode::Found)
+            ->willReturn($response);
+        $response->expects($this->once())
+            ->method('SetHeader')
+            ->with('Location', 'https://example.com')
+            ->willReturn($response);
+        $response->expects($this->once())
+            ->method('Send');
+        $response->expects($this->once())
+            ->method('exitScript');
+        $response->Redirect('https://example.com', true);
+    }
+
+    public function testRedirectWithoutExitScript()
+    {
+        $response = $this->getMockBuilder(Response::class)
+            ->onlyMethods(['SetStatusCode', 'SetHeader', 'Send', 'exitScript'])
+            ->getMock();
+        $response->expects($this->once())
+            ->method('SetStatusCode')
+            ->with(StatusCode::Found)
+            ->willReturn($response);
+        $response->expects($this->once())
+            ->method('SetHeader')
+            ->with('Location', 'https://example.com')
+            ->willReturn($response);
+        $response->expects($this->once())
+            ->method('Send');
+        $response->expects($this->never())
+            ->method('exitScript');
+        $response->Redirect('https://example.com', false);
+    }
+
+    #endregion Redirect
 }
