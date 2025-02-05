@@ -145,31 +145,31 @@ class CSequentialArrayTest extends TestCase
 
     #endregion Set
 
-    #region Delete -------------------------------------------------------------
+    #region Remove -------------------------------------------------------------
 
     function testDeleteWithStringIndex()
     {
         $carr = new CSequentialArray();
         $this->expectException(\InvalidArgumentException::class);
-        $carr->Delete('key');
+        $carr->Remove('key');
     }
 
     #[DataProvider('deleteDataProvider')]
     function testDelete(array $expected, array $arr, string|int $index)
     {
         $carr = new CSequentialArray($arr);
-        $carr->Delete($index);
+        $carr->Remove($index);
         $this->assertSame($expected, $carr->ToArray());
     }
 
     function testDeleteChaining()
     {
         $carr = new CSequentialArray([100, 101, 102, 103]);
-        $carr->Delete(1)->Delete(2);
+        $carr->Remove(1)->Remove(2);
         $this->assertSame([100, 102], $carr->ToArray());
     }
 
-    #endregion Delete
+    #endregion Remove
 
     #region PushBack -----------------------------------------------------------
 
@@ -311,10 +311,10 @@ class CSequentialArrayTest extends TestCase
     function testOffsetUnset()
     {
         $carr = $this->getMockBuilder(CSequentialArray::class)
-            ->onlyMethods(['Delete'])
+            ->onlyMethods(['Remove'])
             ->getMock();
         $carr->expects($this->once())
-            ->method('Delete')
+            ->method('Remove')
             ->with(1);
         unset($carr[1]);
     }

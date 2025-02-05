@@ -125,24 +125,42 @@ class CArrayTest extends TestCase
 
     #endregion Set
 
-    #region Delete -------------------------------------------------------------
+    #region Remove -------------------------------------------------------------
 
     #[DataProvider('deleteDataProvider')]
     function testDelete(array $expected, array $arr, string|int $key)
     {
         $carr = new CArray($arr);
-        $carr->Delete($key);
+        $carr->Remove($key);
         $this->assertSame($expected, $carr->ToArray());
     }
 
     function testDeleteChaining()
     {
         $carr = new CArray(['x' => 10, 'y' => 20, 'z' => 30]);
-        $carr->Delete('x')->Delete('z');
+        $carr->Remove('x')->Remove('z');
         $this->assertSame(['y' => 20], $carr->ToArray());
     }
 
-    #endregion Delete
+    #endregion Remove
+
+    #region Clear --------------------------------------------------------------
+
+    function testClear()
+    {
+        $carr = new CArray(['a' => 1, 'b' => 2, 'c' => 3]);
+        $carr->Clear();
+        $this->assertTrue($carr->IsEmpty());
+    }
+
+    function testClearChaining()
+    {
+        $carr = new CArray(['a' => 1, 'b' => 2, 'c' => 3]);
+        $carr->Clear()->Set('x', 10);
+        $this->assertSame(['x' => 10], $carr->ToArray());
+    }
+
+    #endregion Clear
 
     #region Interface: ArrayAccess ---------------------------------------------
 
@@ -184,10 +202,10 @@ class CArrayTest extends TestCase
     function testOffsetUnset()
     {
         $carr = $this->getMockBuilder(CArray::class)
-            ->onlyMethods(['Delete'])
+            ->onlyMethods(['Remove'])
             ->getMock();
         $carr->expects($this->once())
-            ->method('Delete')
+            ->method('Remove')
             ->with('a');
         unset($carr['a']);
     }
