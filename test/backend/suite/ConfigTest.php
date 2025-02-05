@@ -10,7 +10,7 @@ use \Harmonia\Core\CFileSystem;
 #[CoversClass(Config::class)]
 class ConfigTest extends TestCase
 {
-    private readonly ?Config $originalConfig;
+    private ?Config $originalConfig = null;
     private CPath $testFilePath;
 
     protected function setUp(): void

@@ -13,8 +13,8 @@ use \Harmonia\Server;
 #[CoversClass(Resource::class)]
 class ResourceTest extends TestCase
 {
-    private readonly ?Resource $originalResource;
-    private readonly ?Server $originalServer;
+    private ?Resource $originalResource = null;
+    private ?Server $originalServer = null;
 
     protected function setUp(): void
     {

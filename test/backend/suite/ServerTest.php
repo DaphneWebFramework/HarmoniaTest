@@ -8,7 +8,7 @@ use \Harmonia\Server;
 #[CoversClass(Server::class)]
 class ServerTest extends TestCase
 {
-    private readonly ?Server $originalServer;
+    private ?Server $originalServer = null;
 
     protected function setUp(): void
     {

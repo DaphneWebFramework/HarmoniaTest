@@ -16,8 +16,8 @@ require_once 'StreamMockManager.php';
 #[CoversClass(Request::class)]
 class RequestTest extends TestCase
 {
-    private readonly ?Request $originalRequest;
-    private readonly ?Server $originalServer;
+    private ?Request $originalRequest = null;
+    private ?Server $originalServer = null;
 
     protected function setUp(): void
     {
