@@ -14,8 +14,9 @@ class SessionTest extends TestCase
     {
         $session = $this->getMockBuilder(Session::class)
             ->onlyMethods(['_session_status', '_session_name', '_session_start',
-                '_session_write_close', '_session_unset', '_session_destroy'])
-            ->disableOriginalConstructor() // PHP 8.1 compatibility
+                           '_session_regenerate_id', '_session_write_close',
+                           '_session_unset', '_session_destroy'])
+            ->disableOriginalConstructor()
             ->getMock();
         $this->originalSession = Session::ReplaceInstance($session);
     }
@@ -77,6 +78,8 @@ class SessionTest extends TestCase
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_start');
+        $session->expects($this->once())
+            ->method('_session_regenerate_id');
         $session->Start();
     }
 
