@@ -62,15 +62,15 @@ class SessionTest extends TestCase
      */
     private function createSessionMock(): Session
     {
-        $sessionMockBuilder = $this->getMockBuilder(Session::class)
+        $mockBuilder = $this->getMockBuilder(Session::class)
             ->onlyMethods(['_ini_set', '_session_set_cookie_params',
                            '_session_status', '_session_name', '_session_start',
                            '_session_regenerate_id', '_session_write_close',
                            '_session_unset', '_session_destroy']);
         if (self::$phpUnitMajorVersion < 11) {
-            $sessionMockBuilder->disableOriginalConstructor();
+            $mockBuilder->disableOriginalConstructor();
         }
-        $session = $sessionMockBuilder->getMock();
+        $session = $mockBuilder->getMock();
         if (self::$phpUnitMajorVersion < 11) {
             AccessHelper::CallNonPublicConstructor($session);
         }
