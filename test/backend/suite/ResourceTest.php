@@ -35,7 +35,6 @@ class ResourceTest extends TestCase
         $resource = Resource::Instance();
         $this->assertNull(AccessHelper::GetNonPublicProperty($resource, 'appPath'));
         $this->assertInstanceOf(CArray::class, AccessHelper::GetNonPublicProperty($resource, 'cache'));
-        $this->assertInstanceOf(Server::class, AccessHelper::GetNonPublicProperty($resource, 'server'));
     }
 
     #endregion __construct
