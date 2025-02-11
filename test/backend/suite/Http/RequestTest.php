@@ -31,7 +31,7 @@ class RequestTest extends TestCase
         Server::ReplaceInstance($this->originalServer);
     }
 
-    #region Method -------------------------------------------------------------
+    #region Method_ ------------------------------------------------------------
 
     #[DataProvider('methodDataProvider')]
     public function testMethod(?RequestMethod $expected, ?CString $serverRequestMethod)
@@ -40,10 +40,10 @@ class RequestTest extends TestCase
         $serverMock = Server::Instance();
         $serverMock->method('RequestMethod')
             ->willReturn($serverRequestMethod);
-        $this->assertSame($expected, $request->Method());
+        $this->assertSame($expected, $request->Method_());
     }
 
-    #endregion Method
+    #endregion Method_
 
     #region Path ---------------------------------------------------------------
 
