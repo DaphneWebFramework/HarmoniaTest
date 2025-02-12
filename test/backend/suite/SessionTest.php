@@ -15,118 +15,220 @@ class SessionTest extends TestCase
     private ?Session $originalSession = null;
     private ?Server $originalServer = null;
     private ?Config $originalConfig = null;
-    private static int $phpUnitMajorVersion = 0;
-
-    /**
-     * Determines the PHPUnit major version and stores it for conditional logic
-     * in test setup.
-     */
-    public static function setUpBeforeClass(): void
-    {
-        $phpUnitVersion = \PHPUnit\Runner\Version::id(); // e.g., "11.5.6"
-        self::$phpUnitMajorVersion = (int)\explode('.', $phpUnitVersion)[0];
-    }
 
     protected function setUp(): void
     {
-        $this->originalServer = Server::ReplaceInstance($this->createMock(Server::class));
-        $this->originalConfig = Config::ReplaceInstance($this->createMock(Config::class));
-        $this->originalSession = Session::ReplaceInstance($this->createSessionMock());
+        $this->originalSession = Session::ReplaceInstance(
+            $this->getMockBuilder(Session::class)
+                ->onlyMethods(['_ini_set', '_session_set_cookie_params',
+                               '_session_status', '_session_name',
+                               '_session_start', '_session_regenerate_id',
+                               '_session_write_close', '_session_unset',
+                               '_session_destroy', '_headers_sent', '_setcookie'])
+                ->disableOriginalConstructor()
+                ->getMock());
+        $this->originalServer = Server::ReplaceInstance(
+            $this->createMock(Server::class));
+        $this->originalConfig = Config::ReplaceInstance(
+            $this->createMock(Config::class));
     }
 
     protected function tearDown(): void
     {
+        Session::ReplaceInstance($this->originalSession);
         Server::ReplaceInstance($this->originalServer);
         Config::ReplaceInstance($this->originalConfig);
-        Session::ReplaceInstance($this->originalSession);
     }
 
-    /**
-     * Prepares a mock instance of `Session`, handling PHPUnit version
-     * differences to maintain compatibility and code coverage.
-     *
-     * PHPUnit 10:
-     * o Requires `disableOriginalConstructor()` to prevent a fatal error when
-     *   mocking a class with a protected constructor: "Error: Call to protected
-     *   Harmonia\Session::__construct() from scope PHPUnit\Framework\MockObject
-     *   \Generator\Generator"
-     * o However, this reduces the coverage, since the constructor is never
-     *   executed.
-     * o To address this, `AccessHelper::CallNonPublicConstructor($session)`
-     *   is used to manually invoke the protected constructor.
-     *
-     * PHPUnit 11:
-     * o Allows `getMock()` to successfully call a protected constructor.
-     * o As a result, full coverage is naturally achieved without additional
-     *   intervention.
-     */
-    private function createSessionMock(): Session
-    {
-        $mockBuilder = $this->getMockBuilder(Session::class)
-            ->onlyMethods(['_ini_set', '_session_set_cookie_params',
-                           '_session_status', '_session_name', '_session_start',
-                           '_session_regenerate_id', '_session_write_close',
-                           '_session_unset', '_session_destroy']);
-        if (self::$phpUnitMajorVersion < 11) {
-            $mockBuilder->disableOriginalConstructor();
-        }
-        $session = $mockBuilder->getMock();
-        if (self::$phpUnitMajorVersion < 11) {
-            AccessHelper::CallNonPublicConstructor($session);
-        }
-        return $session;
-    }
+    #region __construct --------------------------------------------------------
 
-    #region IsStarted ----------------------------------------------------------
-
-    function testIsStartedWhenStatusIsDisabled()
+    function testConstructWhenStatusIsDisabled()
     {
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
-        $this->assertFalse($session->IsStarted());
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Session support is disabled.');
+        AccessHelper::CallNonPublicConstructor($session);
     }
 
-    function testIsStartedWhenStatusIsNone()
-    {
-        $session = Session::Instance();
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_NONE);
-        $this->assertFalse($session->IsStarted());
-    }
-
-    function testIsStartedWhenStatusIsActive()
+    function testConstructWhenStatusIsActive()
     {
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
-        $this->assertTrue($session->IsStarted());
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Session is already active.');
+        AccessHelper::CallNonPublicConstructor($session);
     }
 
-    #endregion IsStarted
-
-    #region Name ---------------------------------------------------------------
-
-    function testName()
+    function testConstructSetsIniOptions()
     {
         $session = Session::Instance();
         $session->expects($this->once())
-            ->method('_session_name')
-            ->with(null)
-            ->willReturn('name');
-        $this->assertEquals('name', $session->Name());
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $invokedCount = $this->exactly(5);
+        $session->expects($invokedCount)
+            ->method('_ini_set')
+            ->willReturnCallback(function($option, $value) use($invokedCount) {
+                switch ($invokedCount->numberOfInvocations()) {
+                case 1:
+                    $this->assertSame('session.use_strict_mode', $option);
+                    $this->assertSame('1', $value);
+                    break;
+                case 2:
+                    $this->assertSame('session.use_cookies', $option);
+                    $this->assertSame('1', $value);
+                    break;
+                case 3:
+                    $this->assertSame('session.use_only_cookies', $option);
+                    $this->assertSame('1', $value);
+                    break;
+                case 4:
+                    $this->assertSame('session.use_trans_sid', $option);
+                    $this->assertSame('0', $value);
+                    break;
+                case 5:
+                    $this->assertSame('session.cache_limiter', $option);
+                    $this->assertSame('nocache', $value);
+                    break;
+                }
+            });
+        AccessHelper::CallNonPublicConstructor($session);
     }
 
-    #endregion Name
+    function testConstructSetsCookieParamsWhenServerIsSecure()
+    {
+        $server = Server::Instance();
+        $server->expects($this->once())
+            ->method('IsSecure')
+            ->willReturn(true);
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $session->expects($this->once())
+            ->method('_session_set_cookie_params')
+            ->with(['lifetime' => 0,
+                    'path' => '/',
+                    'domain' => '',
+                    'secure' => true,
+                    'httponly' => true,
+                    'samesite' => 'Strict']);
+        AccessHelper::CallNonPublicConstructor($session);
+    }
+
+    function testConstructSetsCookieParamsWhenServerIsNotSecure()
+    {
+        $server = Server::Instance();
+        $server->expects($this->once())
+            ->method('IsSecure')
+            ->willReturn(false);
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $session->expects($this->once())
+            ->method('_session_set_cookie_params')
+            ->with(['lifetime' => 0,
+                    'path' => '/',
+                    'domain' => '',
+                    'secure' => false,
+                    'httponly' => true,
+                    'samesite' => 'Strict']);
+        AccessHelper::CallNonPublicConstructor($session);
+    }
+
+    function testConstructSetsSessionNameWhenConfigAppNameIsNotSet()
+    {
+        $config = Config::Instance();
+        $config->expects($this->once())
+            ->method('Option')
+            ->with('AppName')
+            ->willReturn(null);
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $session->expects($this->once())
+            ->method('_session_name')
+            ->with('Harmonia_SID');
+        AccessHelper::CallNonPublicConstructor($session);
+    }
+
+    function testConstructSetsSessionNameWhenConfigAppNameIsSetButEmpty()
+    {
+        $config = Config::Instance();
+        $config->expects($this->once())
+            ->method('Option')
+            ->with('AppName')
+            ->willReturn('');
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $session->expects($this->once())
+            ->method('_session_name')
+            ->with('Harmonia_SID');
+        AccessHelper::CallNonPublicConstructor($session);
+    }
+
+    function testConstructSetsSessionNameWhenConfigAppNameIsSetAndNotEmpty()
+    {
+        $config = Config::Instance();
+        $config->expects($this->once())
+            ->method('Option')
+            ->with('AppName')
+            ->willReturn('MyCoolApp');
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $session->expects($this->once())
+            ->method('_session_name')
+            ->with('MyCoolApp_SID');
+        AccessHelper::CallNonPublicConstructor($session);
+    }
+
+    #endregion __construct
 
     #region Start --------------------------------------------------------------
 
-    function testStart()
+    function testStartDoesNothingWhenStatusIsDisabled()
     {
         $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_DISABLED);
+        $session->expects($this->never())
+            ->method('_session_start');
+        $session->expects($this->never())
+            ->method('_session_regenerate_id');
+        $session->Start();
+    }
+
+    function testStartDoesNothingWhenStatusIsActive()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $session->expects($this->never())
+            ->method('_session_start');
+        $session->expects($this->never())
+            ->method('_session_regenerate_id');
+        $session->Start();
+    }
+
+    function testStartWhenStatusIsNone()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
         $session->expects($this->once())
             ->method('_session_start');
         $session->expects($this->once())
@@ -138,9 +240,34 @@ class SessionTest extends TestCase
 
     #region Close --------------------------------------------------------------
 
-    function testClose()
+    function testCloseDoesNothingWhenStatusIsDisabled()
     {
         $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_DISABLED);
+        $session->expects($this->never())
+            ->method('_session_write_close');
+        $session->Close();
+    }
+
+    function testCloseDoesNothingWhenStatusIsNone()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $session->expects($this->never())
+            ->method('_session_write_close');
+        $session->Close();
+    }
+
+    function testCloseWhenStatusIsActive()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
         $session->expects($this->once())
             ->method('_session_write_close');
         $session->Close();
@@ -151,11 +278,36 @@ class SessionTest extends TestCase
     #region Set ----------------------------------------------------------------
 
     #[BackupGlobals(true)]
-    function testSet()
+    function testSetDoesNothingWhenStatusIsDisabled()
     {
         $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_DISABLED);
         $session->Set('key1', 'value1');
-        $this->assertEquals('value1', $_SESSION['key1']);
+        $this->assertFalse(isset($_SESSION));
+    }
+
+    #[BackupGlobals(true)]
+    function testSetDoesNothingWhenStatusIsNone()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $session->Set('key1', 'value1');
+        $this->assertFalse(isset($_SESSION));
+    }
+
+    #[BackupGlobals(true)]
+    function testSetWhenStatusIsActive()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $session->Set('key1', 'value1');
+        $this->assertSame('value1', $_SESSION['key1']);
     }
 
     #endregion Set
@@ -163,41 +315,100 @@ class SessionTest extends TestCase
     #region Get ----------------------------------------------------------------
 
     #[BackupGlobals(true)]
-    function testGetWhenSuperglobalIsNotSet()
+    function testGetReturnsNullWhenStatusIsDisabled()
     {
         $session = Session::Instance();
-        $this->assertNull($session->Get('key1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetWhenKeyDoesNotExist()
-    {
-        $session = Session::Instance();
-        $_SESSION = [];
-        $this->assertNull($session->Get('key1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetWhenWhenSuperglobalIsNotSetWithDefaultValue()
-    {
-        $session = Session::Instance();
-        $this->assertEquals('default1', $session->Get('key1', 'default1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetWhenKeyDoesNotExistWithDefaultValue()
-    {
-        $session = Session::Instance();
-        $_SESSION = [];
-        $this->assertEquals('default1', $session->Get('key1', 'default1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetWhenKeyExists()
-    {
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_DISABLED);
         $_SESSION['key1'] = 'value1';
+        $this->assertNull($session->Get('key1'));
+    }
+
+    #[BackupGlobals(true)]
+    function testGetReturnsDefaultValueWhenStatusIsDisabled()
+    {
         $session = Session::Instance();
-        $this->assertEquals('value1', $session->Get('key1'));
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_DISABLED);
+        $_SESSION['key1'] = 'value1';
+        $this->assertSame('default1', $session->Get('key1', 'default1'));
+    }
+
+    #[BackupGlobals(true)]
+    function testGetReturnsNullWhenStatusIsNone()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $_SESSION['key1'] = 'value1';
+        $this->assertNull($session->Get('key1'));
+    }
+
+    #[BackupGlobals(true)]
+    function testGetReturnsDefaultValueWhenStatusIsNone()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $_SESSION['key1'] = 'value1';
+        $this->assertSame('default1', $session->Get('key1', 'default1'));
+    }
+
+    #[BackupGlobals(true)]
+    function testGetReturnsNullWhenStatusIsActiveButSuperglobalDoesNotExist()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $this->assertNull($session->Get('key1'));
+    }
+
+    #[BackupGlobals(true)]
+    function testGetReturnsDefaultValueWhenStatusIsActiveButSuperglobalDoesNotExist()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $this->assertSame('default1', $session->Get('key1', 'default1'));
+    }
+
+    #[BackupGlobals(true)]
+    function testGetReturnsNullWhenStatusIsActiveAndKeyDoesNotExist()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $_SESSION = [];
+        $this->assertNull($session->Get('key1'));
+    }
+
+    #[BackupGlobals(true)]
+    function testGetReturnsDefaultValueWhenStatusIsActiveButKeyDoesNotExist()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $_SESSION = [];
+        $this->assertSame('default1', $session->Get('key1', 'default1'));
+    }
+
+    #[BackupGlobals(true)]
+    function testGetReturnsValueWhenStatusIsActiveAndKeyExists()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $_SESSION['key1'] = 'value1';
+        $this->assertSame('value1', $session->Get('key1'));
     }
 
     #endregion Get
@@ -205,27 +416,59 @@ class SessionTest extends TestCase
     #region Remove -------------------------------------------------------------
 
     #[BackupGlobals(true)]
-    function testRemoveWhenSuperglobalIsNotSet()
+    function testRemoveDoesNothingWhenStatusIsDisabled()
     {
         $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_DISABLED);
+        $_SESSION['key1'] = 'value1';
+        $session->Remove('key1');
+        $this->assertSame('value1', $_SESSION['key1']);
+    }
+
+    #[BackupGlobals(true)]
+    function testRemoveDoesNothingWhenStatusIsNone()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $_SESSION['key1'] = 'value1';
+        $session->Remove('key1');
+        $this->assertSame('value1', $_SESSION['key1']);
+    }
+
+    #[BackupGlobals(true)]
+    function testRemoveWhenStatusIsActiveButSuperglobalDoesNotExist()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
         $session->Remove('key1');
         $this->assertTrue(true);
     }
 
-
     #[BackupGlobals(true)]
-    function testRemoveWhenKeyDoesNotExist()
+    function testRemoveWhenStatusIsActiveButKeyDoesNotExist()
     {
         $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
         $_SESSION = [];
         $session->Remove('key1');
         $this->assertArrayNotHasKey('key1', $_SESSION);
     }
 
     #[BackupGlobals(true)]
-    function testRemoveWhenKeyExists()
+    function testRemoveWhenStatusIsActiveAndKeyExists()
     {
         $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
         $_SESSION['key1'] = 'value1';
         $session->Remove('key1');
         $this->assertArrayNotHasKey('key1', $_SESSION);
@@ -236,7 +479,7 @@ class SessionTest extends TestCase
     #region Clear --------------------------------------------------------------
 
     #[BackupGlobals(true)]
-    function testClearWhenStatusIsDisabled()
+    function testClearDoesNothingWhenStatusIsDisabled()
     {
         $session = Session::Instance();
         $session->expects($this->once())
@@ -244,14 +487,11 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_DISABLED);
         $session->expects($this->never())
             ->method('_session_unset');
-        $_SESSION['key1'] = 'value1';
-        $_SESSION['key2'] = 'value2';
         $session->Clear();
-        $this->assertEmpty($_SESSION);
     }
 
     #[BackupGlobals(true)]
-    function testClearWhenStatusIsNone()
+    function testClearDoesNothingWhenStatusIsNone()
     {
         $session = Session::Instance();
         $session->expects($this->once())
@@ -259,10 +499,7 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_NONE);
         $session->expects($this->never())
             ->method('_session_unset');
-        $_SESSION['key1'] = 'value1';
-        $_SESSION['key2'] = 'value2';
         $session->Clear();
-        $this->assertEmpty($_SESSION);
     }
 
     function testClearWhenStatusIsActive()
@@ -281,45 +518,124 @@ class SessionTest extends TestCase
     #region Destroy ------------------------------------------------------------
 
     #[BackupGlobals(true)]
-    function testDestroyWhenStatusIsDisabled()
+    function testDestroyDoesNothingWhenStatusIsDisabled()
     {
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
         $session->expects($this->never())
+            ->method('_headers_sent');
+        $session->expects($this->never())
+            ->method('_session_name');
+        $session->expects($this->never())
+            ->method('_setcookie');
+        $session->expects($this->never())
             ->method('_session_unset');
-        $session->expects($this->once())
+        $session->expects($this->never())
             ->method('_session_destroy');
-        $_SESSION['key1'] = 'value1';
-        $_SESSION['key2'] = 'value2';
         $session->Destroy();
-        $this->assertEmpty($_SESSION);
     }
 
     #[BackupGlobals(true)]
-    function testDestroyWhenStatusIsNone()
+    function testDestroyDoesNothingWhenStatusIsNone()
     {
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_NONE);
         $session->expects($this->never())
+            ->method('_headers_sent');
+        $session->expects($this->never())
+            ->method('_session_name');
+        $session->expects($this->never())
+            ->method('_setcookie');
+        $session->expects($this->never())
             ->method('_session_unset');
-        $session->expects($this->once())
+        $session->expects($this->never())
             ->method('_session_destroy');
-        $_SESSION['key1'] = 'value1';
-        $_SESSION['key2'] = 'value2';
         $session->Destroy();
-        $this->assertEmpty($_SESSION);
     }
 
-    function testDestroyWhenStatusIsActive()
+    function testDestroyWhenStatusIsActiveButHeadersAreSent()
     {
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+        $session->expects($this->once())
+            ->method('_headers_sent')
+            ->willReturn(true); // <-- headers are sent
+        $session->expects($this->never())
+            ->method('_session_name');
+        $session->expects($this->never())
+            ->method('_setcookie');
+        $session->expects($this->never())
+            ->method('_session_unset');
+        $session->expects($this->never())
+            ->method('_session_destroy');
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('HTTP headers have already been sent.');
+        $session->Destroy();
+    }
+
+    function testDestroyWhenStatusIsActiveAndHeadersAreNotSentAndServerIsSecure()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $session->expects($this->once())
+            ->method('_headers_sent')
+            ->willReturn(false);
+        $session->expects($this->once())
+            ->method('_session_name')
+            ->willReturn('Harmonia_SID');
+        Server::Instance()->expects($this->once())
+            ->method('IsSecure')
+            ->willReturn(true); // <-- server is secure
+        $session->expects($this->once())
+            ->method('_setcookie')
+            ->with('Harmonia_SID', false, [
+                'expires'  => 0,
+                'path'     => '/',
+                'domain'   => '',
+                'secure'   => true,
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]);
+        $session->expects($this->once())
+            ->method('_session_unset');
+        $session->expects($this->once())
+            ->method('_session_destroy');
+        $session->Destroy();
+    }
+
+    function testDestroyWhenStatusIsActiveAndHeadersAreNotSentAndServerIsNotSecure()
+    {
+        $session = Session::Instance();
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $session->expects($this->once())
+            ->method('_headers_sent')
+            ->willReturn(false);
+        $session->expects($this->once())
+            ->method('_session_name')
+            ->willReturn('Harmonia_SID');
+        Server::Instance()->expects($this->once())
+            ->method('IsSecure')
+            ->willReturn(false); // <-- server is not secure
+        $session->expects($this->once())
+            ->method('_setcookie')
+            ->with('Harmonia_SID', false, [
+                'expires'  => 0,
+                'path'     => '/',
+                'domain'   => '',
+                'secure'   => false,
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]);
         $session->expects($this->once())
             ->method('_session_unset');
         $session->expects($this->once())
