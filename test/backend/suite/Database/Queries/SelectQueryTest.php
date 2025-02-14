@@ -108,13 +108,14 @@ class SelectQueryTest extends TestCase
     {
         $query = new SelectQuery('my_table');
         $objectWithToString = new class {
-            public function __toString() { return ''; }
+            public function __toString() { return "I'm a string"; }
         };
         $query->Where('column1 = :value', ['value' => $objectWithToString]);
         $this->assertSame(
             'SELECT * FROM `my_table` WHERE column1 = :value',
             $query->ToSql()
         );
+        $this->assertSame(['value' => "I'm a string"], $query->Substitutions());
     }
 
     function testWhereWithMissingSubstitution()
