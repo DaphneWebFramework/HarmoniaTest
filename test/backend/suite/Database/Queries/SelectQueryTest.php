@@ -62,6 +62,15 @@ class SelectQueryTest extends TestCase
         );
     }
 
+    function testWhereWithInvalidSubstitutionKey()
+    {
+        $query = new SelectQuery('my_table');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid substitution key: other-value');
+        $query->Where('column1 = :1value OR column1 = :other-value',
+                      ['other-value' => 43, '1value' => 42]);
+    }
+
     function testWhereWithMissingSubstitution()
     {
         $query = new SelectQuery('my_table');
