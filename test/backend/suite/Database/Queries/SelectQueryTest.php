@@ -71,6 +71,52 @@ class SelectQueryTest extends TestCase
                       ['other-value' => 43, '1value' => 42]);
     }
 
+    function testWhereWithArraySubstitution()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "Invalid substitution value for 'value': Array or resource not allowed.");
+        $query = new SelectQuery('my_table');
+        $query->Where('column1 = :value', ['value' => [1, 2, 3]]);
+    }
+
+    function testWhereWithResourceSubstitution()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "Invalid substitution value for 'value': Array or resource not allowed.");
+        $file = \fopen(__FILE__, 'r');
+        try {
+            $query = new SelectQuery('my_table');
+            $query->Where('column1 = :value', ['value' => $file]);
+        } finally {
+            \fclose($file);
+        }
+    }
+
+    function testWhereWithObjectWithoutToStringSubstitution()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "Invalid substitution value for 'value': Object without __toString() method not allowed.");
+        $objectWithoutToString = new class {};
+        $query = new SelectQuery('my_table');
+        $query->Where('column1 = :value', ['value' => $objectWithoutToString]);
+    }
+
+    function testWhereWithObjectWithToStringSubstitution()
+    {
+        $query = new SelectQuery('my_table');
+        $objectWithToString = new class {
+            public function __toString() { return ''; }
+        };
+        $query->Where('column1 = :value', ['value' => $objectWithToString]);
+        $this->assertSame(
+            'SELECT * FROM `my_table` WHERE column1 = :value',
+            $query->ToSql()
+        );
+    }
+
     function testWhereWithMissingSubstitution()
     {
         $query = new SelectQuery('my_table');
