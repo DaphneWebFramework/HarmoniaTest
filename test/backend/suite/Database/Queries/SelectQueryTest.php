@@ -18,6 +18,16 @@ class SelectQueryTest extends TestCase
 
     #region Select -------------------------------------------------------------
 
+    function testSelectWithEmptyColumns()
+    {
+        $query = new SelectQuery('my_table');
+        $query->Select([]);
+        $this->assertSame(
+            'SELECT * FROM `my_table`',
+            $query->ToSql()
+        );
+    }
+
     function testSelectWithIdentifierColumns()
     {
         $query = new SelectQuery('my_table');
@@ -48,11 +58,19 @@ class SelectQueryTest extends TestCase
         );
     }
 
+    function testSelectReplacesPreviousColumns()
+    {
+        $query = new SelectQuery('my_table');
+        $query->Select(['column1']);
+        $query->Select(['column2']);
+        $this->assertSame('SELECT `column2` FROM `my_table`', $query->ToSql());
+    }
+
     #endregion Select
 
     #region Where --------------------------------------------------------------
 
-    function testWhereWithNoSubstitutions()
+    function testWhereWithNoBindings()
     {
         $query = new SelectQuery('my_table');
         $query->Where('column2 = 42');
@@ -62,105 +80,27 @@ class SelectQueryTest extends TestCase
         );
     }
 
-    function testWhereWithInvalidSubstitutionKey()
+    function testWhereWithMatchingBindings()
     {
         $query = new SelectQuery('my_table');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid substitution key: other-value');
-        $query->Where('column1 = :1value OR column1 = :other-value',
-                      ['other-value' => 43, '1value' => 42]);
-    }
-
-    function testWhereWithArraySubstitution()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            "Invalid substitution value for 'value': Array or resource not allowed.");
-        $query = new SelectQuery('my_table');
-        $query->Where('column1 = :value', ['value' => [1, 2, 3]]);
-    }
-
-    function testWhereWithResourceSubstitution()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            "Invalid substitution value for 'value': Array or resource not allowed.");
-        $file = \fopen(__FILE__, 'r');
-        try {
-            $query = new SelectQuery('my_table');
-            $query->Where('column1 = :value', ['value' => $file]);
-        } finally {
-            \fclose($file);
-        }
-    }
-
-    function testWhereWithObjectWithoutToStringSubstitution()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            "Invalid substitution value for 'value': Object without __toString() method not allowed.");
-        $objectWithoutToString = new class {};
-        $query = new SelectQuery('my_table');
-        $query->Where('column1 = :value', ['value' => $objectWithoutToString]);
-    }
-
-    function testWhereWithObjectWithToStringSubstitution()
-    {
-        $query = new SelectQuery('my_table');
-        $objectWithToString = new class {
-            public function __toString() { return "I'm a string"; }
-        };
-        $query->Where('column1 = :value', ['value' => $objectWithToString]);
-        $this->assertSame(
-            'SELECT * FROM `my_table` WHERE column1 = :value',
-            $query->ToSql()
-        );
-        $this->assertSame(['value' => "I'm a string"], $query->Substitutions());
-    }
-
-    function testWhereWithMissingSubstitution()
-    {
-        $query = new SelectQuery('my_table');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing substitutions: value1');
-        $query->Where('column1 = :value1');
-    }
-
-    function testWhereWithMissingSubstitutions()
-    {
-        $query = new SelectQuery('my_table');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing substitutions: value1, value2');
-        $query->Where('column1 = :value1 AND column2 = :value2');
-    }
-
-    function testWhereWithMissingPlaceholder()
-    {
-        $query = new SelectQuery('my_table');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing placeholders: value2');
-        $query->Where('column1 = :value1', ['value1' => 42, 'value2' => 43]);
-    }
-
-    function testWhereWithMissingPlaceholders()
-    {
-        $query = new SelectQuery('my_table');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing placeholders: value1, value2');
-        $query->Where('column1 = value1 AND column2 = value2',
-                      ['value1' => 42, 'value2' => 43]);
-    }
-
-    function testWhereWithMatchingSubstitutions()
-    {
-        $query = new SelectQuery('my_table');
-        $query->Where('column1 = :value1 AND column2 = :value2',
-                      ['value1' => 42, 'value2' => 43]);
+        $query->Where('column1 = :value1 AND column2 = :value2')
+              ->Bind(['value1' => 42, 'value2' => 43]);
         $this->assertSame(
             'SELECT * FROM `my_table` WHERE column1 = :value1 AND column2 = :value2',
             $query->ToSql()
         );
-        $this->assertSame(['value1' => 42, 'value2' => 43], $query->Substitutions());
+        $this->assertSame(['value1' => 42, 'value2' => 43], $query->Bindings());
+    }
+
+    function testWhereReplacesPreviousCondition()
+    {
+        $query = new SelectQuery('my_table');
+        $query->Where('column1 = 1');
+        $query->Where('column2 = 99');
+        $this->assertSame(
+            'SELECT * FROM `my_table` WHERE column2 = 99',
+            $query->ToSql()
+        );
     }
 
     #endregion Where
@@ -187,7 +127,7 @@ class SelectQueryTest extends TestCase
         );
     }
 
-    function testOrderByWithMixedSortingDirection()
+    function testOrderByWithMixedAssociativeAndIndexedArray()
     {
         $query = new SelectQuery('my_table');
         $query->OrderBy(['column1', 'column2'=>'DESC', 'LENGTH(column1)'=>'ASC']);
@@ -213,6 +153,17 @@ class SelectQueryTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid sorting direction: ASX');
         $query->OrderBy(['column1'=>'asx']);
+    }
+
+    function testOrderByReplacesPreviousOrder()
+    {
+        $query = new SelectQuery('my_table');
+        $query->OrderBy(['column1' => 'ASC']);
+        $query->OrderBy(['column2' => 'DESC']);
+        $this->assertSame(
+            'SELECT * FROM `my_table` ORDER BY `column2` DESC',
+            $query->ToSql()
+        );
     }
 
     #endregion OrderBy
@@ -255,6 +206,17 @@ class SelectQueryTest extends TestCase
         );
     }
 
+    function testLimitReplacesPreviousLimit()
+    {
+        $query = new SelectQuery('my_table');
+        $query->Limit(10);
+        $query->Limit(5, 2);
+        $this->assertSame(
+            'SELECT * FROM `my_table` LIMIT 5 OFFSET 2',
+            $query->ToSql()
+        );
+    }
+
     #endregion Limit
 
     #region ToSql --------------------------------------------------------------
@@ -263,14 +225,15 @@ class SelectQueryTest extends TestCase
     {
         $query = (new SelectQuery('my_table'))
             ->Select(['column1', 'COUNT(*) AS count'])
-            ->Where('column2 = :value', ['value' => 42]);
+            ->Where('column2 = :value')
+            ->Bind(['value' => 42]);
         $this->assertSame(
             'SELECT `column1`, COUNT(*) AS count FROM `my_table` WHERE column2 = :value',
             $query->ToSql()
         );
         $this->assertSame(
             ['value' => 42],
-            $query->Substitutions()
+            $query->Bindings()
         );
     }
 
@@ -299,30 +262,32 @@ class SelectQueryTest extends TestCase
     function testToSqlWithWhereAndOrderBy()
     {
         $query = (new SelectQuery('my_table'))
-            ->Where('column2 = :value', ['value' => 42])
-            ->OrderBy(['column1', 'column2'=>'desc', 'LENGTH(column1)'=>'ASC']);
+            ->Where('column2 = :value')
+            ->OrderBy(['column1', 'column2'=>'desc', 'LENGTH(column1)'=>'ASC'])
+            ->Bind(['value' => 42]);
         $this->assertSame(
             'SELECT * FROM `my_table` WHERE column2 = :value ORDER BY `column1`, `column2` DESC, LENGTH(column1) ASC',
             $query->ToSql()
         );
         $this->assertSame(
             ['value' => 42],
-            $query->Substitutions()
+            $query->Bindings()
         );
     }
 
     function testToSqlWithWhereAndLimit()
     {
         $query = (new SelectQuery('my_table'))
-            ->Where('column2 = :value', ['value' => 42])
-            ->Limit(10, 20);
+            ->Where('column2 = :value')
+            ->Limit(10, 20)
+            ->Bind(['value' => 42]);
         $this->assertSame(
             'SELECT * FROM `my_table` WHERE column2 = :value LIMIT 10 OFFSET 20',
             $query->ToSql()
         );
         $this->assertSame(
             ['value' => 42],
-            $query->Substitutions()
+            $query->Bindings()
         );
     }
 
@@ -341,16 +306,17 @@ class SelectQueryTest extends TestCase
     {
         $query = (new SelectQuery('my_table'))
             ->Select(['column1', 'COUNT(*) AS count'])
-            ->Where('column2 = :value', ['value' => 42])
+            ->Where('column2 = :value')
             ->OrderBy(['column1', 'column2'=>'desc', 'LENGTH(column1)'=>'ASC'])
-            ->Limit(10, 20);
+            ->Limit(10, 20)
+            ->Bind(['value' => 42]);
         $this->assertSame(
             'SELECT `column1`, COUNT(*) AS count FROM `my_table` WHERE column2 = :value ORDER BY `column1`, `column2` DESC, LENGTH(column1) ASC LIMIT 10 OFFSET 20',
             $query->ToSql()
         );
         $this->assertSame(
             ['value' => 42],
-            $query->Substitutions()
+            $query->Bindings()
         );
     }
 
