@@ -186,7 +186,64 @@ class ConnectionTest extends TestCase
 
     #endregion __construct
 
-    #region Execute ------------------------------------------------------------
+    #region SelectDatabase -----------------------------------------------------
+
+    function testSelectDatabaseThrowsExceptionWhenSelectionFails()
+    {
+        $this->mysqliHandle->expects($invokedCount = $this->exactly(3))
+            ->method('__get')
+            ->willReturnCallback(function($name) use($invokedCount) {
+                switch ($invokedCount->numberOfInvocations()) {
+                case 1:
+                    $this->assertSame('connect_errno', $name);
+                    return 0;
+                case 2:
+                    $this->assertSame('error', $name);
+                    return 'Unknown database';
+                case 3:
+                    $this->assertSame('errno', $name);
+                    return 1049;
+                }
+            });
+        $this->mysqliHandle->expects($invokedCount = $this->once())
+            ->method('__call')
+            ->with('select_db', ['nonexistent_db'])
+            ->willReturn(false);
+
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown database');
+        $this->expectExceptionCode(1049);
+
+        $this->connection->SelectDatabase('nonexistent_db');
+    }
+
+    function testSelectDatabaseSucceedsWhenSelectionSucceeds()
+    {
+        $this->mysqliHandle->expects($this->once())
+            ->method('__get')
+            ->with('connect_errno')
+            ->willReturn(0);
+        $this->mysqliHandle->expects($this->once())
+            ->method('__call')
+            ->with('select_db', ['test_db'])
+            ->willReturn(true);
+
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
+
+        $this->connection->SelectDatabase('test_db');
+    }
+
+    #endregion SelectDatabase
+
+    #region Execute (PHP < 8.2.0) ----------------------------------------------
 
     #[RequiresPhp('< 8.2.0')]
     function testExecuteThrowsExceptionWhenStatementPreparationFails()
@@ -530,6 +587,10 @@ class ConnectionTest extends TestCase
         $this->assertInstanceOf(MySQLiResult::class, $result);
     }
 
+    #endregion Execute (PHP < 8.2.0)
+
+    #region Execute (PHP >= 8.2.0) ---------------------------------------------
+
     #[RequiresPhp('>= 8.2.0')]
     function testExecuteThrowsExceptionWhenQueryExecutionFails()
     {
@@ -625,7 +686,7 @@ class ConnectionTest extends TestCase
         $this->assertInstanceOf(MySQLiResult::class, $result);
     }
 
-    #endregion Execute
+    #endregion Execute (PHP >= 8.2.0)
 
     #region transformQuery -----------------------------------------------------
 
