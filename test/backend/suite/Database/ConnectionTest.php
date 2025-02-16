@@ -48,6 +48,22 @@ class ConnectionTest extends TestCase
         $this->mysqliHandle = null;
     }
 
+    private function createQueryObject(string $sql, array $bindings = []): Query
+    {
+        $query = $this->getMockBuilder(Query::class)
+            ->setConstructorArgs(['']) // no table name needed
+            ->onlyMethods(['buildSql'])
+            ->getMock();
+        $query->expects($this->once())
+            ->method('buildSql')
+            ->willReturn($sql);
+        if (!empty($bindings)) {
+            $query->Bind($bindings);
+        }
+        return $query;
+    }
+
+
     #region __construct --------------------------------------------------------
 
     function testConstructThrowsExceptionWhenConnectionFails()
@@ -127,6 +143,47 @@ class ConnectionTest extends TestCase
         );
     }
 
+    function testConstructSucceedsWithoutCharset()
+    {
+        $this->mysqliHandle->expects($this->once())
+            ->method('__get')
+            ->with('connect_errno')
+            ->willReturn(0);
+        $this->mysqliHandle->expects($this->never())
+            ->method('__call')
+            ->with('set_charset');
+
+        $this->connection->expects($this->once())
+            ->method('connect')
+            ->with('localhost', 'user1', 'pass123');
+
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            [ 'localhost', 'user1', 'pass123']
+        );
+    }
+
+    function testConstructSucceedsWithCharset()
+    {
+        $this->mysqliHandle->expects($this->once())
+            ->method('__get')
+            ->with('connect_errno')
+            ->willReturn(0);
+        $this->mysqliHandle->expects($this->once())
+            ->method('__call')
+            ->with('set_charset', ['utf8mb4'])
+            ->willReturn(true);
+
+        $this->connection->expects($this->once())
+            ->method('connect')
+            ->with('localhost', 'user1', 'pass123');
+
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            [ 'localhost', 'user1', 'pass123', 'utf8mb4']
+        );
+    }
+
     #endregion __construct
 
     #region Execute ------------------------------------------------------------
@@ -150,20 +207,17 @@ class ConnectionTest extends TestCase
                 }
             });
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users`');
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $this->connection->expects($this->once())
             ->method('prepareStatement')
             ->with('SELECT * FROM `users`')
             ->willReturn(null);
+
+        $query = $this->createQueryObject('SELECT * FROM `users`');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Syntax error');
@@ -180,16 +234,10 @@ class ConnectionTest extends TestCase
             ->with('connect_errno')
             ->willReturn(0);
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
-        $query->Bind(['id' => 42, 'name' => 'John']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $statement = $this->createMock(MySQLiStatement::class);
         $statement->expects($invokedCount = $this->exactly(2))
@@ -226,6 +274,11 @@ class ConnectionTest extends TestCase
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
+        $query = $this->createQueryObject(
+            'SELECT * FROM `users` WHERE id = :id AND name = :name',
+            ['id' => 42, 'name' => 'John']
+        );
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Invalid parameter');
         $this->expectExceptionCode(2031);
@@ -241,16 +294,10 @@ class ConnectionTest extends TestCase
             ->with('connect_errno')
             ->willReturn(0);
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
-        $query->Bind(['id' => 42, 'name' => 'John']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $statement = $this->createMock(MySQLiStatement::class);
         $statement->expects($invokedCount = $this->exactly(2))
@@ -291,6 +338,11 @@ class ConnectionTest extends TestCase
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
+        $query = $this->createQueryObject(
+            'SELECT * FROM `users` WHERE id = :id AND name = :name',
+            ['id' => 42, 'name' => 'John']
+        );
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Execution error');
         $this->expectExceptionCode(1064);
@@ -306,16 +358,10 @@ class ConnectionTest extends TestCase
             ->with('connect_errno')
             ->willReturn(0);
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
-        $query->Bind(['id' => 42, 'name' => 'John']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $statement = $this->createMock(MySQLiStatement::class);
         $statement->expects($invokedCount = $this->exactly(3))
@@ -362,6 +408,11 @@ class ConnectionTest extends TestCase
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
+        $query = $this->createQueryObject(
+            'SELECT * FROM `users` WHERE id = :id AND name = :name',
+            ['id' => 42, 'name' => 'John']
+        );
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Out of memory');
         $this->expectExceptionCode(2008);
@@ -377,16 +428,10 @@ class ConnectionTest extends TestCase
             ->with('connect_errno')
             ->willReturn(0);
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
-        $query->Bind(['id' => 42, 'name' => 'John']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $statement = $this->createMock(MySQLiStatement::class);
         $statement->expects($this->once())
@@ -422,6 +467,11 @@ class ConnectionTest extends TestCase
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
+        $query = $this->createQueryObject(
+            'SELECT * FROM `users` WHERE id = :id AND name = :name',
+            ['id' => 42, 'name' => 'John']
+        );
+
         $result = $this->connection->Execute($query);
         $this->assertNull($result);
     }
@@ -434,16 +484,10 @@ class ConnectionTest extends TestCase
             ->with('connect_errno')
             ->willReturn(0);
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
-        $query->Bind(['id' => 42, 'name' => 'John']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $statement = $this->createMock(MySQLiStatement::class);
         $statement->expects($this->never())
@@ -477,6 +521,11 @@ class ConnectionTest extends TestCase
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
+        $query = $this->createQueryObject(
+            'SELECT * FROM `users` WHERE id = :id AND name = :name',
+            ['id' => 42, 'name' => 'John']
+        );
+
         $result = $this->connection->Execute($query);
         $this->assertInstanceOf(MySQLiResult::class, $result);
     }
@@ -500,21 +549,20 @@ class ConnectionTest extends TestCase
                 }
             });
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
-        $query->Bind(['id' => 42, 'name' => 'John']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $this->connection->expects($this->once())
             ->method('executeQuery')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
             ->willReturn(false);
+
+        $query = $this->createQueryObject(
+            'SELECT * FROM `users` WHERE id = :id AND name = :name',
+            ['id' => 42, 'name' => 'John']
+        );
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Syntax error');
@@ -531,21 +579,20 @@ class ConnectionTest extends TestCase
             ->with('connect_errno')
             ->willReturn(0);
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
-        $query->Bind(['id' => 42, 'name' => 'John']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $this->connection->expects($this->once())
             ->method('executeQuery')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
             ->willReturn(true);
+
+        $query = $this->createQueryObject(
+            'SELECT * FROM `users` WHERE id = :id AND name = :name',
+            ['id' => 42, 'name' => 'John']
+        );
 
         $result = $this->connection->Execute($query);
         $this->assertNull($result);
@@ -559,21 +606,20 @@ class ConnectionTest extends TestCase
             ->with('connect_errno')
             ->willReturn(0);
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
-
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
-        $query->Bind(['id' => 42, 'name' => 'John']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
         $this->connection->expects($this->once())
             ->method('executeQuery')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
             ->willReturn($this->createMock(MySQLiResult::class));
+
+        $query = $this->createQueryObject(
+            'SELECT * FROM `users` WHERE id = :id AND name = :name',
+            ['id' => 42, 'name' => 'John']
+        );
 
         $result = $this->connection->Execute($query);
         $this->assertInstanceOf(MySQLiResult::class, $result);
@@ -591,34 +637,23 @@ class ConnectionTest extends TestCase
         string $sql,
         array  $bindings
     ) {
-        // Tell the mocked MySQLiHandle object to return 0 for connect_errno.
-        // This will simulate a successful connection when the Connection object
-        // is constructed.
         $this->mysqliHandle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
 
-        AccessHelper::CallNonPublicConstructor($this->connection, ['', '', '']);
+        AccessHelper::CallNonPublicConstructor(
+            $this->connection,
+            ['', '', '']
+        );
 
-        // Create a Query object by telling its abstract buildSql method to
-        // return the specified SQL string. This will make the ToSql method
-        // to validate and return the SQL string as is.
-        $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
-            ->onlyMethods(['buildSql'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('buildSql')
-            ->willReturn($sql);
+        $query = $this->createQueryObject($sql, $bindings);
 
-        // Set the bindings for the Query object. These will be substituted
-        // into the SQL string where matching placeholders are found.
-        $query->Bind($bindings);
-
-        // Call the protected transformQuery method and compare the result.
-        $result = AccessHelper::CallNonPublicMethod($this->connection,
-            'transformQuery', [$query]);
+        $result = AccessHelper::CallNonPublicMethod(
+            $this->connection,
+            'transformQuery',
+            [$query]
+        );
         $this->assertSame($expectedSql, $result->sql);
         $this->assertSame($expectedTypes, $result->types);
         $this->assertSame($expectedValues, $result->values);
