@@ -6,9 +6,9 @@ use \PHPUnit\Framework\Attributes\RequiresPhp;
 
 use \Harmonia\Database\Connection;
 
-use \Harmonia\Database\MySQLiHandle;
-use \Harmonia\Database\MySQLiStatement;
-use \Harmonia\Database\MySQLiResult;
+use \Harmonia\Database\Proxies\MySQLiHandle;
+use \Harmonia\Database\Proxies\MySQLiResult;
+use \Harmonia\Database\Proxies\MySQLiStatement;
 use \Harmonia\Database\Queries\Query;
 use \TestToolkit\AccessHelper;
 
@@ -16,7 +16,7 @@ use \TestToolkit\AccessHelper;
 class ConnectionTest extends TestCase
 {
     private ?Connection $connection = null;
-    private ?MySQLiHandle $mysqliHandle = null;
+    private ?MySQLiHandle $handle = null;
 
     /**
      * Creates a partially mocked Connection object with its internal
@@ -25,14 +25,14 @@ class ConnectionTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->mysqliHandle = $this->createMock(MySQLiHandle::class);
+        $this->handle = $this->createMock(MySQLiHandle::class);
         $this->connection = $this->getMockBuilder(Connection::class)
             ->onlyMethods(['connect', 'prepareStatement', 'executeQuery'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->connection->expects($this->once())
             ->method('connect')
-            ->willReturn($this->mysqliHandle);
+            ->willReturn($this->handle);
     }
 
     /**
@@ -41,11 +41,11 @@ class ConnectionTest extends TestCase
      */
     protected function tearDown(): void
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__call')
             ->with('close');
         $this->connection = null;
-        $this->mysqliHandle = null;
+        $this->handle = null;
     }
 
     private function createQueryObject(string $sql, array $bindings = []): Query
@@ -68,7 +68,7 @@ class ConnectionTest extends TestCase
 
     function testConstructThrowsExceptionWhenConnectionFails()
     {
-        $this->mysqliHandle->expects($invokedCount = $this->exactly(3))
+        $this->handle->expects($invokedCount = $this->exactly(3))
             ->method('__get')
             ->willReturnCallback(function($name) use($invokedCount) {
                 switch ($invokedCount->numberOfInvocations()) {
@@ -100,7 +100,7 @@ class ConnectionTest extends TestCase
 
     function testConstructThrowsExceptionWithInvalidCharset()
     {
-        $this->mysqliHandle->expects($invokedCount = $this->exactly(3))
+        $this->handle->expects($invokedCount = $this->exactly(3))
             ->method('__get')
             ->willReturnCallback(function($name) use($invokedCount) {
                 switch ($invokedCount->numberOfInvocations()) {
@@ -115,7 +115,7 @@ class ConnectionTest extends TestCase
                     return 2019;
                 }
             });
-        $this->mysqliHandle->expects($invokedCount = $this->exactly(2))
+        $this->handle->expects($invokedCount = $this->exactly(2))
             ->method('__call')
             ->willReturnCallback(function($name, $arguments) use($invokedCount) {
                 switch ($invokedCount->numberOfInvocations()) {
@@ -145,11 +145,11 @@ class ConnectionTest extends TestCase
 
     function testConstructSucceedsWithoutCharset()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
-        $this->mysqliHandle->expects($this->never())
+        $this->handle->expects($this->never())
             ->method('__call')
             ->with('set_charset');
 
@@ -165,11 +165,11 @@ class ConnectionTest extends TestCase
 
     function testConstructSucceedsWithCharset()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__call')
             ->with('set_charset', ['utf8mb4'])
             ->willReturn(true);
@@ -190,7 +190,7 @@ class ConnectionTest extends TestCase
 
     function testSelectDatabaseThrowsExceptionWhenSelectionFails()
     {
-        $this->mysqliHandle->expects($invokedCount = $this->exactly(3))
+        $this->handle->expects($invokedCount = $this->exactly(3))
             ->method('__get')
             ->willReturnCallback(function($name) use($invokedCount) {
                 switch ($invokedCount->numberOfInvocations()) {
@@ -205,7 +205,7 @@ class ConnectionTest extends TestCase
                     return 1049;
                 }
             });
-        $this->mysqliHandle->expects($invokedCount = $this->once())
+        $this->handle->expects($invokedCount = $this->once())
             ->method('__call')
             ->with('select_db', ['nonexistent_db'])
             ->willReturn(false);
@@ -224,11 +224,11 @@ class ConnectionTest extends TestCase
 
     function testSelectDatabaseSucceedsWhenSelectionSucceeds()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__call')
             ->with('select_db', ['test_db'])
             ->willReturn(true);
@@ -248,7 +248,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('< 8.2.0')]
     function testExecuteThrowsExceptionWhenStatementPreparationFails()
     {
-        $this->mysqliHandle->expects($invokedCount = $this->exactly(3))
+        $this->handle->expects($invokedCount = $this->exactly(3))
             ->method('__get')
             ->willReturnCallback(function($name) use($invokedCount) {
                 switch ($invokedCount->numberOfInvocations()) {
@@ -286,7 +286,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('< 8.2.0')]
     function testExecuteThrowsExceptionWhenParameterBindingFails()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
@@ -346,7 +346,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('< 8.2.0')]
     function testExecuteThrowsExceptionWhenStatementExecutionFails()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
@@ -410,7 +410,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('< 8.2.0')]
     function testExecuteThrowsExceptionWhenResultRetrievalFails()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
@@ -480,7 +480,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('< 8.2.0')]
     function testExecuteReturnsNullWhenResultRetrievalSucceedsWithNoResultSet()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
@@ -536,7 +536,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('< 8.2.0')]
     function testExecuteReturnsResultObjectWhenResultRetrievalSucceedsWithResultSet()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
@@ -594,7 +594,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('>= 8.2.0')]
     function testExecuteThrowsExceptionWhenQueryExecutionFails()
     {
-        $this->mysqliHandle->expects($invokedCount = $this->exactly(3))
+        $this->handle->expects($invokedCount = $this->exactly(3))
             ->method('__get')
             ->willReturnCallback(function($name) use($invokedCount) {
                 switch ($invokedCount->numberOfInvocations()) {
@@ -635,7 +635,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('>= 8.2.0')]
     function testExecuteReturnsNullWhenQueryExecutionSucceedsWithNoResultSet()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
@@ -662,7 +662,7 @@ class ConnectionTest extends TestCase
     #[RequiresPhp('>= 8.2.0')]
     function testExecuteReturnsResultObjectWhenQueryExecutionSucceedsWithResultSet()
     {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
@@ -698,7 +698,7 @@ class ConnectionTest extends TestCase
         string $sql,
         array  $bindings
     ) {
-        $this->mysqliHandle->expects($this->once())
+        $this->handle->expects($this->once())
             ->method('__get')
             ->with('connect_errno')
             ->willReturn(0);
