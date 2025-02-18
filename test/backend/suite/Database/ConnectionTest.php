@@ -27,11 +27,11 @@ class ConnectionTest extends TestCase
     {
         $this->handle = $this->createMock(MySQLiHandle::class);
         $this->connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['connect', 'prepareStatement', 'executeQuery'])
+            ->onlyMethods(['_new_mysqli', '_prepare', '_execute_query'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->connection->expects($this->once())
-            ->method('connect')
+            ->method('_new_mysqli')
             ->willReturn($this->handle);
     }
 
@@ -85,7 +85,7 @@ class ConnectionTest extends TestCase
             });
 
         $this->connection->expects($this->once())
-            ->method('connect')
+            ->method('_new_mysqli')
             ->with('localhost', 'user1', 'pass123');
 
         $this->expectException(\RuntimeException::class);
@@ -130,7 +130,7 @@ class ConnectionTest extends TestCase
             });
 
         $this->connection->expects($this->once())
-            ->method('connect')
+            ->method('_new_mysqli')
             ->with('localhost', 'user1', 'pass123');
 
         $this->expectException(\RuntimeException::class);
@@ -154,7 +154,7 @@ class ConnectionTest extends TestCase
             ->with('set_charset');
 
         $this->connection->expects($this->once())
-            ->method('connect')
+            ->method('_new_mysqli')
             ->with('localhost', 'user1', 'pass123');
 
         AccessHelper::CallNonPublicConstructor(
@@ -175,7 +175,7 @@ class ConnectionTest extends TestCase
             ->willReturn(true);
 
         $this->connection->expects($this->once())
-            ->method('connect')
+            ->method('_new_mysqli')
             ->with('localhost', 'user1', 'pass123');
 
         AccessHelper::CallNonPublicConstructor(
@@ -270,7 +270,7 @@ class ConnectionTest extends TestCase
         );
 
         $this->connection->expects($this->once())
-            ->method('prepareStatement')
+            ->method('_prepare')
             ->with('SELECT * FROM `users`')
             ->willReturn(null);
 
@@ -327,7 +327,7 @@ class ConnectionTest extends TestCase
             });
 
         $this->connection->expects($this->once())
-            ->method('prepareStatement')
+            ->method('_prepare')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
@@ -391,7 +391,7 @@ class ConnectionTest extends TestCase
             });
 
         $this->connection->expects($this->once())
-            ->method('prepareStatement')
+            ->method('_prepare')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
@@ -458,10 +458,10 @@ class ConnectionTest extends TestCase
             });
         $statement->expects($this->once())
             ->method('get_result')
-            ->willReturn(null);
+            ->willReturn(false);
 
         $this->connection->expects($this->once())
-            ->method('prepareStatement')
+            ->method('_prepare')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
@@ -517,10 +517,10 @@ class ConnectionTest extends TestCase
             });
         $statement->expects($this->once())
             ->method('get_result')
-            ->willReturn(null);
+            ->willReturn(false);
 
         $this->connection->expects($this->once())
-            ->method('prepareStatement')
+            ->method('_prepare')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
@@ -574,7 +574,7 @@ class ConnectionTest extends TestCase
             ->willReturn($this->createMock(MySQLiResult::class));
 
         $this->connection->expects($this->once())
-            ->method('prepareStatement')
+            ->method('_prepare')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
             ->willReturn($statement);
 
@@ -616,7 +616,7 @@ class ConnectionTest extends TestCase
         );
 
         $this->connection->expects($this->once())
-            ->method('executeQuery')
+            ->method('_execute_query')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
             ->willReturn(false);
 
@@ -646,7 +646,7 @@ class ConnectionTest extends TestCase
         );
 
         $this->connection->expects($this->once())
-            ->method('executeQuery')
+            ->method('_execute_query')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
             ->willReturn(true);
 
@@ -673,7 +673,7 @@ class ConnectionTest extends TestCase
         );
 
         $this->connection->expects($this->once())
-            ->method('executeQuery')
+            ->method('_execute_query')
             ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
             ->willReturn($this->createMock(MySQLiResult::class));
 

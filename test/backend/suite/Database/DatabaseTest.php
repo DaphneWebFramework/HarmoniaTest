@@ -9,6 +9,7 @@ use \Harmonia\Database\Connection;
 use \Harmonia\Database\Proxies\MySQLiHandle;
 use \Harmonia\Database\Proxies\MySQLiResult;
 use \Harmonia\Database\Queries\Query;
+use \Harmonia\Database\ResultSet;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(Database::class)]
@@ -34,7 +35,7 @@ class DatabaseTest extends TestCase
     private function createDatabasePartialMock(): Database
     {
         return $this->getMockBuilder(Database::class)
-            ->onlyMethods(['connect'])
+            ->onlyMethods(['_new_Connection'])
             ->disableOriginalConstructor()
             ->getMock();
     }
@@ -71,91 +72,76 @@ class DatabaseTest extends TestCase
 
     #region Execute ------------------------------------------------------------
 
-    function testExecuteReturnsNullWhenConnectionFails()
+    function testExecuteReturnsNullWhenNewConnectionThrowsException()
     {
         $database = Database::Instance();
         $database->expects($this->once())
-            ->method('connect')
+            ->method('_new_Connection')
             ->with('localhost', 'root', 'pass123', 'utf8mb4')
             ->willThrowException(new \RuntimeException('Access denied', 1045));
-
         $query = $this->createStub(Query::class);
-
         $this->assertNull($database->Execute($query));
     }
 
-    function testExecuteReturnsNullWhenDatabaseSelectionFails()
+    function testExecuteReturnsNullWhenConnectionSelectDatabaseThrowsException()
     {
         $connection = $this->createConnectionMock();
         $connection->expects($this->once())
             ->method('SelectDatabase')
             ->with('test_db')
             ->willThrowException(new \RuntimeException('Unknown database', 1049));
-
         $database = Database::Instance();
         $database->expects($this->once())
-            ->method('connect')
+            ->method('_new_Connection')
             ->with('localhost', 'root', 'pass123', 'utf8mb4')
             ->willReturn($connection);
-
         $query = $this->createStub(Query::class);
-
         $this->assertNull($database->Execute($query));
     }
 
-    function testExecuteReturnsNullWhenConnectionExecuteFails()
+    function testExecuteReturnsNullWhenConnectionExecuteThrowsException()
     {
         $query = $this->createStub(Query::class);
-
         $connection = $this->createConnectionMock();
         $connection->expects($this->once())
             ->method('Execute')
             ->with($query)
             ->willThrowException(new \RuntimeException('Syntax error', 1064));
-
         $database = Database::Instance();
         $database->expects($this->once())
-            ->method('connect')
+            ->method('_new_Connection')
             ->willReturn($connection);
-
         $this->assertNull($database->Execute($query));
     }
 
-    function testExecuteReturnsNullWhenConnectionExecuteSucceedWithoutResultSet()
+    function testExecuteReturnsResultSetWhenConnectionExecuteReturnsNull()
     {
         $query = $this->createStub(Query::class);
-
         $connection = $this->createConnectionMock();
         $connection->expects($this->once())
             ->method('Execute')
             ->with($query)
-            ->willReturn(null);
-
+            ->willReturn(null); // empty result
         $database = Database::Instance();
         $database->expects($this->once())
-            ->method('connect')
+            ->method('_new_Connection')
             ->willReturn($connection);
-
-        $this->assertNull($database->Execute($query));
+        $this->assertInstanceOf(ResultSet::class, $database->Execute($query));
     }
 
-    function testExecuteReturnsResultWhenConnectionExecuteSucceedWithResultSet()
+    function testExecuteReturnsResultSetWhenConnectionExecuteReturnsResult()
     {
         $query = $this->createStub(Query::class);
-
         $connection = $this->createConnectionMock();
         $connection->expects($this->once())
             ->method('Execute')
             ->with($query)
             ->willReturn($this->createMock(MySQLiResult::class));
-
         $database = Database::Instance();
         $database->expects($this->once())
-            ->method('connect')
+            ->method('_new_Connection')
             ->willReturn($connection);
-
-        $result = $database->Execute($query);
-        $this->assertInstanceOf(MySQLiResult::class, $result);
+        $this->assertInstanceOf(ResultSet::class, $database->Execute($query));
     }
 
     #endregion Execute
