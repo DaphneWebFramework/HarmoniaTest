@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
+use \PHPUnit\Framework\Attributes\RequiresOperatingSystem;
 
 use \Harmonia\Resource;
 
@@ -130,6 +131,36 @@ class ResourceTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Application path is not under server path.');
         $resource->AppRelativePath();
+    }
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testAppRelativePathWithServerDirectoryContainingLinkToAppPath()
+    {
+        // /tmp
+        $serverPath = new CPath(\sys_get_temp_dir());
+
+        // .../test/backend/suite
+        $appPath = new CPath(__DIR__);
+
+        // /tmp/suite
+        $linkPath = CPath::Join($serverPath, $appPath->BaseName());
+
+        // /tmp/suite -> .../test/backend/suite
+        if (\file_exists((string)$linkPath)) {
+            \unlink((string)$linkPath);
+        }
+        $this->assertTrue(\symlink((string)$appPath, (string)$linkPath));
+
+        $serverMock = Server::Instance();
+        $serverMock->method('Path')
+            ->willReturn($serverPath);
+
+        $resource = Resource::Instance();
+        $resource->Initialize($appPath);
+
+        $this->assertEquals($appPath->BaseName(), $resource->AppRelativePath());
+
+        \unlink((string)$linkPath);
     }
 
     function testAppRelativePathWithAppPathEqualToServerPath()
