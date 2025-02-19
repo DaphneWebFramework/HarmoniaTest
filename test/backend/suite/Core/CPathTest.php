@@ -2,6 +2,7 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
+use \PHPUnit\Framework\Attributes\RequiresOperatingSystem;
 
 use \Harmonia\Core\CPath;
 
@@ -177,6 +178,95 @@ class CPathTest extends TestCase
     }
 
     #endregion IsDirectory
+
+    #region IsLink -------------------------------------------------------------
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testIsLinkFailsWithAFile()
+    {
+        $path = new CPath(__FILE__);
+        $this->assertFalse($path->IsLink());
+    }
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testIsLinkFailsWithADirectory()
+    {
+        $path = new CPath(__DIR__);
+        $this->assertFalse($path->IsLink());
+    }
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testIsLinkSucceedsWithALinkToAFile()
+    {
+        $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
+        $this->assertTrue(\symlink(__FILE__, (string)$path));
+        $isLink = $path->IsLink();
+        \unlink((string)$path);
+        $this->assertTrue($isLink);
+    }
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testIsLinkSucceedsWithALinkToADirectory()
+    {
+        $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
+        $this->assertTrue(\symlink(__DIR__, (string)$path));
+        $isLink = $path->IsLink();
+        \unlink((string)$path);
+        $this->assertTrue($isLink);
+    }
+
+    #endregion IsLink
+
+    #region ReadLink -----------------------------------------------------------
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testReadLinkFailsWithAFile()
+    {
+        $path = new CPath(__FILE__);
+        $this->assertNull($path->ReadLink());
+    }
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testReadLinkFailsWithADirectory()
+    {
+        $path = new CPath(__DIR__);
+        $this->assertNull($path->ReadLink());
+    }
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testReadLinkSucceedsWithALinkToAFile()
+    {
+        $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
+        $this->assertTrue(\symlink(__FILE__, (string)$path));
+        $readLink = $path->ReadLink();
+        \unlink((string)$path);
+        $this->assertInstanceOf(CPath::class, $readLink);
+        $this->assertEquals(__FILE__, $readLink);
+    }
+
+    #[RequiresOperatingSystem('Linux|Darwin')]
+    function testReadLinkSucceedsWithALinkToADirectory()
+    {
+        $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
+        $this->assertTrue(\symlink(__DIR__, (string)$path));
+        $readLink = $path->ReadLink();
+        \unlink((string)$path);
+        $this->assertInstanceOf(CPath::class, $readLink);
+        $this->assertEquals(__DIR__, $readLink);
+    }
+
+    #endregion ReadLink
+
+    #region BaseName -----------------------------------------------------------
+
+    #[DataProvider('baseNameDataProvider')]
+    function testBaseName($expected, $value)
+    {
+        $path = new CPath($value);
+        $this->assertSame($expected, $path->BaseName());
+    }
+
+    #endregion BaseName
 
     #region ToAbsolute ---------------------------------------------------------
 
@@ -781,6 +871,21 @@ class CPathTest extends TestCase
             'non existing path' => [false, 'non_existing'],
             'path with invalid characters' => [false, '<>:"|?*'],
             'empty path' => [false, ''],
+        ];
+    }
+
+    static function baseNameDataProvider()
+    {
+        return [
+            ['sudoers.d', '/etc/sudoers.d/'],
+            ['sudoers.d', '/etc/sudoers.d'],
+            ['passwd', '/etc/passwd'],
+            ['etc', '/etc/'],
+            ['etc', 'etc/'],
+            ['etc', '/etc'],
+            ['.', '.'],
+            ['', '/'],
+            ['', '']
         ];
     }
 
