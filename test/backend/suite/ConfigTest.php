@@ -150,6 +150,33 @@ class ConfigTest extends TestCase
 
     #endregion Option
 
+    #region OptionOrDefault ----------------------------------------------------
+
+    function testOptionOrDefaultWithoutLoad()
+    {
+        $config = Config::Instance();
+        $this->assertSame('default', $config->OptionOrDefault('key', 'default'));
+    }
+
+    function testOptionOrDefaultWithLoad()
+    {
+        $this->createTestFile(<<<PHP
+            <?php
+            return [
+                'key1' => 'value1',
+                'key2' => 'value2'
+            ];
+
+        PHP);
+        $config = Config::Instance();
+        $config->Load($this->testFilePath);
+        $this->assertSame('value1', $config->OptionOrDefault('key1', 'default'));
+        $this->assertSame('value2', $config->OptionOrDefault('key2', 'default'));
+        $this->assertSame('default', $config->OptionOrDefault('key3', 'default'));
+    }
+
+    #endregion OptionOrDefault
+
     #region SetOption ----------------------------------------------------------
 
     function testSetOptionWithoutLoad()

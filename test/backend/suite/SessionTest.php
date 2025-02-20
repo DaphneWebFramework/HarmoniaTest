@@ -142,29 +142,12 @@ class SessionTest extends TestCase
         AccessHelper::CallNonPublicConstructor($session);
     }
 
-    function testConstructSetsSessionNameWhenConfigAppNameIsNotSet()
+    function testConstructSetsSessionNameWhenConfigAppNameIsNotSetOrEmpty()
     {
         $config = Config::Instance();
         $config->expects($this->once())
-            ->method('Option')
-            ->with('AppName')
-            ->willReturn(null);
-        $session = Session::Instance();
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_NONE);
-        $session->expects($this->once())
-            ->method('_session_name')
-            ->with('Harmonia_SID');
-        AccessHelper::CallNonPublicConstructor($session);
-    }
-
-    function testConstructSetsSessionNameWhenConfigAppNameIsSetButEmpty()
-    {
-        $config = Config::Instance();
-        $config->expects($this->once())
-            ->method('Option')
-            ->with('AppName')
+            ->method('OptionOrDefault')
+            ->with('AppName', '')
             ->willReturn('');
         $session = Session::Instance();
         $session->expects($this->once())
@@ -176,12 +159,12 @@ class SessionTest extends TestCase
         AccessHelper::CallNonPublicConstructor($session);
     }
 
-    function testConstructSetsSessionNameWhenConfigAppNameIsSetAndNotEmpty()
+    function testConstructSetsSessionNameWhenConfigAppNameIsNotEmpty()
     {
         $config = Config::Instance();
         $config->expects($this->once())
-            ->method('Option')
-            ->with('AppName')
+            ->method('OptionOrDefault')
+            ->with('AppName', '')
             ->willReturn('MyCoolApp');
         $session = Session::Instance();
         $session->expects($this->once())
