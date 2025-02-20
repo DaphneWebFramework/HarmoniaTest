@@ -12,43 +12,14 @@ use \Harmonia\Database\Proxies\MySQLiStatement;
 use \Harmonia\Database\Queries\Query;
 use \TestToolkit\AccessHelper;
 
+if (!\class_exists('mysqli_sql_exception')) {
+    class mysqli_sql_exception extends \RuntimeException {}
+}
+
 #[CoversClass(Connection::class)]
 class ConnectionTest extends TestCase
 {
-    private ?Connection $connection = null;
-    private ?MySQLiHandle $handle = null;
-
-    /**
-     * Creates a partially mocked Connection object with its internal
-     * MySQLiHandle object mocked. The Connection object's constructor
-     * is NOT invoked at this point.
-     */
-    protected function setUp(): void
-    {
-        $this->handle = $this->createMock(MySQLiHandle::class);
-        $this->connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['_new_mysqli', '_prepare', '_execute_query'])
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->connection->expects($this->once())
-            ->method('_new_mysqli')
-            ->willReturn($this->handle);
-    }
-
-    /**
-     * Ensures that the Connection object's destructor is called and its
-     * internal MySQLiHandle object is closed.
-     */
-    protected function tearDown(): void
-    {
-        $this->handle->expects($this->once())
-            ->method('__call')
-            ->with('close');
-        $this->connection = null;
-        $this->handle = null;
-    }
-
-    private function createQueryObject(string $sql, array $bindings = []): Query
+    private function createQuery(string $sql, array $bindings = []): Query
     {
         $query = $this->getMockBuilder(Query::class)
             ->setConstructorArgs(['']) // no table name needed
@@ -63,182 +34,382 @@ class ConnectionTest extends TestCase
         return $query;
     }
 
-
     #region __construct --------------------------------------------------------
 
-    function testConstructThrowsExceptionWhenConnectionFails()
+    function testConstructThrowsWhenCreateHandleThrows()
     {
-        $this->handle->expects($invokedCount = $this->exactly(3))
-            ->method('__get')
-            ->willReturnCallback(function($name) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('connect_errno', $name);
-                    return 1045;
-                case 2:
-                    $this->assertSame('connect_error', $name);
-                    return 'Access denied for user';
-                case 3:
-                    $this->assertSame('connect_errno', $name);
-                    return 1045;
-                }
-            });
-
-        $this->connection->expects($this->once())
-            ->method('_new_mysqli')
-            ->with('localhost', 'user1', 'pass123');
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['createHandle'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willThrowException(new \RuntimeException('Access denied', 1045));
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Access denied for user');
+        $this->expectExceptionMessage('Access denied');
         $this->expectExceptionCode(1045);
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            [ 'localhost', 'user1', 'pass123']
-        );
+        $connection->__construct('localhost', 'root', '');
+
+        $this->assertNull(AccessHelper::GetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle'
+        ));
     }
 
-    function testConstructThrowsExceptionWithInvalidCharset()
+    function testConstructThrowsWhenSetCharsetThrows()
     {
-        $this->handle->expects($invokedCount = $this->exactly(3))
-            ->method('__get')
-            ->willReturnCallback(function($name) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('connect_errno', $name);
-                    return 0;
-                case 2:
-                    $this->assertSame('error', $name);
-                    return 'Unknown character set';
-                case 3:
-                    $this->assertSame('errno', $name);
-                    return 2019;
-                }
-            });
-        $this->handle->expects($invokedCount = $this->exactly(2))
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
             ->method('__call')
-            ->willReturnCallback(function($name, $arguments) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('set_charset', $name);
-                    $this->assertSame('invalidmb4', $arguments[0]);
-                    return false;
-                case 2:
-                    $this->assertSame('close', $name);
-                    return null;
-                }
-            });
+            ->with('close');
 
-        $this->connection->expects($this->once())
-            ->method('_new_mysqli')
-            ->with('localhost', 'user1', 'pass123');
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['createHandle', 'setCharset'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->expects($this->once())
+            ->method('setCharset')
+            ->with($handle, 'badcharset')
+            ->willThrowException(new \RuntimeException('Unknown character set', 2019));
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Unknown character set');
         $this->expectExceptionCode(2019);
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            [ 'localhost', 'user1', 'pass123', 'invalidmb4']
-        );
+        $connection->__construct('localhost', 'root', '', 'badcharset');
+
+        $this->assertNull(AccessHelper::GetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle'
+        ));
     }
 
     function testConstructSucceedsWithoutCharset()
     {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-        $this->handle->expects($this->never())
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->never())
             ->method('__call')
-            ->with('set_charset');
+            ->with('close');
 
-        $this->connection->expects($this->once())
-            ->method('_new_mysqli')
-            ->with('localhost', 'user1', 'pass123');
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['createHandle', 'setCharset'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->expects($this->never())
+            ->method('setCharset');
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            [ 'localhost', 'user1', 'pass123']
-        );
+        $connection->__construct('localhost', 'root', '');
+
+        $this->assertSame($handle, AccessHelper::GetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle'
+        ));
+    }
+
+    function testConstructSucceedsWithNullCharset()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->never())
+            ->method('__call')
+            ->with('close');
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['createHandle', 'setCharset'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->expects($this->never())
+            ->method('setCharset');
+
+        $connection->__construct('localhost', 'root', '', null);
+
+        $this->assertSame($handle, AccessHelper::GetNonPublicMockProperty(
+            Connection::class,
+            $connection, 'handle'
+        ));
     }
 
     function testConstructSucceedsWithCharset()
     {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-        $this->handle->expects($this->once())
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->never())
             ->method('__call')
-            ->with('set_charset', ['utf8mb4'])
-            ->willReturn(true);
+            ->with('close');
 
-        $this->connection->expects($this->once())
-            ->method('_new_mysqli')
-            ->with('localhost', 'user1', 'pass123');
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['createHandle', 'setCharset'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->expects($this->once())
+            ->method('setCharset')
+            ->with($handle, 'utf8mb4');
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            [ 'localhost', 'user1', 'pass123', 'utf8mb4']
-        );
+        $connection->__construct('localhost', 'root', '', 'utf8mb4');
+
+        $this->assertSame($handle, AccessHelper::GetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle'
+        ));
     }
 
     #endregion __construct
 
+    #region createHandle -------------------------------------------------------
+
+    function testCreateHandleThrowsIfNewMysqliFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['connect_error', 'Access denied'],
+                ['connect_errno', 1045]
+            ]);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['_new_mysqli'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('_new_mysqli')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Access denied');
+        $this->expectExceptionCode(1045);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'createHandle',
+            ['localhost', 'root', '']
+        );
+    }
+
+    function testCreateHandleThrowsIfNewMysqliFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['_new_mysqli'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('_new_mysqli')
+            ->with('localhost', 'root', '')
+            ->willThrowException(new \mysqli_sql_exception('Access denied', 1045));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Access denied');
+        $this->expectExceptionCode(1045);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'createHandle',
+            ['localhost', 'root', '']
+        );
+    }
+
+    function testCreateHandleReturnsHandleWhenNewMysqliSucceeds()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->with('connect_errno')
+            ->willReturn(0);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['_new_mysqli'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('_new_mysqli')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+
+        $this->assertSame($handle, AccessHelper::CallNonPublicMethod(
+            $connection,
+            'createHandle',
+            ['localhost', 'root', '']
+        ));
+    }
+
+    #endregion createHandle
+
+    #region setCharset ---------------------------------------------------------
+
+    function testSetCharsetThrowsIfHandleSetCharsetFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('set_charset', ['badcharset'])
+            ->willReturn(false);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Unknown character set'],
+                ['errno', 2019]
+            ]);
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown character set');
+        $this->expectExceptionCode(2019);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'setCharset',
+            [$handle, 'badcharset']
+        );
+    }
+
+    function testSetCharsetThrowsIfHandleSetCharsetFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('set_charset', ['badcharset'])
+            ->willThrowException(new \mysqli_sql_exception('Unknown character set', 2019));
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown character set');
+        $this->expectExceptionCode(2019);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'setCharset',
+            [$handle, 'badcharset']
+        );
+    }
+
+    function testSetCharsetSucceedsWhenHandleSetCharsetSucceeds()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('set_charset', ['utf8mb4'])
+            ->willReturn(true);
+
+        $connection = $this->createMock(Connection::class);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'setCharset',
+            [$handle, 'utf8mb4']
+        );
+    }
+
+    #endregion setCharset
+
     #region SelectDatabase -----------------------------------------------------
 
-    function testSelectDatabaseThrowsExceptionWhenSelectionFails()
+    function testSelectDatabaseThrowsIfHandleSelectDbFailsWhenReportModeIsOff()
     {
-        $this->handle->expects($invokedCount = $this->exactly(3))
-            ->method('__get')
-            ->willReturnCallback(function($name) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('connect_errno', $name);
-                    return 0;
-                case 2:
-                    $this->assertSame('error', $name);
-                    return 'Unknown database';
-                case 3:
-                    $this->assertSame('errno', $name);
-                    return 1049;
-                }
-            });
-        $this->handle->expects($invokedCount = $this->once())
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
             ->method('__call')
             ->with('select_db', ['nonexistent_db'])
             ->willReturn(false);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Unknown database'],
+                ['errno', 1049]
+            ]);
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['createHandle'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Unknown database');
         $this->expectExceptionCode(1049);
 
-        $this->connection->SelectDatabase('nonexistent_db');
+        $connection->SelectDatabase('nonexistent_db');
     }
 
-    function testSelectDatabaseSucceedsWhenSelectionSucceeds()
+    function testSelectDatabaseThrowsIfHandleSelectDbFailsWhenReportModeIsStrict()
     {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-        $this->handle->expects($this->once())
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('select_db', ['nonexistent_db'])
+            ->willThrowException(new \mysqli_sql_exception('Unknown database', 1049));
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['createHandle'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown database');
+        $this->expectExceptionCode(1049);
+
+        $connection->SelectDatabase('nonexistent_db');
+    }
+
+    function testSelectDatabaseSucceedsWhenHandleSelectDbSucceeds()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
             ->method('__call')
             ->with('select_db', ['test_db'])
             ->willReturn(true);
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['createHandle'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
 
-        $this->connection->SelectDatabase('test_db');
+        $connection->SelectDatabase('test_db');
     }
 
     #endregion SelectDatabase
@@ -246,345 +417,112 @@ class ConnectionTest extends TestCase
     #region Execute (PHP < 8.2.0) ----------------------------------------------
 
     #[RequiresPhp('< 8.2.0')]
-    function testExecuteThrowsExceptionWhenStatementPreparationFails()
+    function testExecuteThrowsWhenPrepareStatementThrows()
     {
-        $this->handle->expects($invokedCount = $this->exactly(3))
-            ->method('__get')
-            ->willReturnCallback(function($name) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('connect_errno', $name);
-                    return 0;
-                case 2:
-                    $this->assertSame('error', $name);
-                    return 'Syntax error';
-                case 3:
-                    $this->assertSame('errno', $name);
-                    return 1064;
-                }
-            });
-
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
-        $this->connection->expects($this->once())
-            ->method('_prepare')
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['prepareStatement'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('prepareStatement')
             ->with('SELECT * FROM `users`')
-            ->willReturn(null);
+            ->willThrowException(new \RuntimeException('Syntax error', 1064));
 
-        $query = $this->createQueryObject('SELECT * FROM `users`');
+        $query = $this->createQuery('SELECT * FROM `users`');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Syntax error');
         $this->expectExceptionCode(1064);
 
-        $this->connection->Execute($query);
+        $connection->Execute($query);
     }
 
     #[RequiresPhp('< 8.2.0')]
-    function testExecuteThrowsExceptionWhenParameterBindingFails()
+    function testExecuteThrowsWhenExecuteStatementThrows()
     {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
         $statement = $this->createMock(MySQLiStatement::class);
-        $statement->expects($invokedCount = $this->exactly(2))
-            ->method('__get')
-            ->willReturnCallback(function($name) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('error', $name);
-                    return 'Invalid parameter';
-                case 2:
-                    $this->assertSame('errno', $name);
-                    return 2031;
-                }
-            });
-        $statement->expects($invokedCount = $this->exactly(2))
+        $statement->expects($this->once())
             ->method('__call')
-            ->willReturnCallback(function($name, $arguments) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('bind_param', $name);
-                    $this->assertCount(3, $arguments);
-                    $this->assertSame('is', $arguments[0]);
-                    $this->assertSame(42, $arguments[1]);
-                    $this->assertSame('John', $arguments[2]);
-                    return false;
-                case 2:
-                    $this->assertSame('close', $name);
-                    return null;
-                }
-            });
+            ->with('close');
 
-        $this->connection->expects($this->once())
-            ->method('_prepare')
-            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['prepareStatement', 'executeStatement'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('prepareStatement')
+            ->with('SELECT * FROM `users`')
             ->willReturn($statement);
+        $connection->expects($this->once())
+            ->method('executeStatement')
+            ->willThrowException(new \RuntimeException('Execution error', 1064));
 
-        $query = $this->createQueryObject(
-            'SELECT * FROM `users` WHERE id = :id AND name = :name',
-            ['id' => 42, 'name' => 'John']
-        );
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Invalid parameter');
-        $this->expectExceptionCode(2031);
-
-        $this->connection->Execute($query);
-    }
-
-    #[RequiresPhp('< 8.2.0')]
-    function testExecuteThrowsExceptionWhenStatementExecutionFails()
-    {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
-        $statement = $this->createMock(MySQLiStatement::class);
-        $statement->expects($invokedCount = $this->exactly(2))
-            ->method('__get')
-            ->willReturnCallback(function($name) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('error', $name);
-                    return 'Execution error';
-                case 2:
-                    $this->assertSame('errno', $name);
-                    return 1064;
-                }
-            });
-        $statement->expects($invokedCount = $this->exactly(3))
-            ->method('__call')
-            ->willReturnCallback(function($name, $arguments) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('bind_param', $name);
-                    $this->assertCount(3, $arguments);
-                    $this->assertSame('is', $arguments[0]);
-                    $this->assertSame(42, $arguments[1]);
-                    $this->assertSame('John', $arguments[2]);
-                    return true;
-                case 2:
-                    $this->assertSame('execute', $name);
-                    $this->assertEmpty($arguments);
-                    return false;
-                case 3:
-                    $this->assertSame('close', $name);
-                    return null;
-                }
-            });
-
-        $this->connection->expects($this->once())
-            ->method('_prepare')
-            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
-            ->willReturn($statement);
-
-        $query = $this->createQueryObject(
-            'SELECT * FROM `users` WHERE id = :id AND name = :name',
-            ['id' => 42, 'name' => 'John']
-        );
+        $query = $this->createQuery('SELECT * FROM `users`');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Execution error');
         $this->expectExceptionCode(1064);
 
-        $this->connection->Execute($query);
+        $connection->Execute($query);
     }
 
     #[RequiresPhp('< 8.2.0')]
-    function testExecuteThrowsExceptionWhenResultRetrievalFails()
+    function testExecuteThrowsWhenGetStatementResultThrows()
     {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
         $statement = $this->createMock(MySQLiStatement::class);
-        $statement->expects($invokedCount = $this->exactly(3))
-            ->method('__get')
-            ->willReturnCallback(function($name) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('errno', $name);
-                    return 2008;
-                case 2:
-                    $this->assertSame('error', $name);
-                    return 'Out of memory';
-                case 3:
-                    $this->assertSame('errno', $name);
-                    return 2008;
-                }
-            });
-        $statement->expects($invokedCount = $this->exactly(3))
-            ->method('__call')
-            ->willReturnCallback(function($name, $arguments) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('bind_param', $name);
-                    $this->assertCount(3, $arguments);
-                    $this->assertSame('is', $arguments[0]);
-                    $this->assertSame(42, $arguments[1]);
-                    $this->assertSame('John', $arguments[2]);
-                    return true;
-                case 2:
-                    $this->assertSame('execute', $name);
-                    $this->assertEmpty($arguments);
-                    return true;
-                case 3:
-                    $this->assertSame('close', $name);
-                    return null;
-                }
-            });
         $statement->expects($this->once())
-            ->method('get_result')
-            ->willReturn(false);
+            ->method('__call')
+            ->with('close');
 
-        $this->connection->expects($this->once())
-            ->method('_prepare')
-            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['prepareStatement', 'executeStatement', 'getStatementResult'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('prepareStatement')
+            ->with('SELECT * FROM `users`')
             ->willReturn($statement);
+        $connection->expects($this->once())
+            ->method('executeStatement');
+        $connection->expects($this->once())
+            ->method('getStatementResult')
+            ->willThrowException(new \RuntimeException('Result error', 1064));
 
-        $query = $this->createQueryObject(
-            'SELECT * FROM `users` WHERE id = :id AND name = :name',
-            ['id' => 42, 'name' => 'John']
-        );
+        $query = $this->createQuery('SELECT * FROM `users`');
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Out of memory');
-        $this->expectExceptionCode(2008);
+        $this->expectExceptionMessage('Result error');
+        $this->expectExceptionCode(1064);
 
-        $this->connection->Execute($query);
+        $connection->Execute($query);
     }
 
     #[RequiresPhp('< 8.2.0')]
-    function testExecuteReturnsNullWhenResultRetrievalSucceedsWithNoResultSet()
+    #[DataProvider('nullOrResultDataProvider')]
+    function testExecuteReturnsWhatGetStatementResultReturns($result)
     {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
         $statement = $this->createMock(MySQLiStatement::class);
         $statement->expects($this->once())
-            ->method('__get')
-            ->with('errno')
-            ->willReturn(0);
-        $statement->expects($invokedCount = $this->exactly(3))
             ->method('__call')
-            ->willReturnCallback(function($name, $arguments) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('bind_param', $name);
-                    $this->assertCount(3, $arguments);
-                    $this->assertSame('is', $arguments[0]);
-                    $this->assertSame(42, $arguments[1]);
-                    $this->assertSame('John', $arguments[2]);
-                    return true;
-                case 2:
-                    $this->assertSame('execute', $name);
-                    $this->assertEmpty($arguments);
-                    return true;
-                case 3:
-                    $this->assertSame('close', $name);
-                    return null;
-                }
-            });
-        $statement->expects($this->once())
-            ->method('get_result')
-            ->willReturn(false);
+            ->with('close');
 
-        $this->connection->expects($this->once())
-            ->method('_prepare')
-            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['prepareStatement', 'executeStatement', 'getStatementResult'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('prepareStatement')
+            ->with('SELECT * FROM `users`')
             ->willReturn($statement);
+        $connection->expects($this->once())
+            ->method('executeStatement');
+        $connection->expects($this->once())
+            ->method('getStatementResult')
+            ->willReturn($result);
 
-        $query = $this->createQueryObject(
-            'SELECT * FROM `users` WHERE id = :id AND name = :name',
-            ['id' => 42, 'name' => 'John']
-        );
+        $query = $this->createQuery('SELECT * FROM `users`');
 
-        $result = $this->connection->Execute($query);
-        $this->assertNull($result);
-    }
-
-    #[RequiresPhp('< 8.2.0')]
-    function testExecuteReturnsResultObjectWhenResultRetrievalSucceedsWithResultSet()
-    {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
-        $statement = $this->createMock(MySQLiStatement::class);
-        $statement->expects($this->never())
-            ->method('__get');
-        $statement->expects($invokedCount = $this->exactly(3))
-            ->method('__call')
-            ->willReturnCallback(function($name, $arguments) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('bind_param', $name);
-                    $this->assertCount(3, $arguments);
-                    $this->assertSame('is', $arguments[0]);
-                    $this->assertSame(42, $arguments[1]);
-                    $this->assertSame('John', $arguments[2]);
-                    return true;
-                case 2:
-                    $this->assertSame('execute', $name);
-                    $this->assertEmpty($arguments);
-                    return true;
-                case 3:
-                    $this->assertSame('close', $name);
-                    return null;
-                }
-            });
-        $statement->expects($this->once())
-            ->method('get_result')
-            ->willReturn($this->createMock(MySQLiResult::class));
-
-        $this->connection->expects($this->once())
-            ->method('_prepare')
-            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?')
-            ->willReturn($statement);
-
-        $query = $this->createQueryObject(
-            'SELECT * FROM `users` WHERE id = :id AND name = :name',
-            ['id' => 42, 'name' => 'John']
-        );
-
-        $result = $this->connection->Execute($query);
-        $this->assertInstanceOf(MySQLiResult::class, $result);
+        $this->assertSame($result, $connection->Execute($query));
     }
 
     #endregion Execute (PHP < 8.2.0)
@@ -592,98 +530,42 @@ class ConnectionTest extends TestCase
     #region Execute (PHP >= 8.2.0) ---------------------------------------------
 
     #[RequiresPhp('>= 8.2.0')]
-    function testExecuteThrowsExceptionWhenQueryExecutionFails()
+    function testExecuteThrowsWhenExecuteQueryThrows()
     {
-        $this->handle->expects($invokedCount = $this->exactly(3))
-            ->method('__get')
-            ->willReturnCallback(function($name) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('connect_errno', $name);
-                    return 0;
-                case 2:
-                    $this->assertSame('error', $name);
-                    return 'Syntax error';
-                case 3:
-                    $this->assertSame('errno', $name);
-                    return 1064;
-                }
-            });
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['executeQuery'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('executeQuery')
+            ->with('SELECT * FROM `users`', [])
+            ->willThrowException(new \RuntimeException('Syntax error', 1064));
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
-        $this->connection->expects($this->once())
-            ->method('_execute_query')
-            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
-            ->willReturn(false);
-
-        $query = $this->createQueryObject(
-            'SELECT * FROM `users` WHERE id = :id AND name = :name',
-            ['id' => 42, 'name' => 'John']
-        );
+        $query = $this->createQuery('SELECT * FROM `users`');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Syntax error');
         $this->expectExceptionCode(1064);
 
-        $this->connection->Execute($query);
+        $connection->Execute($query);
     }
 
     #[RequiresPhp('>= 8.2.0')]
-    function testExecuteReturnsNullWhenQueryExecutionSucceedsWithNoResultSet()
+    #[DataProvider('nullOrResultDataProvider')]
+    function testExecuteReturnsWhatExecuteQueryReturns($result)
     {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
+        $connection = $this->getMockBuilder(Connection::class)
+            ->onlyMethods(['executeQuery'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('executeQuery')
+            ->with('SELECT * FROM `users`', [])
+            ->willReturn($result);
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
+        $query = $this->createQuery('SELECT * FROM `users`');
 
-        $this->connection->expects($this->once())
-            ->method('_execute_query')
-            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
-            ->willReturn(true);
-
-        $query = $this->createQueryObject(
-            'SELECT * FROM `users` WHERE id = :id AND name = :name',
-            ['id' => 42, 'name' => 'John']
-        );
-
-        $result = $this->connection->Execute($query);
-        $this->assertNull($result);
-    }
-
-    #[RequiresPhp('>= 8.2.0')]
-    function testExecuteReturnsResultObjectWhenQueryExecutionSucceedsWithResultSet()
-    {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
-        $this->connection->expects($this->once())
-            ->method('_execute_query')
-            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?', [42, 'John'])
-            ->willReturn($this->createMock(MySQLiResult::class));
-
-        $query = $this->createQueryObject(
-            'SELECT * FROM `users` WHERE id = :id AND name = :name',
-            ['id' => 42, 'name' => 'John']
-        );
-
-        $result = $this->connection->Execute($query);
-        $this->assertInstanceOf(MySQLiResult::class, $result);
+        $this->assertSame($result, $connection->Execute($query));
     }
 
     #endregion Execute (PHP >= 8.2.0)
@@ -691,66 +573,56 @@ class ConnectionTest extends TestCase
     #region transformQuery -----------------------------------------------------
 
     #[DataProvider('transformQueryDataProvider')]
-    public function testTransformQuery(
-        string $expectedSql,
-        string $expectedTypes,
-        array  $expectedValues,
-        string $sql,
-        array  $bindings
-    ) {
-        $this->handle->expects($this->once())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
+    public function testTransformQuery(string $expectedSql, array $expectedValues,
+        string $sql, array $bindings)
+    {
+        $query = $this->createQuery($sql, $bindings);
 
-        AccessHelper::CallNonPublicConstructor(
-            $this->connection,
-            ['', '', '']
-        );
-
-        $query = $this->createQueryObject($sql, $bindings);
-
-        $result = AccessHelper::CallNonPublicMethod(
-            $this->connection,
+        $transformedQuery = AccessHelper::CallNonPublicStaticMethod(
+            Connection::class,
             'transformQuery',
             [$query]
         );
-        $this->assertSame($expectedSql, $result->sql);
-        $this->assertSame($expectedTypes, $result->types);
-        $this->assertSame($expectedValues, $result->values);
+
+        $this->assertSame($expectedSql, $transformedQuery->sql);
+        $this->assertSame($expectedValues, $transformedQuery->values);
     }
 
     #endregion transformQuery
 
     #region Data Providers -----------------------------------------------------
 
+    static function nullOrResultDataProvider()
+    {
+        return [
+            'null' => [null],
+            'result' => [self::createStub(MySQLiResult::class)]
+        ];
+    }
+
     static function transformQueryDataProvider()
     {
         return [
             'static sql' => [
                 'expectedSql'   => 'SELECT name FROM `users` WHERE active = 1',
-                'expectedTypes' => '',
                 'expectedValues'=> [],
                 'sql'           => 'SELECT name FROM `users` WHERE active = 1',
                 'bindings'      => []
             ],
             'no placeholders' => [
                 'expectedSql'   => 'SELECT * FROM `users`',
-                'expectedTypes' => '',
                 'expectedValues'=> [],
                 'sql'           => 'SELECT * FROM `users`',
                 'bindings'      => []
             ],
             'single placeholder' => [
                 'expectedSql'   => 'SELECT * FROM `users` WHERE id = ?',
-                'expectedTypes' => 'i',
                 'expectedValues'=> [42],
                 'sql'           => 'SELECT * FROM `users` WHERE id = :id',
                 'bindings'      => ['id' => 42]
             ],
             'multiple placeholders' => [
                 'expectedSql'   => 'SELECT * FROM `users` WHERE id = ? AND name = ? OR parent_id = ? OR duration = ?',
-                'expectedTypes' => 'isid',
                 'expectedValues'=> [42, 'John', 42, 32.5],
                 'sql'           => 'SELECT * FROM `users` WHERE id = :id AND name = :name OR parent_id = :id OR duration = :duration',
                 'bindings'      => ['id' => 42, 'name' => 'John', 'duration' => 32.5]
