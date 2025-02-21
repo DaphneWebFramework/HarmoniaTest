@@ -39,8 +39,8 @@ class ConnectionTest extends TestCase
     function testConstructThrowsWhenCreateHandleThrows()
     {
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['createHandle'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
             ->getMock();
         $connection->expects($this->once())
             ->method('createHandle')
@@ -68,8 +68,8 @@ class ConnectionTest extends TestCase
             ->with('close');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['createHandle', 'setCharset'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle', 'setCharset'])
             ->getMock();
         $connection->expects($this->once())
             ->method('createHandle')
@@ -101,8 +101,8 @@ class ConnectionTest extends TestCase
             ->with('close');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['createHandle', 'setCharset'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle', 'setCharset'])
             ->getMock();
         $connection->expects($this->once())
             ->method('createHandle')
@@ -128,8 +128,8 @@ class ConnectionTest extends TestCase
             ->with('close');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['createHandle', 'setCharset'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle', 'setCharset'])
             ->getMock();
         $connection->expects($this->once())
             ->method('createHandle')
@@ -154,8 +154,8 @@ class ConnectionTest extends TestCase
             ->with('close');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['createHandle', 'setCharset'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle', 'setCharset'])
             ->getMock();
         $connection->expects($this->once())
             ->method('createHandle')
@@ -189,8 +189,8 @@ class ConnectionTest extends TestCase
             ]);
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['_new_mysqli'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['_new_mysqli'])
             ->getMock();
         $connection->expects($this->once())
             ->method('_new_mysqli')
@@ -215,8 +215,8 @@ class ConnectionTest extends TestCase
             ->method('__get');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['_new_mysqli'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['_new_mysqli'])
             ->getMock();
         $connection->expects($this->once())
             ->method('_new_mysqli')
@@ -243,8 +243,8 @@ class ConnectionTest extends TestCase
             ->willReturn(0);
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['_new_mysqli'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['_new_mysqli'])
             ->getMock();
         $connection->expects($this->once())
             ->method('_new_mysqli')
@@ -348,8 +348,8 @@ class ConnectionTest extends TestCase
             ]);
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['createHandle'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
             ->getMock();
         $connection->expects($this->once())
             ->method('createHandle')
@@ -375,8 +375,8 @@ class ConnectionTest extends TestCase
             ->method('__get');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['createHandle'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
             ->getMock();
         $connection->expects($this->once())
             ->method('createHandle')
@@ -400,8 +400,8 @@ class ConnectionTest extends TestCase
             ->willReturn(true);
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['createHandle'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
             ->getMock();
         $connection->expects($this->once())
             ->method('createHandle')
@@ -420,8 +420,8 @@ class ConnectionTest extends TestCase
     function testExecuteThrowsWhenPrepareStatementThrows()
     {
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['prepareStatement'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['prepareStatement'])
             ->getMock();
         $connection->expects($this->once())
             ->method('prepareStatement')
@@ -446,8 +446,8 @@ class ConnectionTest extends TestCase
             ->with('close');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['prepareStatement', 'executeStatement'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['prepareStatement', 'executeStatement'])
             ->getMock();
         $connection->expects($this->once())
             ->method('prepareStatement')
@@ -475,8 +475,8 @@ class ConnectionTest extends TestCase
             ->with('close');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['prepareStatement', 'executeStatement', 'getStatementResult'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['prepareStatement', 'executeStatement', 'getStatementResult'])
             ->getMock();
         $connection->expects($this->once())
             ->method('prepareStatement')
@@ -507,8 +507,8 @@ class ConnectionTest extends TestCase
             ->with('close');
 
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['prepareStatement', 'executeStatement', 'getStatementResult'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['prepareStatement', 'executeStatement', 'getStatementResult'])
             ->getMock();
         $connection->expects($this->once())
             ->method('prepareStatement')
@@ -527,14 +527,394 @@ class ConnectionTest extends TestCase
 
     #endregion Execute (PHP < 8.2.0)
 
+    #region prepareStatement ---------------------------------------------------
+
+    #[RequiresPhp('< 8.2.0')]
+    function testPrepareStatementThrowsIfHandlePrepareFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('prepare')
+            ->with('SELECT * FROM `users`')
+            ->willReturn(false);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Syntax error'],
+                ['errno', 1064]
+            ]);
+
+        $connection = $this->createMock(Connection::class);
+        AccessHelper::SetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle',
+            $handle
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Syntax error');
+        $this->expectExceptionCode(1064);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'prepareStatement',
+            ['SELECT * FROM `users`']
+        );
+    }
+
+    #[RequiresPhp('< 8.2.0')]
+    function testPrepareStatementThrowsIfHandlePrepareFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('prepare')
+            ->with('SELECT * FROM `users`')
+            ->willThrowException(new \mysqli_sql_exception('Syntax error', 1064));
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->createMock(Connection::class);
+        AccessHelper::SetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle',
+            $handle
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Syntax error');
+        $this->expectExceptionCode(1064);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'prepareStatement',
+            ['SELECT * FROM `users`']
+        );
+    }
+
+    #[RequiresPhp('< 8.2.0')]
+    function testPrepareStatementReturnsStatementWhenHandlePrepareSucceeds()
+    {
+        $statement = $this->createStub(MySQLiStatement::class);
+
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('prepare')
+            ->with('SELECT * FROM `users`')
+            ->willReturn($statement);
+
+        $connection = $this->createMock(Connection::class);
+        AccessHelper::SetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle',
+            $handle
+        );
+
+        $this->assertSame($statement, AccessHelper::CallNonPublicMethod(
+            $connection,
+            'prepareStatement',
+            ['SELECT * FROM `users`']
+        ));
+    }
+
+    #endregion prepareStatement
+
+    #region executeStatement ---------------------------------------------------
+
+    #[RequiresPhp('< 8.2.0')]
+    function testExecuteStatementThrowsIfStatementExecuteFailsWhenReportModeIsOff()
+    {
+        $statement = $this->createMock(MySQLiStatement::class);
+        $statement->expects($this->once())
+            ->method('__call')
+            ->with('execute', [[42, 'John']])
+            ->willReturn(false);
+        $statement->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Execution error'],
+                ['errno', 1064]
+            ]);
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Execution error');
+        $this->expectExceptionCode(1064);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'executeStatement',
+            [$statement, [42, 'John']]
+        );
+    }
+
+    #[RequiresPhp('< 8.2.0')]
+    function testExecuteStatementThrowsIfStatementExecuteFailsWhenReportModeIsStrict()
+    {
+        $statement = $this->createMock(MySQLiStatement::class);
+        $statement->expects($this->once())
+            ->method('__call')
+            ->with('execute', [[42, 'John']])
+            ->willThrowException(new \mysqli_sql_exception('Execution error', 1064));
+        $statement->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Execution error');
+        $this->expectExceptionCode(1064);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'executeStatement',
+            [$statement, [42, 'John']]
+        );
+    }
+
+    #[RequiresPhp('< 8.2.0')]
+    function testExecuteStatementSucceedsWhenStatementExecuteSucceeds()
+    {
+        $statement = $this->createMock(MySQLiStatement::class);
+        $statement->expects($this->once())
+            ->method('__call')
+            ->with('execute', [[42, 'John']])
+            ->willReturn(true);
+
+        $connection = $this->createMock(Connection::class);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'executeStatement',
+            [$statement, [42, 'John']]
+        );
+    }
+
+    #endregion executeStatement
+
+    #region getStatementResult -------------------------------------------------
+
+    #[RequiresPhp('< 8.2.0')]
+    function testGetStatementResultThrowsIfStatementGetResultFailsWhenReportModeIsOff()
+    {
+        $statement = $this->createMock(MySQLiStatement::class);
+        $statement->expects($this->once())
+            ->method('get_result')
+            ->willReturn(false);
+        $statement->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Result error'],
+                ['errno', 1064]
+            ]);
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Result error');
+        $this->expectExceptionCode(1064);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'getStatementResult',
+            [$statement]
+        );
+    }
+
+    #[RequiresPhp('< 8.2.0')]
+    function testGetStatementResultThrowsIfStatementGetResultFailsWhenReportModeIsStrict()
+    {
+        $statement = $this->createMock(MySQLiStatement::class);
+        $statement->expects($this->once())
+            ->method('get_result')
+            ->willThrowException(new \mysqli_sql_exception('Result error', 1064));
+        $statement->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Result error');
+        $this->expectExceptionCode(1064);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'getStatementResult',
+            [$statement]
+        );
+    }
+
+    #[RequiresPhp('< 8.2.0')]
+    function testGetStatementResultReturnsNullWhenStatementGetResultReturnsFalse()
+    {
+        $statement = $this->createMock(MySQLiStatement::class);
+        $statement->expects($this->once())
+            ->method('get_result')
+            ->willReturn(false);
+        $statement->expects($this->any())
+            ->method('__get')
+            ->with('errno')
+            ->willReturn(0);
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->assertNull(AccessHelper::CallNonPublicMethod(
+            $connection,
+            'getStatementResult',
+            [$statement]
+        ));
+    }
+
+    #[RequiresPhp('< 8.2.0')]
+    function testGetStatementResultReturnsResultWhenStatementGetResultReturnsResult()
+    {
+        $result = $this->createStub(MySQLiResult::class);
+
+        $statement = $this->createMock(MySQLiStatement::class);
+        $statement->expects($this->once())
+            ->method('get_result')
+            ->willReturn($result);
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->assertSame($result, AccessHelper::CallNonPublicMethod(
+            $connection,
+            'getStatementResult',
+            [$statement]
+        ));
+    }
+
+    #endregion getStatementResult
+
+    #region executeQuery -------------------------------------------------------
+
+    #[RequiresPhp('>= 8.2.0')]
+    function testExecuteQueryThrowsIfHandleExecuteQueryFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('execute_query')
+            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John'])
+            ->willReturn(false);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Syntax error'],
+                ['errno', 1064]
+            ]);
+
+        $connection = $this->createMock(Connection::class);
+        AccessHelper::SetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle',
+            $handle
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Syntax error');
+        $this->expectExceptionCode(1064);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'executeQuery',
+            ['SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John']]
+        );
+    }
+
+    #[RequiresPhp('>= 8.2.0')]
+    function testExecuteQueryThrowsIfHandleExecuteQueryFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('execute_query')
+            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John'])
+            ->willThrowException(new \mysqli_sql_exception('Syntax error', 1064));
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->createMock(Connection::class);
+        AccessHelper::SetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle',
+            $handle
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Syntax error');
+        $this->expectExceptionCode(1064);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'executeQuery',
+            ['SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John']]
+        );
+    }
+
+    #[RequiresPhp('>= 8.2.0')]
+    function testExecuteQueryReturnsNullWhenHandleExecuteQueryReturnsTrue()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('execute_query')
+            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John'])
+            ->willReturn(true);
+
+        $connection = $this->createMock(Connection::class);
+        AccessHelper::SetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle',
+            $handle
+        );
+
+        $this->assertNull(AccessHelper::CallNonPublicMethod(
+            $connection,
+            'executeQuery',
+            ['SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John']]
+        ));
+    }
+
+    #[RequiresPhp('>= 8.2.0')]
+    function testExecuteQueryReturnsResultWhenHandleExecuteQueryReturnsResult()
+    {
+        $result = $this->createStub(MySQLiResult::class);
+
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('execute_query')
+            ->with('SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John'])
+            ->willReturn($result);
+
+        $connection = $this->createMock(Connection::class);
+        AccessHelper::SetNonPublicMockProperty(
+            Connection::class,
+            $connection,
+            'handle',
+            $handle
+        );
+
+        $this->assertSame($result, AccessHelper::CallNonPublicMethod(
+            $connection,
+            'executeQuery',
+            ['SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John']]
+        ));
+    }
+
+    #endregion executeQuery
+
     #region Execute (PHP >= 8.2.0) ---------------------------------------------
 
     #[RequiresPhp('>= 8.2.0')]
     function testExecuteThrowsWhenExecuteQueryThrows()
     {
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['executeQuery'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['executeQuery'])
             ->getMock();
         $connection->expects($this->once())
             ->method('executeQuery')
@@ -555,8 +935,8 @@ class ConnectionTest extends TestCase
     function testExecuteReturnsWhatExecuteQueryReturns($result)
     {
         $connection = $this->getMockBuilder(Connection::class)
-            ->onlyMethods(['executeQuery'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['executeQuery'])
             ->getMock();
         $connection->expects($this->once())
             ->method('executeQuery')
