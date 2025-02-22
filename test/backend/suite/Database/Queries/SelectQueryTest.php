@@ -4,102 +4,113 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Database\Queries\SelectQuery;
 
+use \TestToolkit\AccessHelper;
+
 #[CoversClass(SelectQuery::class)]
 class SelectQueryTest extends TestCase
 {
-    function testWithDefaults()
+    #region Columns ------------------------------------------------------------
+
+    function testColumnsCallsFormatStringList()
     {
-        $query = new SelectQuery('my_table');
+        $query = $this->getMockBuilder(SelectQuery::class)
+            ->onlyMethods(['formatStringList'])
+            ->getMock();
+        $query->expects($this->once())
+            ->method('formatStringList')
+            ->with('column1', 'column2');
+        $query->Columns('column1', 'column2');
+    }
+
+    function testColumnsReplacesPrevious()
+    {
+        $query = (new SelectQuery)
+            ->Columns('column1')
+            ->From('my_table');
+        $query->Columns('column2');
         $this->assertSame(
-            'SELECT * FROM `my_table`',
+            'SELECT column2 FROM my_table',
             $query->ToSql()
         );
     }
 
-    #region Select -------------------------------------------------------------
-
-    function testSelectWithEmptyColumns()
+    function testColumnsReturnsSelf()
     {
-        $query = new SelectQuery('my_table');
-        $query->Select([]);
+        $query = new SelectQuery();
         $this->assertSame(
-            'SELECT * FROM `my_table`',
+            $query,
+            $query->Columns('column1')
+        );
+    }
+
+    #endregion Columns
+
+    #region From ---------------------------------------------------------------
+
+    function testFromCallsFormatString()
+    {
+        $query = $this->getMockBuilder(SelectQuery::class)
+            ->onlyMethods(['formatString'])
+            ->getMock();
+        $query->expects($this->once())
+            ->method('formatString')
+            ->with('my_table');
+        $query->From('my_table');
+    }
+
+    function testFromReplacesPrevious()
+    {
+        $query = (new SelectQuery)
+            ->From('my_table');
+        $query->From('another_table');
+        $this->assertSame(
+            'SELECT * FROM another_table',
             $query->ToSql()
         );
     }
 
-    function testSelectWithIdentifierColumns()
+    function testFromReturnsSelf()
     {
-        $query = new SelectQuery('my_table');
-        $query->Select(['column1', '_column2']);
+        $query = new SelectQuery();
         $this->assertSame(
-            'SELECT `column1`, `_column2` FROM `my_table`',
-            $query->ToSql()
+            $query,
+            $query->From('my_table')
         );
     }
 
-    function testSelectWithNonIdentifierColumns()
-    {
-        $query = new SelectQuery('my_table');
-        $query->Select(['AVG(column1)', 'COUNT(*)']);
-        $this->assertSame(
-            'SELECT AVG(column1), COUNT(*) FROM `my_table`',
-            $query->ToSql()
-        );
-    }
-
-    function testSelectWithMixtureOfIdentifierAndNonIdentifierColumns()
-    {
-        $query = new SelectQuery('my_table');
-        $query->Select(['column1', 'COUNT(*) AS count']);
-        $this->assertSame(
-            'SELECT `column1`, COUNT(*) AS count FROM `my_table`',
-            $query->ToSql()
-        );
-    }
-
-    function testSelectReplacesPreviousColumns()
-    {
-        $query = new SelectQuery('my_table');
-        $query->Select(['column1']);
-        $query->Select(['column2']);
-        $this->assertSame('SELECT `column2` FROM `my_table`', $query->ToSql());
-    }
-
-    #endregion Select
+    #endregion From
 
     #region Where --------------------------------------------------------------
 
-    function testWhereWithNoBindings()
+    function testWhereCallsFormatString()
     {
-        $query = new SelectQuery('my_table');
-        $query->Where('column2 = 42');
-        $this->assertSame(
-            'SELECT * FROM `my_table` WHERE column2 = 42',
-            $query->ToSql()
-        );
+        $query = $this->getMockBuilder(SelectQuery::class)
+            ->onlyMethods(['formatString'])
+            ->getMock();
+        $query->expects($this->once())
+            ->method('formatString')
+            ->with('column1 = 42');
+        $query->From('column1 = 42');
     }
 
-    function testWhereWithMatchingBindings()
+    function testWhereReplacesPrevious()
     {
-        $query = new SelectQuery('my_table');
-        $query->Where('column1 = :value1 AND column2 = :value2')
-              ->Bind(['value1' => 42, 'value2' => 43]);
-        $this->assertSame(
-            'SELECT * FROM `my_table` WHERE column1 = :value1 AND column2 = :value2',
-            $query->ToSql()
-        );
-        $this->assertSame(['value1' => 42, 'value2' => 43], $query->Bindings());
-    }
-
-    function testWhereReplacesPreviousCondition()
-    {
-        $query = new SelectQuery('my_table');
-        $query->Where('column1 = 1');
+        $query = (new SelectQuery)
+            ->From('my_table')
+            ->Where('column1 = 1');
         $query->Where('column2 = 99');
         $this->assertSame(
-            'SELECT * FROM `my_table` WHERE column2 = 99',
+            'SELECT * FROM my_table WHERE column2 = 99',
             $query->ToSql()
+        );
+    }
+
+    function testWhereReturnsSelf()
+    {
+        $query = new SelectQuery();
+        $this->assertSame(
+            $query,
+            $query->Where('column1 = 42')
         );
     }
 
@@ -107,62 +118,35 @@ class SelectQueryTest extends TestCase
 
     #region OrderBy ------------------------------------------------------------
 
-    function testOrderByWithEmptySortingDirectionArray()
+    function testOrderByCallsFormatStringList()
     {
-        $query = new SelectQuery('my_table');
-        $query->OrderBy([]);
+        $query = $this->getMockBuilder(SelectQuery::class)
+            ->onlyMethods(['formatStringList'])
+            ->getMock();
+        $query->expects($this->once())
+            ->method('formatStringList')
+            ->with('column1', 'column2 DESC');
+        $query->OrderBy('column1', 'column2 DESC');
+    }
+
+    function testOrderByReplacesPrevious()
+    {
+        $query = (new SelectQuery)
+            ->From('my_table')
+            ->OrderBy('column1 ASC');
+        $query->OrderBy('column2 DESC');
         $this->assertSame(
-            'SELECT * FROM `my_table`',
+            'SELECT * FROM my_table ORDER BY column2 DESC',
             $query->ToSql()
         );
     }
 
-    function testOrderByWithNoSortingDirection()
+    function testOrderByReturnsSelf()
     {
-        $query = new SelectQuery('my_table');
-        $query->OrderBy(['column1', 'LENGTH(column1)']);
+        $query = new SelectQuery();
         $this->assertSame(
-            'SELECT * FROM `my_table` ORDER BY `column1`, LENGTH(column1)',
-            $query->ToSql()
-        );
-    }
-
-    function testOrderByWithMixedAssociativeAndIndexedArray()
-    {
-        $query = new SelectQuery('my_table');
-        $query->OrderBy(['column1', 'column2'=>'DESC', 'LENGTH(column1)'=>'ASC']);
-        $this->assertSame(
-            'SELECT * FROM `my_table` ORDER BY `column1`, `column2` DESC, LENGTH(column1) ASC',
-            $query->ToSql()
-        );
-    }
-
-    function testOrderByWithNonUpperCaseSortingDirection()
-    {
-        $query = new SelectQuery('my_table');
-        $query->OrderBy(['column1'=>'desc', 'LENGTH(column1)'=>'Asc']);
-        $this->assertSame(
-            'SELECT * FROM `my_table` ORDER BY `column1` DESC, LENGTH(column1) ASC',
-            $query->ToSql()
-        );
-    }
-
-    function testOrderByWithInvalidSortingDirection()
-    {
-        $query = new SelectQuery('my_table');
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid sorting direction: ASX');
-        $query->OrderBy(['column1'=>'asx']);
-    }
-
-    function testOrderByReplacesPreviousOrder()
-    {
-        $query = new SelectQuery('my_table');
-        $query->OrderBy(['column1' => 'ASC']);
-        $query->OrderBy(['column2' => 'DESC']);
-        $this->assertSame(
-            'SELECT * FROM `my_table` ORDER BY `column2` DESC',
-            $query->ToSql()
+            $query,
+            $query->OrderBy('column1')
         );
     }
 
@@ -172,7 +156,7 @@ class SelectQueryTest extends TestCase
 
     function testLimitWithNegativeLimit()
     {
-        $query = new SelectQuery('my_table');
+        $query = new SelectQuery();
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Limit must be a non-negative integer.');
         $query->Limit(-1);
@@ -180,7 +164,7 @@ class SelectQueryTest extends TestCase
 
     function testLimitWithNegativeOffset()
     {
-        $query = new SelectQuery('my_table');
+        $query = new SelectQuery();
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Offset must be a non-negative integer.');
         $query->Limit(10, -1);
@@ -188,32 +172,44 @@ class SelectQueryTest extends TestCase
 
     function testLimitWithoutOffset()
     {
-        $query = new SelectQuery('my_table');
-        $query->Limit(10);
+        $query = (new SelectQuery)
+            ->From('my_table')
+            ->Limit(10);
         $this->assertSame(
-            'SELECT * FROM `my_table` LIMIT 10',
+            'SELECT * FROM my_table LIMIT 10',
             $query->ToSql()
         );
     }
 
     function testLimitWithOffset()
     {
-        $query = new SelectQuery('my_table');
-        $query->Limit(10, 20);
+        $query = (new SelectQuery)
+            ->From('my_table')
+            ->Limit(10, 20);
         $this->assertSame(
-            'SELECT * FROM `my_table` LIMIT 10 OFFSET 20',
+            'SELECT * FROM my_table LIMIT 10 OFFSET 20',
             $query->ToSql()
         );
     }
 
-    function testLimitReplacesPreviousLimit()
+    function testLimitReplacesPrevious()
     {
-        $query = new SelectQuery('my_table');
-        $query->Limit(10);
+        $query = (new SelectQuery)
+            ->From('my_table')
+            ->Limit(10);
         $query->Limit(5, 2);
         $this->assertSame(
-            'SELECT * FROM `my_table` LIMIT 5 OFFSET 2',
+            'SELECT * FROM my_table LIMIT 5 OFFSET 2',
             $query->ToSql()
+        );
+    }
+
+    function testLimitReturnsSelf()
+    {
+        $query = new SelectQuery();
+        $this->assertSame(
+            $query,
+            $query->Limit(10)
         );
     }
 
@@ -221,101 +217,40 @@ class SelectQueryTest extends TestCase
 
     #region ToSql --------------------------------------------------------------
 
-    function testToSqlWithSelectAndWhere()
+    function testToSqlWithoutFromClause()
     {
-        $query = (new SelectQuery('my_table'))
-            ->Select(['column1', 'COUNT(*) AS count'])
-            ->Where('column2 = :value')
-            ->Bind(['value' => 42]);
-        $this->assertSame(
-            'SELECT `column1`, COUNT(*) AS count FROM `my_table` WHERE column2 = :value',
-            $query->ToSql()
-        );
-        $this->assertSame(
-            ['value' => 42],
-            $query->Bindings()
-        );
+        $query = new SelectQuery();
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Table name must be provided.');
+        $query->ToSql();
     }
 
-    function testToSqlWithSelectAndOrderBy()
+    function testToSqlWithRealWorldScenario()
     {
-        $query = (new SelectQuery('my_table'))
-            ->Select(['column1', 'COUNT(*) AS count'])
-            ->OrderBy(['column1', 'column2'=>'desc', 'LENGTH(column1)'=>'ASC']);
-        $this->assertSame(
-            'SELECT `column1`, COUNT(*) AS count FROM `my_table` ORDER BY `column1`, `column2` DESC, LENGTH(column1) ASC',
-            $query->ToSql()
-        );
-    }
+        // Fetch active users who registered after a specific date.
+        $query = (new SelectQuery)
+            ->Columns('name', 'email', 'COUNT(*) AS loginCount')
+            ->From('users')
+            ->Where('status = :status AND createdAt >= :startDate')
+            ->OrderBy(
+                'lastLogin DESC', // most recent login first
+                'name ASC'        // then alphabetically by name
+            )
+            ->Limit(20, 10) // 20 records per page, skipping the first 10 (e.g., page 2)
+            ->Bind([
+                'status'    => 'active',
+                'startDate' => '2025-01-01'
+            ]);
 
-    function testToSqlWithSelectAndLimit()
-    {
-        $query = (new SelectQuery('my_table'))
-            ->Select(['column1', 'COUNT(*) AS count'])
-            ->Limit(10, 20);
         $this->assertSame(
-            'SELECT `column1`, COUNT(*) AS count FROM `my_table` LIMIT 10 OFFSET 20',
-            $query->ToSql()
-        );
-    }
-
-    function testToSqlWithWhereAndOrderBy()
-    {
-        $query = (new SelectQuery('my_table'))
-            ->Where('column2 = :value')
-            ->OrderBy(['column1', 'column2'=>'desc', 'LENGTH(column1)'=>'ASC'])
-            ->Bind(['value' => 42]);
-        $this->assertSame(
-            'SELECT * FROM `my_table` WHERE column2 = :value ORDER BY `column1`, `column2` DESC, LENGTH(column1) ASC',
-            $query->ToSql()
+            'SELECT name, email, COUNT(*) AS loginCount FROM users'
+          . ' WHERE status = :status AND createdAt >= :startDate'
+          . ' ORDER BY lastLogin DESC, name ASC'
+          . ' LIMIT 20 OFFSET 10'
+          , $query->ToSql()
         );
         $this->assertSame(
-            ['value' => 42],
-            $query->Bindings()
-        );
-    }
-
-    function testToSqlWithWhereAndLimit()
-    {
-        $query = (new SelectQuery('my_table'))
-            ->Where('column2 = :value')
-            ->Limit(10, 20)
-            ->Bind(['value' => 42]);
-        $this->assertSame(
-            'SELECT * FROM `my_table` WHERE column2 = :value LIMIT 10 OFFSET 20',
-            $query->ToSql()
-        );
-        $this->assertSame(
-            ['value' => 42],
-            $query->Bindings()
-        );
-    }
-
-    function testToSqlWithOrderByAndLimit()
-    {
-        $query = (new SelectQuery('my_table'))
-            ->OrderBy(['column1', 'column2'=>'desc', 'LENGTH(column1)'=>'ASC'])
-            ->Limit(10, 20);
-        $this->assertSame(
-            'SELECT * FROM `my_table` ORDER BY `column1`, `column2` DESC, LENGTH(column1) ASC LIMIT 10 OFFSET 20',
-            $query->ToSql()
-        );
-    }
-
-    function testToSqlWithAllClauses()
-    {
-        $query = (new SelectQuery('my_table'))
-            ->Select(['column1', 'COUNT(*) AS count'])
-            ->Where('column2 = :value')
-            ->OrderBy(['column1', 'column2'=>'desc', 'LENGTH(column1)'=>'ASC'])
-            ->Limit(10, 20)
-            ->Bind(['value' => 42]);
-        $this->assertSame(
-            'SELECT `column1`, COUNT(*) AS count FROM `my_table` WHERE column2 = :value ORDER BY `column1`, `column2` DESC, LENGTH(column1) ASC LIMIT 10 OFFSET 20',
-            $query->ToSql()
-        );
-        $this->assertSame(
-            ['value' => 42],
+            ['status' => 'active', 'startDate' => '2025-01-01'],
             $query->Bindings()
         );
     }

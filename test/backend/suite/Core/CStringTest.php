@@ -836,7 +836,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString('hello');
         $applied = $cstr->Apply(
-            function (string $value) {
+            function(string $value) {
                 return str_replace('ll', 'xx', $value);
             }
         );
@@ -853,7 +853,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString('hello');
         $applied = $cstr->Apply(
-            function (string $value, string $prefix, string $suffix) {
+            function(string $value, string $prefix, string $suffix) {
                 return $prefix . $value . $suffix;
             },
             '<',
@@ -888,7 +888,7 @@ class CStringTest extends TestCase
         $this->assertSame(
             $cstr,
             $cstr->ApplyInPlace(
-                function (string $value) {
+                function(string $value) {
                     return str_replace('ll', 'xx', $value);
                 }
             )
@@ -902,7 +902,7 @@ class CStringTest extends TestCase
         $this->assertSame(
             $cstr,
             $cstr->ApplyInPlace(
-                function (string $value, string $prefix, string $suffix) {
+                function(string $value, string $prefix, string $suffix) {
                     return $prefix . $value . $suffix;
                 },
                 '<',

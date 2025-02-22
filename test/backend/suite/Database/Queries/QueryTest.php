@@ -9,12 +9,11 @@ use \TestToolkit\AccessHelper;
 #[CoversClass(Query::class)]
 class QueryTest extends TestCase
 {
-    private ?Query $query;
+    private ?Query $query = null;
 
     protected function setUp(): void
     {
         $this->query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs([''])
             ->onlyMethods(['buildSql'])
             ->getMock();
     }
@@ -203,27 +202,76 @@ class QueryTest extends TestCase
 
     #endregion Bind
 
-    #region isIdentifier -------------------------------------------------------
+    #region formatString -------------------------------------------------------
 
-    function testIsIdentifierWithValidIdentifiers()
+    function testFormatStringWithEmptyString()
     {
-        $this->assertTrue(AccessHelper::CallNonPublicMethod(
-            $this->query, 'isIdentifier', ['id']));
-        $this->assertTrue(AccessHelper::CallNonPublicMethod(
-            $this->query, 'isIdentifier', ['id_1']));
-        $this->assertTrue(AccessHelper::CallNonPublicMethod(
-            $this->query, 'isIdentifier', ['_id']));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('String cannot be empty.');
+        AccessHelper::CallNonPublicMethod($this->query, 'formatString', ['']);
     }
 
-    function testIsIdentifierWithInvalidIdentifiers()
+    function testFormatStringWithWhitespaceOnlyString()
     {
-        $this->assertFalse(AccessHelper::CallNonPublicMethod(
-            $this->query, 'isIdentifier', ['1id']));
-        $this->assertFalse(AccessHelper::CallNonPublicMethod(
-            $this->query, 'isIdentifier', ['id-1']));
-        $this->assertFalse(AccessHelper::CallNonPublicMethod(
-            $this->query, 'isIdentifier', ['id 1']));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('String cannot be empty.');
+        AccessHelper::CallNonPublicMethod($this->query, 'formatString', ['   ']);
     }
 
-    #endregion isIdentifier
+    function testFormatStringTrimsString()
+    {
+        $this->assertSame('id', AccessHelper::CallNonPublicMethod(
+            $this->query, 'formatString', ['  id  ']));
+    }
+
+    function testFormatStringWithNonEmptyString()
+    {
+        $this->assertSame('id', AccessHelper::CallNonPublicMethod(
+            $this->query, 'formatString', ['id']));
+    }
+
+    #endregion formatString
+
+    #region formatStringList ---------------------------------------------------
+
+    function testFormatStringListWithNoStrings()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('String list cannot be empty.');
+        AccessHelper::CallNonPublicMethod($this->query, 'formatStringList', []);
+    }
+
+    function testFormatStringListWithEmptyString()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('String cannot be empty.');
+        AccessHelper::CallNonPublicMethod($this->query, 'formatStringList', ['']);
+    }
+
+    function testFormatStringListWithWhitespaceOnlyString()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('String cannot be empty.');
+        AccessHelper::CallNonPublicMethod($this->query, 'formatStringList', ['   ']);
+    }
+
+    function testFormatStringListTrimsStrings()
+    {
+        $this->assertSame('id, name', AccessHelper::CallNonPublicMethod(
+            $this->query, 'formatStringList', ['  id  ', '  name  ']));
+    }
+
+    function testFormatStringListWithSingleString()
+    {
+        $this->assertSame('id', AccessHelper::CallNonPublicMethod(
+            $this->query, 'formatStringList', ['id']));
+    }
+
+    function testFormatStringListWithMultipleStrings()
+    {
+        $this->assertSame('id, name, AVG(*)', AccessHelper::CallNonPublicMethod(
+            $this->query, 'formatStringList', ['id', 'name', 'AVG(*)']));
+    }
+
+    #endregion formatStringList
 }

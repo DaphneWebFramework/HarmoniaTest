@@ -22,7 +22,6 @@ class ConnectionTest extends TestCase
     private function createQuery(string $sql, array $bindings = []): Query
     {
         $query = $this->getMockBuilder(Query::class)
-            ->setConstructorArgs(['']) // no table name needed
             ->onlyMethods(['buildSql'])
             ->getMock();
         $query->expects($this->once())
