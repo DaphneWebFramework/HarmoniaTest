@@ -26,7 +26,8 @@ class SessionTest extends TestCase
                                '_session_write_close', '_session_unset',
                                '_session_destroy', '_headers_sent', '_setcookie'])
                 ->disableOriginalConstructor()
-                ->getMock());
+                ->getMock()
+        );
         $this->originalServer = Server::ReplaceInstance(
             $this->createMock(Server::class));
         $this->originalConfig = Config::ReplaceInstance(
@@ -48,8 +49,10 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Session support is disabled.');
+
         AccessHelper::CallNonPublicConstructor($session);
     }
 
@@ -59,8 +62,10 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Session is already active.');
+
         AccessHelper::CallNonPublicConstructor($session);
     }
 
@@ -97,6 +102,7 @@ class SessionTest extends TestCase
                     break;
                 }
             });
+
         AccessHelper::CallNonPublicConstructor($session);
     }
 
@@ -118,6 +124,7 @@ class SessionTest extends TestCase
                     'secure' => true,
                     'httponly' => true,
                     'samesite' => 'Strict']);
+
         AccessHelper::CallNonPublicConstructor($session);
     }
 
@@ -139,6 +146,7 @@ class SessionTest extends TestCase
                     'secure' => false,
                     'httponly' => true,
                     'samesite' => 'Strict']);
+
         AccessHelper::CallNonPublicConstructor($session);
     }
 
@@ -156,6 +164,7 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_name')
             ->with('Harmonia_SID');
+
         AccessHelper::CallNonPublicConstructor($session);
     }
 
@@ -173,6 +182,7 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_name')
             ->with('MyCoolApp_SID');
+
         AccessHelper::CallNonPublicConstructor($session);
     }
 
@@ -190,6 +200,7 @@ class SessionTest extends TestCase
             ->method('_session_start');
         $session->expects($this->never())
             ->method('_session_regenerate_id');
+
         $session->Start();
     }
 
@@ -203,6 +214,7 @@ class SessionTest extends TestCase
             ->method('_session_start');
         $session->expects($this->never())
             ->method('_session_regenerate_id');
+
         $session->Start();
     }
 
@@ -216,6 +228,7 @@ class SessionTest extends TestCase
             ->method('_session_start');
         $session->expects($this->once())
             ->method('_session_regenerate_id');
+
         $session->Start();
     }
 
@@ -231,6 +244,7 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_DISABLED);
         $session->expects($this->never())
             ->method('_session_write_close');
+
         $session->Close();
     }
 
@@ -242,6 +256,7 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_NONE);
         $session->expects($this->never())
             ->method('_session_write_close');
+
         $session->Close();
     }
 
@@ -253,6 +268,7 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_ACTIVE);
         $session->expects($this->once())
             ->method('_session_write_close');
+
         $session->Close();
     }
 
@@ -267,7 +283,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
+
         $session->Set('key1', 'value1');
+
         $this->assertFalse(isset($_SESSION));
     }
 
@@ -278,7 +296,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_NONE);
+
         $session->Set('key1', 'value1');
+
         $this->assertFalse(isset($_SESSION));
     }
 
@@ -289,7 +309,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $session->Set('key1', 'value1');
+
         $this->assertSame('value1', $_SESSION['key1']);
     }
 
@@ -304,7 +326,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
+
         $_SESSION['key1'] = 'value1';
+
         $this->assertNull($session->Get('key1'));
     }
 
@@ -315,7 +339,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
+
         $_SESSION['key1'] = 'value1';
+
         $this->assertSame('default1', $session->Get('key1', 'default1'));
     }
 
@@ -326,7 +352,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_NONE);
+
         $_SESSION['key1'] = 'value1';
+
         $this->assertNull($session->Get('key1'));
     }
 
@@ -337,7 +365,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_NONE);
+
         $_SESSION['key1'] = 'value1';
+
         $this->assertSame('default1', $session->Get('key1', 'default1'));
     }
 
@@ -348,6 +378,7 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $this->assertNull($session->Get('key1'));
     }
 
@@ -358,6 +389,7 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $this->assertSame('default1', $session->Get('key1', 'default1'));
     }
 
@@ -368,7 +400,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $_SESSION = [];
+
         $this->assertNull($session->Get('key1'));
     }
 
@@ -379,7 +413,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $_SESSION = [];
+
         $this->assertSame('default1', $session->Get('key1', 'default1'));
     }
 
@@ -390,7 +426,9 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $_SESSION['key1'] = 'value1';
+
         $this->assertSame('value1', $session->Get('key1'));
     }
 
@@ -405,8 +443,11 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
+
         $_SESSION['key1'] = 'value1';
+
         $session->Remove('key1');
+
         $this->assertSame('value1', $_SESSION['key1']);
     }
 
@@ -417,8 +458,11 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_NONE);
+
         $_SESSION['key1'] = 'value1';
+
         $session->Remove('key1');
+
         $this->assertSame('value1', $_SESSION['key1']);
     }
 
@@ -429,8 +473,8 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $session->Remove('key1');
-        $this->assertTrue(true);
     }
 
     #[BackupGlobals(true)]
@@ -440,8 +484,11 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $_SESSION = [];
+
         $session->Remove('key1');
+
         $this->assertArrayNotHasKey('key1', $_SESSION);
     }
 
@@ -452,8 +499,11 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
+
         $_SESSION['key1'] = 'value1';
+
         $session->Remove('key1');
+
         $this->assertArrayNotHasKey('key1', $_SESSION);
     }
 
@@ -470,6 +520,7 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_DISABLED);
         $session->expects($this->never())
             ->method('_session_unset');
+
         $session->Clear();
     }
 
@@ -482,6 +533,7 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_NONE);
         $session->expects($this->never())
             ->method('_session_unset');
+
         $session->Clear();
     }
 
@@ -493,6 +545,7 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_ACTIVE);
         $session->expects($this->once())
             ->method('_session_unset');
+
         $session->Clear();
     }
 
@@ -517,6 +570,7 @@ class SessionTest extends TestCase
             ->method('_session_unset');
         $session->expects($this->never())
             ->method('_session_destroy');
+
         $session->Destroy();
     }
 
@@ -537,6 +591,7 @@ class SessionTest extends TestCase
             ->method('_session_unset');
         $session->expects($this->never())
             ->method('_session_destroy');
+
         $session->Destroy();
     }
 
@@ -557,8 +612,10 @@ class SessionTest extends TestCase
             ->method('_session_unset');
         $session->expects($this->never())
             ->method('_session_destroy');
+
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('HTTP headers have already been sent.');
+
         $session->Destroy();
     }
 
@@ -591,6 +648,7 @@ class SessionTest extends TestCase
             ->method('_session_unset');
         $session->expects($this->once())
             ->method('_session_destroy');
+
         $session->Destroy();
     }
 
@@ -623,6 +681,7 @@ class SessionTest extends TestCase
             ->method('_session_unset');
         $session->expects($this->once())
             ->method('_session_destroy');
+
         $session->Destroy();
     }
 

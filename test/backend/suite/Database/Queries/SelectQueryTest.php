@@ -4,8 +4,6 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Database\Queries\SelectQuery;
 
-use \TestToolkit\AccessHelper;
-
 #[CoversClass(SelectQuery::class)]
 class SelectQueryTest extends TestCase
 {
