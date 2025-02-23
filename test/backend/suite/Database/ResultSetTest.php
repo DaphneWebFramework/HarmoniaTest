@@ -85,6 +85,29 @@ class ResultSetTest extends TestCase
 
     #endregion Columns
 
+    #region RowCount -----------------------------------------------------------
+
+    function testRowCountWithEmptyResultSet()
+    {
+        $resultSet = new ResultSet();
+        $rowCount = $resultSet->RowCount();
+        $this->assertSame(0, $rowCount);
+    }
+
+    function testRowCountWithNonEmptyResultSet()
+    {
+        $result = $this->createMock(MySQLiResult::class);
+        $result->expects($this->once())
+            ->method('__get')
+            ->with('num_rows')
+            ->willReturn(3);
+        $resultSet = new ResultSet($result);
+        $rowCount = $resultSet->RowCount();
+        $this->assertSame(3, $rowCount);
+    }
+
+    #endregion RowCount
+
     #region Row ----------------------------------------------------------------
 
     function testRowWithEmptyResultSet()
