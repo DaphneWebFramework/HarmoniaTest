@@ -55,6 +55,36 @@ class ResultSetTest extends TestCase
 
     #endregion __destruct
 
+    #region Columns ------------------------------------------------------------
+
+    function testColumnsWithEmptyResultSet()
+    {
+        $resultSet = new ResultSet();
+        $columns = $resultSet->Columns();
+        $this->assertEmpty($columns);
+    }
+
+    function testColumnsWithNonEmptyResultSet()
+    {
+        $result = $this->createMock(MySQLiResult::class);
+        $result->expects($this->any())
+            ->method('__call')
+            ->willReturnCallback(function($name) {
+                return match ($name) {
+                    'fetch_fields' => [
+                        (object)['name' => 'id'],
+                        (object)['name' => 'name']
+                    ],
+                    'free' => null
+                };
+            });
+        $resultSet = new ResultSet($result);
+        $columns = $resultSet->Columns();
+        $this->assertSame(['id', 'name'], $columns);
+    }
+
+    #endregion Columns
+
     #region Row ----------------------------------------------------------------
 
     function testRowWithEmptyResultSet()
