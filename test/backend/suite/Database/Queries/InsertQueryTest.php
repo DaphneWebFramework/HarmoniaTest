@@ -7,9 +7,9 @@ use \Harmonia\Database\Queries\InsertQuery;
 #[CoversClass(InsertQuery::class)]
 class InsertQueryTest extends TestCase
 {
-    #region Into ---------------------------------------------------------------
+    #region Table --------------------------------------------------------------
 
-    function testIntoCallsFormatString()
+    function testTableCallsFormatString()
     {
         $query = $this->getMockBuilder(InsertQuery::class)
             ->onlyMethods(['formatString'])
@@ -17,31 +17,31 @@ class InsertQueryTest extends TestCase
         $query->expects($this->once())
             ->method('formatString')
             ->with('my_table');
-        $query->Into('my_table');
+        $query->Table('my_table');
     }
 
-    function testIntoReplacesPrevious()
+    function testTableReplacesPrevious()
     {
         $query = (new InsertQuery)
-            ->Into('my_table')
+            ->Table('my_table')
             ->Values('value1');
-        $query->Into('another_table');
+        $query->Table('another_table');
         $this->assertSame(
             'INSERT INTO another_table VALUES (value1)',
             $query->ToSql()
         );
     }
 
-    function testIntoReturnsSelf()
+    function testTableReturnsSelf()
     {
         $query = new InsertQuery();
         $this->assertSame(
             $query,
-            $query->Into('my_table')
+            $query->Table('my_table')
         );
     }
 
-    #endregion Into
+    #endregion Table
 
     #region Columns ------------------------------------------------------------
 
@@ -59,7 +59,7 @@ class InsertQueryTest extends TestCase
     function testColumnsReplacesPrevious()
     {
         $query = (new InsertQuery)
-            ->Into('my_table')
+            ->Table('my_table')
             ->Columns('column1')
             ->Values('value1');
         $query->Columns('column2');
@@ -96,7 +96,7 @@ class InsertQueryTest extends TestCase
     function testValuesReplacesPrevious()
     {
         $query = (new InsertQuery)
-            ->Into('my_table')
+            ->Table('my_table')
             ->Values('value1');
         $query->Values('value2');
         $this->assertSame(
@@ -118,7 +118,7 @@ class InsertQueryTest extends TestCase
 
     #region ToSql --------------------------------------------------------------
 
-    function testToSqlWithoutIntoClause()
+    function testToSqlWithoutTable()
     {
         $query = (new InsertQuery)
             ->Values('value1');
@@ -127,10 +127,10 @@ class InsertQueryTest extends TestCase
         $query->ToSql();
     }
 
-    function testToSqlWithoutValuesClause()
+    function testToSqlWithoutValues()
     {
         $query = (new InsertQuery)
-            ->Into('my_table');
+            ->Table('my_table');
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Values must be provided.');
         $query->ToSql();
@@ -140,7 +140,7 @@ class InsertQueryTest extends TestCase
     {
         // Insert a new user with specified columns and values.
         $query = (new InsertQuery)
-            ->Into('users')
+            ->Table('users')
             ->Columns('id', 'name', 'email', 'status', 'createdAt')
             ->Values(':id', ':name', ':email', ':status', ':createdAt')
             ->Bind([

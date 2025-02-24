@@ -7,6 +7,41 @@ use \Harmonia\Database\Queries\SelectQuery;
 #[CoversClass(SelectQuery::class)]
 class SelectQueryTest extends TestCase
 {
+    #region Table --------------------------------------------------------------
+
+    function testTableCallsFormatString()
+    {
+        $query = $this->getMockBuilder(SelectQuery::class)
+            ->onlyMethods(['formatString'])
+            ->getMock();
+        $query->expects($this->once())
+            ->method('formatString')
+            ->with('my_table');
+        $query->Table('my_table');
+    }
+
+    function testTableReplacesPrevious()
+    {
+        $query = (new SelectQuery)
+            ->Table('my_table');
+        $query->Table('another_table');
+        $this->assertSame(
+            'SELECT * FROM another_table',
+            $query->ToSql()
+        );
+    }
+
+    function testTableReturnsSelf()
+    {
+        $query = new SelectQuery();
+        $this->assertSame(
+            $query,
+            $query->Table('my_table')
+        );
+    }
+
+    #endregion Table
+
     #region Columns ------------------------------------------------------------
 
     function testColumnsCallsFormatStringList()
@@ -23,8 +58,8 @@ class SelectQueryTest extends TestCase
     function testColumnsReplacesPrevious()
     {
         $query = (new SelectQuery)
-            ->Columns('column1')
-            ->From('my_table');
+            ->Table('my_table')
+            ->Columns('column1');
         $query->Columns('column2');
         $this->assertSame(
             'SELECT column2 FROM my_table',
@@ -43,41 +78,6 @@ class SelectQueryTest extends TestCase
 
     #endregion Columns
 
-    #region From ---------------------------------------------------------------
-
-    function testFromCallsFormatString()
-    {
-        $query = $this->getMockBuilder(SelectQuery::class)
-            ->onlyMethods(['formatString'])
-            ->getMock();
-        $query->expects($this->once())
-            ->method('formatString')
-            ->with('my_table');
-        $query->From('my_table');
-    }
-
-    function testFromReplacesPrevious()
-    {
-        $query = (new SelectQuery)
-            ->From('my_table');
-        $query->From('another_table');
-        $this->assertSame(
-            'SELECT * FROM another_table',
-            $query->ToSql()
-        );
-    }
-
-    function testFromReturnsSelf()
-    {
-        $query = new SelectQuery();
-        $this->assertSame(
-            $query,
-            $query->From('my_table')
-        );
-    }
-
-    #endregion From
-
     #region Where --------------------------------------------------------------
 
     function testWhereCallsFormatString()
@@ -88,13 +88,13 @@ class SelectQueryTest extends TestCase
         $query->expects($this->once())
             ->method('formatString')
             ->with('column1 = 42');
-        $query->From('column1 = 42');
+        $query->Where('column1 = 42');
     }
 
     function testWhereReplacesPrevious()
     {
         $query = (new SelectQuery)
-            ->From('my_table')
+            ->Table('my_table')
             ->Where('column1 = 1');
         $query->Where('column2 = 99');
         $this->assertSame(
@@ -130,7 +130,7 @@ class SelectQueryTest extends TestCase
     function testOrderByReplacesPrevious()
     {
         $query = (new SelectQuery)
-            ->From('my_table')
+            ->Table('my_table')
             ->OrderBy('column1 ASC');
         $query->OrderBy('column2 DESC');
         $this->assertSame(
@@ -171,7 +171,7 @@ class SelectQueryTest extends TestCase
     function testLimitWithoutOffset()
     {
         $query = (new SelectQuery)
-            ->From('my_table')
+            ->Table('my_table')
             ->Limit(10);
         $this->assertSame(
             'SELECT * FROM my_table LIMIT 10',
@@ -182,7 +182,7 @@ class SelectQueryTest extends TestCase
     function testLimitWithOffset()
     {
         $query = (new SelectQuery)
-            ->From('my_table')
+            ->Table('my_table')
             ->Limit(10, 20);
         $this->assertSame(
             'SELECT * FROM my_table LIMIT 10 OFFSET 20',
@@ -193,7 +193,7 @@ class SelectQueryTest extends TestCase
     function testLimitReplacesPrevious()
     {
         $query = (new SelectQuery)
-            ->From('my_table')
+            ->Table('my_table')
             ->Limit(10);
         $query->Limit(5, 2);
         $this->assertSame(
@@ -215,7 +215,7 @@ class SelectQueryTest extends TestCase
 
     #region ToSql --------------------------------------------------------------
 
-    function testToSqlWithoutFromClause()
+    function testToSqlWithoutTable()
     {
         $query = new SelectQuery();
         $this->expectException(\RuntimeException::class);
@@ -227,8 +227,8 @@ class SelectQueryTest extends TestCase
     {
         // Fetch active users who registered after a specific date.
         $query = (new SelectQuery)
+            ->Table('users')
             ->Columns('name', 'email', 'COUNT(*) AS loginCount')
-            ->From('users')
             ->Where('status = :status AND createdAt >= :startDate')
             ->OrderBy(
                 'lastLogin DESC', // most recent login first
