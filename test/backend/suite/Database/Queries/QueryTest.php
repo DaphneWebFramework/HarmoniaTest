@@ -202,35 +202,78 @@ class QueryTest extends TestCase
 
     #endregion Bind
 
-    #region formatString -------------------------------------------------------
+    #region checkString --------------------------------------------------------
 
-    function testFormatStringWithEmptyString()
+    function testCheckStringWithEmptyString()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'formatString', ['']);
+        AccessHelper::CallNonPublicMethod($this->query, 'checkString', ['']);
     }
 
-    function testFormatStringWithWhitespaceOnlyString()
+    function testCheckStringWithWhitespaceOnlyString()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'formatString', ['   ']);
+        AccessHelper::CallNonPublicMethod($this->query, 'checkString', ['   ']);
     }
 
-    function testFormatStringTrimsString()
+    function testCheckStringTrimsString()
     {
         $this->assertSame('id', AccessHelper::CallNonPublicMethod(
-            $this->query, 'formatString', ['  id  ']));
+            $this->query, 'checkString', ['  id  ']));
     }
 
-    function testFormatStringWithNonEmptyString()
+    function testCheckStringWithNonEmptyString()
     {
         $this->assertSame('id', AccessHelper::CallNonPublicMethod(
-            $this->query, 'formatString', ['id']));
+            $this->query, 'checkString', ['id']));
     }
 
-    #endregion formatString
+    #endregion checkString
+
+    #region checkStringList ----------------------------------------------------
+
+    function testCheckStringListWithNoStrings()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('String list cannot be empty.');
+        AccessHelper::CallNonPublicMethod($this->query, 'checkStringList', []);
+    }
+
+    function testCheckStringListWithEmptyString()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('String cannot be empty.');
+        AccessHelper::CallNonPublicMethod($this->query, 'checkStringList', ['']);
+    }
+
+    function testCheckStringListWithWhitespaceOnlyString()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('String cannot be empty.');
+        AccessHelper::CallNonPublicMethod($this->query, 'checkStringList', ['   ']);
+    }
+
+    function testCheckStringListTrimsStrings()
+    {
+        $this->assertSame(['id', 'name'], AccessHelper::CallNonPublicMethod(
+            $this->query, 'checkStringList', ['  id  ', '  name  ']));
+    }
+
+    function testCheckStringListWithSingleString()
+    {
+        $this->assertSame(['id'], AccessHelper::CallNonPublicMethod(
+            $this->query, 'checkStringList', ['id']));
+    }
+
+    function testCheckStringListWithMultipleStrings()
+    {
+        $this->assertSame(['id', 'name', 'AVG(*)'], AccessHelper::CallNonPublicMethod(
+            $this->query, 'checkStringList', ['id', 'name', 'AVG(*)']));
+    }
+
+    #endregion checkStringList
 
     #region formatStringList ---------------------------------------------------
 

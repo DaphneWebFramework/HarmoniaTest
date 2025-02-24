@@ -9,13 +9,13 @@ class SelectQueryTest extends TestCase
 {
     #region Table --------------------------------------------------------------
 
-    function testTableCallsFormatString()
+    function testTableCallsCheckString()
     {
         $query = $this->getMockBuilder(SelectQuery::class)
-            ->onlyMethods(['formatString'])
+            ->onlyMethods(['checkString'])
             ->getMock();
         $query->expects($this->once())
-            ->method('formatString')
+            ->method('checkString')
             ->with('my_table');
         $query->Table('my_table');
     }
@@ -80,13 +80,13 @@ class SelectQueryTest extends TestCase
 
     #region Where --------------------------------------------------------------
 
-    function testWhereCallsFormatString()
+    function testWhereCallsCheckString()
     {
         $query = $this->getMockBuilder(SelectQuery::class)
-            ->onlyMethods(['formatString'])
+            ->onlyMethods(['checkString'])
             ->getMock();
         $query->expects($this->once())
-            ->method('formatString')
+            ->method('checkString')
             ->with('column1 = 42');
         $query->Where('column1 = 42');
     }

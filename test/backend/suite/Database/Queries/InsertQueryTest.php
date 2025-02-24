@@ -9,13 +9,13 @@ class InsertQueryTest extends TestCase
 {
     #region Table --------------------------------------------------------------
 
-    function testTableCallsFormatString()
+    function testTableCallsCheckString()
     {
         $query = $this->getMockBuilder(InsertQuery::class)
-            ->onlyMethods(['formatString'])
+            ->onlyMethods(['checkString'])
             ->getMock();
         $query->expects($this->once())
-            ->method('formatString')
+            ->method('checkString')
             ->with('my_table');
         $query->Table('my_table');
     }
