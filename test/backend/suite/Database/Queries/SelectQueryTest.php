@@ -218,7 +218,7 @@ class SelectQueryTest extends TestCase
     function testToSqlWithoutFromClause()
     {
         $query = new SelectQuery();
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Table name must be provided.');
         $query->ToSql();
     }
