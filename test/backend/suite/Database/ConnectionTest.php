@@ -175,161 +175,6 @@ class ConnectionTest extends TestCase
 
     #endregion __construct
 
-    #region createHandle -------------------------------------------------------
-
-    function testCreateHandleThrowsIfNewMysqliFailsWhenReportModeIsOff()
-    {
-        $handle = $this->createMock(MySQLiHandle::class);
-        $handle->expects($this->any())
-            ->method('__get')
-            ->willReturnMap([
-                ['connect_error', 'Access denied'],
-                ['connect_errno', 1045]
-            ]);
-
-        $connection = $this->getMockBuilder(Connection::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_new_mysqli'])
-            ->getMock();
-        $connection->expects($this->once())
-            ->method('_new_mysqli')
-            ->with('localhost', 'root', '')
-            ->willReturn($handle);
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Access denied');
-        $this->expectExceptionCode(1045);
-
-        AccessHelper::CallNonPublicMethod(
-            $connection,
-            'createHandle',
-            ['localhost', 'root', '']
-        );
-    }
-
-    function testCreateHandleThrowsIfNewMysqliFailsWhenReportModeIsStrict()
-    {
-        $handle = $this->createMock(MySQLiHandle::class);
-        $handle->expects($this->never())
-            ->method('__get');
-
-        $connection = $this->getMockBuilder(Connection::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_new_mysqli'])
-            ->getMock();
-        $connection->expects($this->once())
-            ->method('_new_mysqli')
-            ->with('localhost', 'root', '')
-            ->willThrowException(new \mysqli_sql_exception('Access denied', 1045));
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Access denied');
-        $this->expectExceptionCode(1045);
-
-        AccessHelper::CallNonPublicMethod(
-            $connection,
-            'createHandle',
-            ['localhost', 'root', '']
-        );
-    }
-
-    function testCreateHandleReturnsHandleWhenNewMysqliSucceeds()
-    {
-        $handle = $this->createMock(MySQLiHandle::class);
-        $handle->expects($this->any())
-            ->method('__get')
-            ->with('connect_errno')
-            ->willReturn(0);
-
-        $connection = $this->getMockBuilder(Connection::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_new_mysqli'])
-            ->getMock();
-        $connection->expects($this->once())
-            ->method('_new_mysqli')
-            ->with('localhost', 'root', '')
-            ->willReturn($handle);
-
-        $this->assertSame($handle, AccessHelper::CallNonPublicMethod(
-            $connection,
-            'createHandle',
-            ['localhost', 'root', '']
-        ));
-    }
-
-    #endregion createHandle
-
-    #region setCharset ---------------------------------------------------------
-
-    function testSetCharsetThrowsIfHandleSetCharsetFailsWhenReportModeIsOff()
-    {
-        $handle = $this->createMock(MySQLiHandle::class);
-        $handle->expects($this->once())
-            ->method('__call')
-            ->with('set_charset', ['badcharset'])
-            ->willReturn(false);
-        $handle->expects($this->any())
-            ->method('__get')
-            ->willReturnMap([
-                ['error', 'Unknown character set'],
-                ['errno', 2019]
-            ]);
-
-        $connection = $this->createMock(Connection::class);
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unknown character set');
-        $this->expectExceptionCode(2019);
-
-        AccessHelper::CallNonPublicMethod(
-            $connection,
-            'setCharset',
-            [$handle, 'badcharset']
-        );
-    }
-
-    function testSetCharsetThrowsIfHandleSetCharsetFailsWhenReportModeIsStrict()
-    {
-        $handle = $this->createMock(MySQLiHandle::class);
-        $handle->expects($this->once())
-            ->method('__call')
-            ->with('set_charset', ['badcharset'])
-            ->willThrowException(new \mysqli_sql_exception('Unknown character set', 2019));
-        $handle->expects($this->never())
-            ->method('__get');
-
-        $connection = $this->createMock(Connection::class);
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Unknown character set');
-        $this->expectExceptionCode(2019);
-
-        AccessHelper::CallNonPublicMethod(
-            $connection,
-            'setCharset',
-            [$handle, 'badcharset']
-        );
-    }
-
-    function testSetCharsetSucceedsWhenHandleSetCharsetSucceeds()
-    {
-        $handle = $this->createMock(MySQLiHandle::class);
-        $handle->expects($this->once())
-            ->method('__call')
-            ->with('set_charset', ['utf8mb4'])
-            ->willReturn(true);
-
-        $connection = $this->createMock(Connection::class);
-
-        AccessHelper::CallNonPublicMethod(
-            $connection,
-            'setCharset',
-            [$handle, 'utf8mb4']
-        );
-    }
-
-    #endregion setCharset
-
     #region SelectDatabase -----------------------------------------------------
 
     function testSelectDatabaseThrowsIfHandleSelectDbFailsWhenReportModeIsOff()
@@ -525,6 +370,252 @@ class ConnectionTest extends TestCase
     }
 
     #endregion Execute (PHP < 8.2.0)
+
+    #region Execute (PHP >= 8.2.0) ---------------------------------------------
+
+    #[RequiresPhp('>= 8.2.0')]
+    function testExecuteThrowsWhenExecuteQueryThrows()
+    {
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['executeQuery'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('executeQuery')
+            ->with('SELECT * FROM `users`', [])
+            ->willThrowException(new \RuntimeException('Syntax error', 1064));
+
+        $query = $this->createQuery('SELECT * FROM `users`');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Syntax error');
+        $this->expectExceptionCode(1064);
+
+        $connection->Execute($query);
+    }
+
+    #[RequiresPhp('>= 8.2.0')]
+    #[DataProvider('nullOrResultDataProvider')]
+    function testExecuteReturnsWhatExecuteQueryReturns($result)
+    {
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['executeQuery'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('executeQuery')
+            ->with('SELECT * FROM `users`', [])
+            ->willReturn($result);
+
+        $query = $this->createQuery('SELECT * FROM `users`');
+
+        $this->assertSame($result, $connection->Execute($query));
+    }
+
+    #endregion Execute (PHP >= 8.2.0)
+
+    #region LastInsertId -------------------------------------------------------
+
+    function testLastInsertId()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__get')
+            ->with('insert_id')
+            ->willReturn(42);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->willReturn($handle);
+        $connection->__construct('', '', '');
+
+        $this->assertSame(42, $connection->LastInsertId());
+    }
+
+    #endregion LastInsertId
+
+    #region LastAffectedRowCount -----------------------------------------------
+
+    function testLastAffectedRowCount()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__get')
+            ->with('affected_rows')
+            ->willReturn(42);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->willReturn($handle);
+        $connection->__construct('', '', '');
+
+        $this->assertSame(42, $connection->LastAffectedRowCount());
+    }
+
+    #endregion LastAffectedRowCount
+
+    #region createHandle -------------------------------------------------------
+
+    function testCreateHandleThrowsIfNewMysqliFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['connect_error', 'Access denied'],
+                ['connect_errno', 1045]
+            ]);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['_new_mysqli'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('_new_mysqli')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Access denied');
+        $this->expectExceptionCode(1045);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'createHandle',
+            ['localhost', 'root', '']
+        );
+    }
+
+    function testCreateHandleThrowsIfNewMysqliFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['_new_mysqli'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('_new_mysqli')
+            ->with('localhost', 'root', '')
+            ->willThrowException(new \mysqli_sql_exception('Access denied', 1045));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Access denied');
+        $this->expectExceptionCode(1045);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'createHandle',
+            ['localhost', 'root', '']
+        );
+    }
+
+    function testCreateHandleReturnsHandleWhenNewMysqliSucceeds()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->with('connect_errno')
+            ->willReturn(0);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['_new_mysqli'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('_new_mysqli')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+
+        $this->assertSame($handle, AccessHelper::CallNonPublicMethod(
+            $connection,
+            'createHandle',
+            ['localhost', 'root', '']
+        ));
+    }
+
+    #endregion createHandle
+
+    #region setCharset ---------------------------------------------------------
+
+    function testSetCharsetThrowsIfHandleSetCharsetFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('set_charset', ['badcharset'])
+            ->willReturn(false);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Unknown character set'],
+                ['errno', 2019]
+            ]);
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown character set');
+        $this->expectExceptionCode(2019);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'setCharset',
+            [$handle, 'badcharset']
+        );
+    }
+
+    function testSetCharsetThrowsIfHandleSetCharsetFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('set_charset', ['badcharset'])
+            ->willThrowException(new \mysqli_sql_exception('Unknown character set', 2019));
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->createMock(Connection::class);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown character set');
+        $this->expectExceptionCode(2019);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'setCharset',
+            [$handle, 'badcharset']
+        );
+    }
+
+    function testSetCharsetSucceedsWhenHandleSetCharsetSucceeds()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('set_charset', ['utf8mb4'])
+            ->willReturn(true);
+
+        $connection = $this->createMock(Connection::class);
+
+        AccessHelper::CallNonPublicMethod(
+            $connection,
+            'setCharset',
+            [$handle, 'utf8mb4']
+        );
+    }
+
+    #endregion setCharset
 
     #region prepareStatement ---------------------------------------------------
 
@@ -905,49 +996,6 @@ class ConnectionTest extends TestCase
     }
 
     #endregion executeQuery
-
-    #region Execute (PHP >= 8.2.0) ---------------------------------------------
-
-    #[RequiresPhp('>= 8.2.0')]
-    function testExecuteThrowsWhenExecuteQueryThrows()
-    {
-        $connection = $this->getMockBuilder(Connection::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['executeQuery'])
-            ->getMock();
-        $connection->expects($this->once())
-            ->method('executeQuery')
-            ->with('SELECT * FROM `users`', [])
-            ->willThrowException(new \RuntimeException('Syntax error', 1064));
-
-        $query = $this->createQuery('SELECT * FROM `users`');
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Syntax error');
-        $this->expectExceptionCode(1064);
-
-        $connection->Execute($query);
-    }
-
-    #[RequiresPhp('>= 8.2.0')]
-    #[DataProvider('nullOrResultDataProvider')]
-    function testExecuteReturnsWhatExecuteQueryReturns($result)
-    {
-        $connection = $this->getMockBuilder(Connection::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['executeQuery'])
-            ->getMock();
-        $connection->expects($this->once())
-            ->method('executeQuery')
-            ->with('SELECT * FROM `users`', [])
-            ->willReturn($result);
-
-        $query = $this->createQuery('SELECT * FROM `users`');
-
-        $this->assertSame($result, $connection->Execute($query));
-    }
-
-    #endregion Execute (PHP >= 8.2.0)
 
     #region transformQuery -----------------------------------------------------
 

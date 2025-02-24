@@ -157,6 +157,64 @@ class DatabaseTest extends TestCase
 
     #endregion Execute
 
+    #region LastInsertId -------------------------------------------------------
+
+    function testLastInsertIdReturnsZeroWhenNewConnectionThrows()
+    {
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willThrowException(new \RuntimeException());
+
+        $this->assertSame(0, $database->LastInsertId());
+    }
+
+    function testLastInsertIdReturnsWhateverTheConnectionMethodReturns()
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('LastInsertId')
+            ->willReturn(123);
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $this->assertSame(123, $database->LastInsertId());
+    }
+
+    #endregion LastInsertId
+
+    #region LastAffectedRowCount -----------------------------------------------
+
+    function testLastAffectedRowCountReturnsMinusOneWhenNewConnectionThrows()
+    {
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willThrowException(new \RuntimeException());
+
+        $this->assertSame(-1, $database->LastAffectedRowCount());
+    }
+
+    function testLastAffectedRowCountReturnsWhateverTheConnectionMethodReturns()
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('LastAffectedRowCount')
+            ->willReturn(3);
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $this->assertSame(3, $database->LastAffectedRowCount());
+    }
+
+    #endregion LastAffectedRowCount
+
     #region Data Providers -----------------------------------------------------
 
     static function nullOrResultDataProvider()
