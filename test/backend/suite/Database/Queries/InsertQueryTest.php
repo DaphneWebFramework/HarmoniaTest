@@ -155,7 +155,6 @@ class InsertQueryTest extends TestCase
             'INSERT INTO users (id, name, email, status, createdAt) VALUES (:id, :name, :email, :status, :createdAt)',
             $query->ToSql()
         );
-
         $this->assertSame(
             [ 'id' => 101, 'name' => 'John Doe', 'email' => 'john.doe@example.com',
               'status'    => 'active', 'createdAt' => '2025-02-23 15:30:00' ],

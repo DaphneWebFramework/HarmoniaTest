@@ -224,7 +224,6 @@ class UpdateQueryTest extends TestCase
             'UPDATE users SET email = :email, status = :status WHERE id = :id',
             $query->ToSql()
         );
-
         $this->assertSame(
             ['email' => 'new.email@example.com', 'status' => 'active', 'id' => 101],
             $query->Bindings()
