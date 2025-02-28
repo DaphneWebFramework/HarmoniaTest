@@ -47,7 +47,7 @@ class SingletonTest extends TestCase
     function testReplaceInstanceReturnsPreviousInstance()
     {
         $original = SingletonUnderTest::Instance();
-        $replacement = AccessHelper::CallNonPublicConstructor(SingletonUnderTest::class);
+        $replacement = AccessHelper::CallConstructor(SingletonUnderTest::class);
         $previous = SingletonUnderTest::ReplaceInstance($replacement);
         $this->assertSame($previous, $original);
         $this->assertNotSame($original, SingletonUnderTest::Instance());
@@ -56,10 +56,10 @@ class SingletonTest extends TestCase
 
     function testReplaceInstanceWhenNoPreviousInstanceExists()
     {
-        $instances = AccessHelper::GetNonPublicStaticProperty(Singleton::class, 'instances');
+        $instances = AccessHelper::GetStaticProperty(Singleton::class, 'instances');
         unset($instances[SingletonUnderTest::class]);
-        AccessHelper::SetNonPublicStaticProperty(Singleton::class, 'instances', $instances);
-        $replacement = AccessHelper::CallNonPublicConstructor(SingletonUnderTest::class);
+        AccessHelper::SetStaticProperty(Singleton::class, 'instances', $instances);
+        $replacement = AccessHelper::CallConstructor(SingletonUnderTest::class);
         $previous = SingletonUnderTest::ReplaceInstance($replacement);
         $this->assertNull($previous);
         $this->assertSame($replacement, SingletonUnderTest::Instance());
@@ -71,7 +71,7 @@ class SingletonTest extends TestCase
         $previous = SingletonUnderTest::ReplaceInstance(null);
         $this->assertSame($previous, $original);
         $this->assertArrayNotHasKey(SingletonUnderTest::class,
-            AccessHelper::GetNonPublicStaticProperty(Singleton::class, 'instances'));
+            AccessHelper::GetStaticProperty(Singleton::class, 'instances'));
     }
 
     function testConstructorIsNotPublic()

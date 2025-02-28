@@ -53,7 +53,7 @@ class SessionTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Session support is disabled.');
 
-        AccessHelper::CallNonPublicConstructor($session);
+        AccessHelper::CallConstructor($session);
     }
 
     function testConstructWhenStatusIsActive()
@@ -66,7 +66,7 @@ class SessionTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Session is already active.');
 
-        AccessHelper::CallNonPublicConstructor($session);
+        AccessHelper::CallConstructor($session);
     }
 
     function testConstructSetsIniOptions()
@@ -103,7 +103,7 @@ class SessionTest extends TestCase
                 }
             });
 
-        AccessHelper::CallNonPublicConstructor($session);
+        AccessHelper::CallConstructor($session);
     }
 
     function testConstructSetsCookieParamsWhenServerIsSecure()
@@ -125,7 +125,7 @@ class SessionTest extends TestCase
                     'httponly' => true,
                     'samesite' => 'Strict']);
 
-        AccessHelper::CallNonPublicConstructor($session);
+        AccessHelper::CallConstructor($session);
     }
 
     function testConstructSetsCookieParamsWhenServerIsNotSecure()
@@ -147,7 +147,7 @@ class SessionTest extends TestCase
                     'httponly' => true,
                     'samesite' => 'Strict']);
 
-        AccessHelper::CallNonPublicConstructor($session);
+        AccessHelper::CallConstructor($session);
     }
 
     function testConstructSetsSessionNameWhenConfigAppNameIsNotSetOrEmpty()
@@ -165,7 +165,7 @@ class SessionTest extends TestCase
             ->method('_session_name')
             ->with('Harmonia_SID');
 
-        AccessHelper::CallNonPublicConstructor($session);
+        AccessHelper::CallConstructor($session);
     }
 
     function testConstructSetsSessionNameWhenConfigAppNameIsNotEmpty()
@@ -183,7 +183,7 @@ class SessionTest extends TestCase
             ->method('_session_name')
             ->with('MyCoolApp_SID');
 
-        AccessHelper::CallNonPublicConstructor($session);
+        AccessHelper::CallConstructor($session);
     }
 
     #endregion __construct

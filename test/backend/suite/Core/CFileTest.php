@@ -78,7 +78,7 @@ class CFileTest extends TestCase
     {
         $file = CFile::Open(self::FILENAME, CFile::MODE_WRITE);
         $file->Close();
-        $this->assertNull(AccessHelper::GetNonPublicProperty($file, 'handle'));
+        $this->assertNull(AccessHelper::GetProperty($file, 'handle'));
     }
 
     function testCloseIsIdempotent()
@@ -86,7 +86,7 @@ class CFileTest extends TestCase
         $file = CFile::Open(self::FILENAME, CFile::MODE_WRITE);
         $file->Close();
         $file->Close(); // Calling Close a second time should have no effect
-        $this->assertNull(AccessHelper::GetNonPublicProperty($file, 'handle'));
+        $this->assertNull(AccessHelper::GetProperty($file, 'handle'));
     }
 
     #endregion Close

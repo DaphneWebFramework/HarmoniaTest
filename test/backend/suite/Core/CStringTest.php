@@ -67,7 +67,7 @@ class CStringTest extends TestCase
         $this->assertSame('', (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding')
         );
     }
 
@@ -77,12 +77,12 @@ class CStringTest extends TestCase
         $copy = new CString($original, 'UTF-8'); // 'UTF-8' should be ignored
         $this->assertSame((string)$original, (string)$copy);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($original, 'encoding'),
-            AccessHelper::GetNonPublicProperty($copy, 'encoding')
+            AccessHelper::GetProperty($original, 'encoding'),
+            AccessHelper::GetProperty($copy, 'encoding')
         );
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($original, 'isSingleByte'),
-            AccessHelper::GetNonPublicProperty($copy, 'isSingleByte')
+            AccessHelper::GetProperty($original, 'isSingleByte'),
+            AccessHelper::GetProperty($copy, 'isSingleByte')
         );
     }
 
@@ -97,7 +97,7 @@ class CStringTest extends TestCase
         $this->assertSame('I am Stringable', (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding')
         );
     }
 
@@ -112,7 +112,7 @@ class CStringTest extends TestCase
         $this->assertSame('I am Stringable', (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding')
         );
     }
 
@@ -127,7 +127,7 @@ class CStringTest extends TestCase
         $this->assertSame('I am Stringable', (string)$cstr);
         $this->assertSame(
             'ISO-8859-1',
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding')
         );
     }
 
@@ -138,7 +138,7 @@ class CStringTest extends TestCase
         $this->assertSame($str, (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding')
         );
     }
 
@@ -149,7 +149,7 @@ class CStringTest extends TestCase
         $this->assertSame($str, (string)$cstr);
         $this->assertSame(
             \mb_internal_encoding(),
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding')
         );
     }
 
@@ -160,7 +160,7 @@ class CStringTest extends TestCase
         $this->assertSame($str, (string)$cstr);
         $this->assertSame(
             'ISO-8859-1',
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding')
         );
     }
 
@@ -168,14 +168,14 @@ class CStringTest extends TestCase
     function testConstructorWithSingleByteEncoding($encoding)
     {
         $cstr = new CString('', $encoding);
-        $this->assertTrue(AccessHelper::GetNonPublicProperty($cstr, 'isSingleByte'));
+        $this->assertTrue(AccessHelper::GetProperty($cstr, 'isSingleByte'));
     }
 
     #[DataProvider('multiByteEncodingProvider')]
     function testConstructorWithMultiByteEncoding($encoding)
     {
         $cstr = new CString('', $encoding);
-        $this->assertFalse(AccessHelper::GetNonPublicProperty($cstr, 'isSingleByte'));
+        $this->assertFalse(AccessHelper::GetProperty($cstr, 'isSingleByte'));
     }
 
     #endregion __construct
@@ -283,8 +283,8 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$prepended);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($prepended, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($prepended, 'encoding'),
         );
     }
 
@@ -335,8 +335,8 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$appended);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($appended, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($appended, 'encoding'),
         );
     }
 
@@ -396,8 +396,8 @@ class CStringTest extends TestCase
         $left = $cstr->Left($count);
         $this->assertSame($expected, (string)$left);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($left, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($left, 'encoding'),
         );
     }
 
@@ -412,8 +412,8 @@ class CStringTest extends TestCase
         $right = $cstr->Right($count);
         $this->assertSame($expected, (string)$right);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($right, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($right, 'encoding'),
         );
     }
 
@@ -428,8 +428,8 @@ class CStringTest extends TestCase
         $middle = $cstr->Middle($offset, $count);
         $this->assertSame($expected, (string)$middle);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($middle, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($middle, 'encoding'),
         );
     }
 
@@ -447,8 +447,8 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$trimmed);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($trimmed, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($trimmed, 'encoding'),
         );
     }
 
@@ -475,8 +475,8 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$trimmed);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($trimmed, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($trimmed, 'encoding'),
         );
     }
 
@@ -503,8 +503,8 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$trimmed);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($trimmed, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($trimmed, 'encoding'),
         );
     }
 
@@ -530,8 +530,8 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$lowercased);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($lowercased, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($lowercased, 'encoding'),
         );
     }
 
@@ -556,8 +556,8 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$uppercased);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($uppercased, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($uppercased, 'encoding'),
         );
     }
 
@@ -704,8 +704,8 @@ class CStringTest extends TestCase
         $this->assertSame($value, (string)$cstr);
         $this->assertSame($expected, (string)$replaced);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($replaced, 'encoding'),
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($replaced, 'encoding'),
         );
     }
 
@@ -814,8 +814,8 @@ class CStringTest extends TestCase
         $this->assertSame('hello%20world', (string)$applied);
         $this->assertSame('hello world', (string)$cstr);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($applied, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($applied, 'encoding')
         );
     }
 
@@ -827,8 +827,8 @@ class CStringTest extends TestCase
         $this->assertSame('world', (string)$applied);
         $this->assertSame('hello world', (string)$cstr);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($applied, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($applied, 'encoding')
         );
     }
 
@@ -844,8 +844,8 @@ class CStringTest extends TestCase
         $this->assertSame('hexxo', (string)$applied);
         $this->assertSame('hello', (string)$cstr);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($applied, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($applied, 'encoding')
         );
     }
 
@@ -863,8 +863,8 @@ class CStringTest extends TestCase
         $this->assertSame('hello', (string)$cstr);
         $this->assertSame('<hello>', (string)$applied);
         $this->assertSame(
-            AccessHelper::GetNonPublicProperty($cstr, 'encoding'),
-            AccessHelper::GetNonPublicProperty($applied, 'encoding')
+            AccessHelper::GetProperty($cstr, 'encoding'),
+            AccessHelper::GetProperty($applied, 'encoding')
         );
     }
 

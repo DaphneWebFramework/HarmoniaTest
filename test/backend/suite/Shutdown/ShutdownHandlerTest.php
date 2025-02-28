@@ -41,9 +41,9 @@ class ShutdownHandlerTest extends TestCase
             ->method('_register_shutdown_function')
             ->with([$shutdownHandler, 'OnShutdown']);
 
-        AccessHelper::CallNonPublicConstructor($shutdownHandler);
+        AccessHelper::CallConstructor($shutdownHandler);
 
-        $listeners = AccessHelper::GetNonPublicMockProperty(
+        $listeners = AccessHelper::GetMockProperty(
             ShutdownHandler::class,
             $shutdownHandler,
             'listeners'
@@ -61,7 +61,7 @@ class ShutdownHandlerTest extends TestCase
         $listener = $this->createStub(IShutdownListener::class);
 
         $shutdownHandler = ShutdownHandler::Instance();
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             ShutdownHandler::class,
             $shutdownHandler,
             'listeners',
@@ -69,7 +69,7 @@ class ShutdownHandlerTest extends TestCase
         );
         $shutdownHandler->AddListener($listener);
 
-        $listeners = AccessHelper::GetNonPublicMockProperty(
+        $listeners = AccessHelper::GetMockProperty(
             ShutdownHandler::class,
             $shutdownHandler,
             'listeners'
@@ -90,7 +90,7 @@ class ShutdownHandlerTest extends TestCase
             ->with(null);
 
         $shutdownHandler = ShutdownHandler::Instance();
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             ShutdownHandler::class,
             $shutdownHandler,
             'listeners',
@@ -112,7 +112,7 @@ class ShutdownHandlerTest extends TestCase
             ->with("Something went wrong in 'file.php' on line 123.");
 
         $shutdownHandler = ShutdownHandler::Instance();
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             ShutdownHandler::class,
             $shutdownHandler,
             'listeners',
@@ -135,7 +135,7 @@ class ShutdownHandlerTest extends TestCase
             ->with("E_NOTICE: Something went wrong on line 123.");
 
         $shutdownHandler = ShutdownHandler::Instance();
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             ShutdownHandler::class,
             $shutdownHandler,
             'listeners',
@@ -158,7 +158,7 @@ class ShutdownHandlerTest extends TestCase
             ->with("E_NOTICE: Something went wrong in 'file.php'.");
 
         $shutdownHandler = ShutdownHandler::Instance();
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             ShutdownHandler::class,
             $shutdownHandler,
             'listeners',
@@ -181,7 +181,7 @@ class ShutdownHandlerTest extends TestCase
             ->with("E_NOTICE: Something went wrong in 'file.php' on line 123.");
 
         $shutdownHandler = ShutdownHandler::Instance();
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             ShutdownHandler::class,
             $shutdownHandler,
             'listeners',

@@ -52,7 +52,7 @@ class ConnectionTest extends TestCase
 
         $connection->__construct('localhost', 'root', '');
 
-        $this->assertNull(AccessHelper::GetNonPublicMockProperty(
+        $this->assertNull(AccessHelper::GetMockProperty(
             Connection::class,
             $connection,
             'handle'
@@ -85,7 +85,7 @@ class ConnectionTest extends TestCase
 
         $connection->__construct('localhost', 'root', '', 'badcharset');
 
-        $this->assertNull(AccessHelper::GetNonPublicMockProperty(
+        $this->assertNull(AccessHelper::GetMockProperty(
             Connection::class,
             $connection,
             'handle'
@@ -112,7 +112,7 @@ class ConnectionTest extends TestCase
 
         $connection->__construct('localhost', 'root', '');
 
-        $this->assertSame($handle, AccessHelper::GetNonPublicMockProperty(
+        $this->assertSame($handle, AccessHelper::GetMockProperty(
             Connection::class,
             $connection,
             'handle'
@@ -139,7 +139,7 @@ class ConnectionTest extends TestCase
 
         $connection->__construct('localhost', 'root', '', null);
 
-        $this->assertSame($handle, AccessHelper::GetNonPublicMockProperty(
+        $this->assertSame($handle, AccessHelper::GetMockProperty(
             Connection::class,
             $connection, 'handle'
         ));
@@ -166,7 +166,7 @@ class ConnectionTest extends TestCase
 
         $connection->__construct('localhost', 'root', '', 'utf8mb4');
 
-        $this->assertSame($handle, AccessHelper::GetNonPublicMockProperty(
+        $this->assertSame($handle, AccessHelper::GetMockProperty(
             Connection::class,
             $connection,
             'handle'
@@ -487,7 +487,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Access denied');
         $this->expectExceptionCode(1045);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'createHandle',
             ['localhost', 'root', '']
@@ -513,7 +513,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Access denied');
         $this->expectExceptionCode(1045);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'createHandle',
             ['localhost', 'root', '']
@@ -537,7 +537,7 @@ class ConnectionTest extends TestCase
             ->with('localhost', 'root', '')
             ->willReturn($handle);
 
-        $this->assertSame($handle, AccessHelper::CallNonPublicMethod(
+        $this->assertSame($handle, AccessHelper::CallMethod(
             $connection,
             'createHandle',
             ['localhost', 'root', '']
@@ -568,7 +568,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Unknown character set');
         $this->expectExceptionCode(2019);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'setCharset',
             [$handle, 'badcharset']
@@ -591,7 +591,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Unknown character set');
         $this->expectExceptionCode(2019);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'setCharset',
             [$handle, 'badcharset']
@@ -608,7 +608,7 @@ class ConnectionTest extends TestCase
 
         $connection = $this->createMock(Connection::class);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'setCharset',
             [$handle, 'utf8mb4']
@@ -635,7 +635,7 @@ class ConnectionTest extends TestCase
             ]);
 
         $connection = $this->createMock(Connection::class);
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             Connection::class,
             $connection,
             'handle',
@@ -646,7 +646,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Syntax error');
         $this->expectExceptionCode(1064);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'prepareStatement',
             ['SELECT * FROM `users`']
@@ -665,7 +665,7 @@ class ConnectionTest extends TestCase
             ->method('__get');
 
         $connection = $this->createMock(Connection::class);
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             Connection::class,
             $connection,
             'handle',
@@ -676,7 +676,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Syntax error');
         $this->expectExceptionCode(1064);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'prepareStatement',
             ['SELECT * FROM `users`']
@@ -695,14 +695,14 @@ class ConnectionTest extends TestCase
             ->willReturn($statement);
 
         $connection = $this->createMock(Connection::class);
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             Connection::class,
             $connection,
             'handle',
             $handle
         );
 
-        $this->assertSame($statement, AccessHelper::CallNonPublicMethod(
+        $this->assertSame($statement, AccessHelper::CallMethod(
             $connection,
             'prepareStatement',
             ['SELECT * FROM `users`']
@@ -734,7 +734,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Execution error');
         $this->expectExceptionCode(1064);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'executeStatement',
             [$statement, [42, 'John']]
@@ -758,7 +758,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Execution error');
         $this->expectExceptionCode(1064);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'executeStatement',
             [$statement, [42, 'John']]
@@ -776,7 +776,7 @@ class ConnectionTest extends TestCase
 
         $connection = $this->createMock(Connection::class);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'executeStatement',
             [$statement, [42, 'John']]
@@ -807,7 +807,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Result error');
         $this->expectExceptionCode(1064);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'getStatementResult',
             [$statement]
@@ -830,7 +830,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Result error');
         $this->expectExceptionCode(1064);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'getStatementResult',
             [$statement]
@@ -851,7 +851,7 @@ class ConnectionTest extends TestCase
 
         $connection = $this->createMock(Connection::class);
 
-        $this->assertNull(AccessHelper::CallNonPublicMethod(
+        $this->assertNull(AccessHelper::CallMethod(
             $connection,
             'getStatementResult',
             [$statement]
@@ -870,7 +870,7 @@ class ConnectionTest extends TestCase
 
         $connection = $this->createMock(Connection::class);
 
-        $this->assertSame($result, AccessHelper::CallNonPublicMethod(
+        $this->assertSame($result, AccessHelper::CallMethod(
             $connection,
             'getStatementResult',
             [$statement]
@@ -897,7 +897,7 @@ class ConnectionTest extends TestCase
             ]);
 
         $connection = $this->createMock(Connection::class);
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             Connection::class,
             $connection,
             'handle',
@@ -908,7 +908,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Syntax error');
         $this->expectExceptionCode(1064);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'executeQuery',
             ['SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John']]
@@ -927,7 +927,7 @@ class ConnectionTest extends TestCase
             ->method('__get');
 
         $connection = $this->createMock(Connection::class);
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             Connection::class,
             $connection,
             'handle',
@@ -938,7 +938,7 @@ class ConnectionTest extends TestCase
         $this->expectExceptionMessage('Syntax error');
         $this->expectExceptionCode(1064);
 
-        AccessHelper::CallNonPublicMethod(
+        AccessHelper::CallMethod(
             $connection,
             'executeQuery',
             ['SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John']]
@@ -955,14 +955,14 @@ class ConnectionTest extends TestCase
             ->willReturn(true);
 
         $connection = $this->createMock(Connection::class);
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             Connection::class,
             $connection,
             'handle',
             $handle
         );
 
-        $this->assertNull(AccessHelper::CallNonPublicMethod(
+        $this->assertNull(AccessHelper::CallMethod(
             $connection,
             'executeQuery',
             ['SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John']]
@@ -981,14 +981,14 @@ class ConnectionTest extends TestCase
             ->willReturn($result);
 
         $connection = $this->createMock(Connection::class);
-        AccessHelper::SetNonPublicMockProperty(
+        AccessHelper::SetMockProperty(
             Connection::class,
             $connection,
             'handle',
             $handle
         );
 
-        $this->assertSame($result, AccessHelper::CallNonPublicMethod(
+        $this->assertSame($result, AccessHelper::CallMethod(
             $connection,
             'executeQuery',
             ['SELECT * FROM `users` WHERE id = ? AND name = ?;', [42, 'John']]
@@ -1005,7 +1005,7 @@ class ConnectionTest extends TestCase
     {
         $query = $this->createQuery($sql, $bindings);
 
-        $transformedQuery = AccessHelper::CallNonPublicStaticMethod(
+        $transformedQuery = AccessHelper::CallStaticMethod(
             Connection::class,
             'transformQuery',
             [$query]

@@ -208,25 +208,25 @@ class QueryTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'checkString', ['']);
+        AccessHelper::CallMethod($this->query, 'checkString', ['']);
     }
 
     function testCheckStringWithWhitespaceOnlyString()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'checkString', ['   ']);
+        AccessHelper::CallMethod($this->query, 'checkString', ['   ']);
     }
 
     function testCheckStringTrimsString()
     {
-        $this->assertSame('id', AccessHelper::CallNonPublicMethod(
+        $this->assertSame('id', AccessHelper::CallMethod(
             $this->query, 'checkString', ['  id  ']));
     }
 
     function testCheckStringWithNonEmptyString()
     {
-        $this->assertSame('id', AccessHelper::CallNonPublicMethod(
+        $this->assertSame('id', AccessHelper::CallMethod(
             $this->query, 'checkString', ['id']));
     }
 
@@ -238,38 +238,38 @@ class QueryTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String list cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'checkStringList', []);
+        AccessHelper::CallMethod($this->query, 'checkStringList', []);
     }
 
     function testCheckStringListWithEmptyString()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'checkStringList', ['']);
+        AccessHelper::CallMethod($this->query, 'checkStringList', ['']);
     }
 
     function testCheckStringListWithWhitespaceOnlyString()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'checkStringList', ['   ']);
+        AccessHelper::CallMethod($this->query, 'checkStringList', ['   ']);
     }
 
     function testCheckStringListTrimsStrings()
     {
-        $this->assertSame(['id', 'name'], AccessHelper::CallNonPublicMethod(
+        $this->assertSame(['id', 'name'], AccessHelper::CallMethod(
             $this->query, 'checkStringList', ['  id  ', '  name  ']));
     }
 
     function testCheckStringListWithSingleString()
     {
-        $this->assertSame(['id'], AccessHelper::CallNonPublicMethod(
+        $this->assertSame(['id'], AccessHelper::CallMethod(
             $this->query, 'checkStringList', ['id']));
     }
 
     function testCheckStringListWithMultipleStrings()
     {
-        $this->assertSame(['id', 'name', 'AVG(*)'], AccessHelper::CallNonPublicMethod(
+        $this->assertSame(['id', 'name', 'AVG(*)'], AccessHelper::CallMethod(
             $this->query, 'checkStringList', ['id', 'name', 'AVG(*)']));
     }
 
@@ -281,38 +281,38 @@ class QueryTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String list cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'formatStringList', []);
+        AccessHelper::CallMethod($this->query, 'formatStringList', []);
     }
 
     function testFormatStringListWithEmptyString()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'formatStringList', ['']);
+        AccessHelper::CallMethod($this->query, 'formatStringList', ['']);
     }
 
     function testFormatStringListWithWhitespaceOnlyString()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallNonPublicMethod($this->query, 'formatStringList', ['   ']);
+        AccessHelper::CallMethod($this->query, 'formatStringList', ['   ']);
     }
 
     function testFormatStringListTrimsStrings()
     {
-        $this->assertSame('id, name', AccessHelper::CallNonPublicMethod(
+        $this->assertSame('id, name', AccessHelper::CallMethod(
             $this->query, 'formatStringList', ['  id  ', '  name  ']));
     }
 
     function testFormatStringListWithSingleString()
     {
-        $this->assertSame('id', AccessHelper::CallNonPublicMethod(
+        $this->assertSame('id', AccessHelper::CallMethod(
             $this->query, 'formatStringList', ['id']));
     }
 
     function testFormatStringListWithMultipleStrings()
     {
-        $this->assertSame('id, name, AVG(*)', AccessHelper::CallNonPublicMethod(
+        $this->assertSame('id, name, AVG(*)', AccessHelper::CallMethod(
             $this->query, 'formatStringList', ['id', 'name', 'AVG(*)']));
     }
 

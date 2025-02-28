@@ -15,13 +15,13 @@ class ResultSetTest extends TestCase
     function testConstructWithNoParameters()
     {
         $resultSet = new ResultSet();
-        $this->assertNull(AccessHelper::GetNonPublicProperty($resultSet, 'result'));
+        $this->assertNull(AccessHelper::GetProperty($resultSet, 'result'));
     }
 
     function testConstructWithNull()
     {
         $resultSet = new ResultSet(null);
-        $this->assertNull(AccessHelper::GetNonPublicProperty($resultSet, 'result'));
+        $this->assertNull(AccessHelper::GetProperty($resultSet, 'result'));
     }
 
     function testConstructWithResultObject()
@@ -29,7 +29,7 @@ class ResultSetTest extends TestCase
         $result = $this->createMock(MySQLiResult::class);
         $resultSet = new ResultSet($result);
         $this->assertInstanceOf(MySQLiResult::class,
-            AccessHelper::GetNonPublicProperty($resultSet, 'result'));
+            AccessHelper::GetProperty($resultSet, 'result'));
     }
 
     #endregion __construct

@@ -17,10 +17,10 @@ class ResponseTest extends TestCase
     {
         $response = new Response();
         $this->assertSame(StatusCode::OK,
-            AccessHelper::GetNonPublicProperty($response, 'statusCode'));
-        $this->assertNull(AccessHelper::GetNonPublicProperty($response, 'headers'));
-        $this->assertNull(AccessHelper::GetNonPublicProperty($response, 'cookies'));
-        $this->assertNull(AccessHelper::GetNonPublicProperty($response, 'body'));
+            AccessHelper::GetProperty($response, 'statusCode'));
+        $this->assertNull(AccessHelper::GetProperty($response, 'headers'));
+        $this->assertNull(AccessHelper::GetProperty($response, 'cookies'));
+        $this->assertNull(AccessHelper::GetProperty($response, 'body'));
     }
 
     #endregion __construct
@@ -32,7 +32,7 @@ class ResponseTest extends TestCase
         $response = new Response();
         $this->assertSame($response, $response->SetStatusCode(StatusCode::ImATeapot));
         $this->assertSame(StatusCode::ImATeapot,
-            AccessHelper::GetNonPublicProperty($response, 'statusCode'));
+            AccessHelper::GetProperty($response, 'statusCode'));
     }
 
     #endregion SetStatusCode
@@ -43,7 +43,7 @@ class ResponseTest extends TestCase
     {
         $response = new Response();
         $this->assertSame($response, $response->SetHeader('Content-Type', 'text/plain'));
-        $headers = AccessHelper::GetNonPublicProperty($response, 'headers');
+        $headers = AccessHelper::GetProperty($response, 'headers');
         $this->assertInstanceof(CArray::class, $headers);
         $this->assertSame('text/plain', $headers->Get('Content-Type'));
     }
@@ -56,7 +56,7 @@ class ResponseTest extends TestCase
     {
         $response = new Response();
         $this->assertSame($response, $response->SetCookie('name', 'value'));
-        $cookies = AccessHelper::GetNonPublicProperty($response, 'cookies');
+        $cookies = AccessHelper::GetProperty($response, 'cookies');
         $this->assertInstanceof(CArray::class, $cookies);
         $this->assertSame('value', $cookies->Get('name'));
     }
@@ -69,7 +69,7 @@ class ResponseTest extends TestCase
     {
         $response = new Response();
         $this->assertSame($response, $response->DeleteCookie('name'));
-        $cookies = AccessHelper::GetNonPublicProperty($response, 'cookies');
+        $cookies = AccessHelper::GetProperty($response, 'cookies');
         $this->assertInstanceof(CArray::class, $cookies);
         $this->assertFalse($cookies->Get('name'));
     }
@@ -83,7 +83,7 @@ class ResponseTest extends TestCase
         $response = new Response();
         $this->assertSame($response, $response->SetBody('Hello, World!'));
         $this->assertSame('Hello, World!',
-            AccessHelper::GetNonPublicProperty($response, 'body'));
+            AccessHelper::GetProperty($response, 'body'));
         // Also, test with a Stringable object:
         $response->SetBody(new class {
             public function __toString() {
@@ -91,7 +91,7 @@ class ResponseTest extends TestCase
             }
         });
         $this->assertSame('I am a Stringable object.',
-            AccessHelper::GetNonPublicProperty($response, 'body'));
+            AccessHelper::GetProperty($response, 'body'));
     }
 
     #endregion SetBody
