@@ -5,8 +5,9 @@ use \PHPUnit\Framework\Attributes\BackupGlobals;
 
 use \Harmonia\Session;
 
-use \Harmonia\Server;
 use \Harmonia\Config;
+use \Harmonia\Server;
+use \Harmonia\Services\CookieService;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(Session::class)]
@@ -15,6 +16,7 @@ class SessionTest extends TestCase
     private ?Session $originalSession = null;
     private ?Server $originalServer = null;
     private ?Config $originalConfig = null;
+    private ?CookieService $originalCookieService = null;
 
     protected function setUp(): void
     {
@@ -24,7 +26,7 @@ class SessionTest extends TestCase
                                '_session_status', '_session_name',
                                '_session_start', '_session_regenerate_id',
                                '_session_write_close', '_session_unset',
-                               '_session_destroy', '_headers_sent', '_setcookie'])
+                               '_session_destroy'])
                 ->disableOriginalConstructor()
                 ->getMock()
         );
@@ -32,6 +34,8 @@ class SessionTest extends TestCase
             $this->createMock(Server::class));
         $this->originalConfig = Config::ReplaceInstance(
             $this->createMock(Config::class));
+        $this->originalCookieService = CookieService::ReplaceInstance(
+            $this->createMock(CookieService::class));
     }
 
     protected function tearDown(): void
@@ -39,6 +43,7 @@ class SessionTest extends TestCase
         Session::ReplaceInstance($this->originalSession);
         Server::ReplaceInstance($this->originalServer);
         Config::ReplaceInstance($this->originalConfig);
+        CookieService::ReplaceInstance($this->originalCookieService);
     }
 
     #region __construct --------------------------------------------------------
@@ -556,16 +561,16 @@ class SessionTest extends TestCase
     #[BackupGlobals(true)]
     function testDestroyDoesNothingWhenStatusIsDisabled()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->never())
+            ->method('DeleteCookie');
+
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
         $session->expects($this->never())
-            ->method('_headers_sent');
-        $session->expects($this->never())
             ->method('_session_name');
-        $session->expects($this->never())
-            ->method('_setcookie');
         $session->expects($this->never())
             ->method('_session_unset');
         $session->expects($this->never())
@@ -577,16 +582,16 @@ class SessionTest extends TestCase
     #[BackupGlobals(true)]
     function testDestroyDoesNothingWhenStatusIsNone()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->never())
+            ->method('DeleteCookie');
+
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_NONE);
         $session->expects($this->never())
-            ->method('_headers_sent');
-        $session->expects($this->never())
             ->method('_session_name');
-        $session->expects($this->never())
-            ->method('_setcookie');
         $session->expects($this->never())
             ->method('_session_unset');
         $session->expects($this->never())
@@ -595,88 +600,47 @@ class SessionTest extends TestCase
         $session->Destroy();
     }
 
-    function testDestroyWhenStatusIsActiveButHeadersAreSent()
+    function testDestroyWhenStatusIsActiveButCookieCannotBeDeleted()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->once())
+            ->method('DeleteCookie')
+            ->with('Harmonia_SID')
+            ->willReturn(false);
+
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
         $session->expects($this->once())
-            ->method('_headers_sent')
-            ->willReturn(true); // <-- headers are sent
-        $session->expects($this->never())
-            ->method('_session_name');
-        $session->expects($this->never())
-            ->method('_setcookie');
+            ->method('_session_name')
+            ->willReturn('Harmonia_SID');
         $session->expects($this->never())
             ->method('_session_unset');
         $session->expects($this->never())
             ->method('_session_destroy');
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('HTTP headers have already been sent.');
+        $this->expectExceptionMessage('Failed to delete session cookie.');
 
         $session->Destroy();
     }
 
-    function testDestroyWhenStatusIsActiveAndHeadersAreNotSentAndServerIsSecure()
+    function testDestroyWhenStatusIsActiveAndCookieIsDeleted()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->once())
+            ->method('DeleteCookie')
+            ->with('Harmonia_SID')
+            ->willReturn(true);
+
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
         $session->expects($this->once())
-            ->method('_headers_sent')
-            ->willReturn(false);
-        $session->expects($this->once())
             ->method('_session_name')
             ->willReturn('Harmonia_SID');
-        Server::Instance()->expects($this->once())
-            ->method('IsSecure')
-            ->willReturn(true); // <-- server is secure
-        $session->expects($this->once())
-            ->method('_setcookie')
-            ->with('Harmonia_SID', false, [
-                'expires'  => 0,
-                'path'     => '/',
-                'domain'   => '',
-                'secure'   => true,
-                'httponly' => true,
-                'samesite' => 'Strict'
-            ]);
-        $session->expects($this->once())
-            ->method('_session_unset');
-        $session->expects($this->once())
-            ->method('_session_destroy');
-
-        $session->Destroy();
-    }
-
-    function testDestroyWhenStatusIsActiveAndHeadersAreNotSentAndServerIsNotSecure()
-    {
-        $session = Session::Instance();
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_ACTIVE);
-        $session->expects($this->once())
-            ->method('_headers_sent')
-            ->willReturn(false);
-        $session->expects($this->once())
-            ->method('_session_name')
-            ->willReturn('Harmonia_SID');
-        Server::Instance()->expects($this->once())
-            ->method('IsSecure')
-            ->willReturn(false); // <-- server is not secure
-        $session->expects($this->once())
-            ->method('_setcookie')
-            ->with('Harmonia_SID', false, [
-                'expires'  => 0,
-                'path'     => '/',
-                'domain'   => '',
-                'secure'   => false,
-                'httponly' => true,
-                'samesite' => 'Strict'
-            ]);
         $session->expects($this->once())
             ->method('_session_unset');
         $session->expects($this->once())

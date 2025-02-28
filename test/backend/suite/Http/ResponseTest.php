@@ -6,14 +6,28 @@ use \Harmonia\Http\Response;
 
 use \Harmonia\Core\CArray;
 use \Harmonia\Http\StatusCode;
+use \Harmonia\Services\CookieService;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(Response::class)]
 class ResponseTest extends TestCase
 {
+    private ?CookieService $originalCookieService = null;
+
+    protected function setUp(): void
+    {
+        $this->originalCookieService = CookieService::ReplaceInstance(
+            $this->createMock(CookieService::class));
+    }
+
+    protected function tearDown(): void
+    {
+        CookieService::ReplaceInstance($this->originalCookieService);
+    }
+
     #region __construct --------------------------------------------------------
 
-    public function test__construct()
+    public function testConstruct()
     {
         $response = new Response();
         $this->assertSame(StatusCode::OK,
@@ -78,13 +92,17 @@ class ResponseTest extends TestCase
 
     #region SetBody ------------------------------------------------------------
 
-    public function testSetBody()
+    public function testSetBodyWithString()
     {
         $response = new Response();
         $this->assertSame($response, $response->SetBody('Hello, World!'));
         $this->assertSame('Hello, World!',
             AccessHelper::GetProperty($response, 'body'));
-        // Also, test with a Stringable object:
+    }
+
+    public function testSetBodyWithStringable()
+    {
+        $response = new Response();
         $response->SetBody(new class {
             public function __toString() {
                 return 'I am a Stringable object.';
@@ -100,9 +118,13 @@ class ResponseTest extends TestCase
 
     public function testSendWhenHeadersCannotBeSent()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->never())
+            ->method('SetCookie');
+
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendCookie', 'sendBody'])
+                           'sendBody'])
             ->getMock();
         $response->expects($this->once())
             ->method('canSendHeaders')
@@ -112,17 +134,20 @@ class ResponseTest extends TestCase
         $response->expects($this->never())
             ->method('sendHeader');
         $response->expects($this->never())
-            ->method('sendCookie');
-        $response->expects($this->never())
             ->method('sendBody');
+
         $response->Send();
     }
 
     public function testSendWhenHeadersCanBeSentWithNoHeadersNoCookiesNoBody()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->never())
+            ->method('SetCookie');
+
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendCookie', 'sendBody'])
+                           'sendBody'])
             ->getMock();
         $response->expects($this->once())
             ->method('canSendHeaders')
@@ -132,48 +157,71 @@ class ResponseTest extends TestCase
         $response->expects($this->never())
             ->method('sendHeader');
         $response->expects($this->never())
-            ->method('sendCookie');
-        $response->expects($this->never())
             ->method('sendBody');
+
         $response->Send();
     }
 
     public function testSendWhenHeadersCanBeSentWithHeadersNoCookiesNoBody()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->never())
+            ->method('SetCookie');
+
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendCookie', 'sendBody'])
+                           'sendBody'])
             ->getMock();
         $response->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
         $response->expects($this->once())
             ->method('sendStatusCode');
-        $sendHeaderArgs = [];
-        $response->expects($this->exactly(2))
+        $response->expects($invokedCount = $this->exactly(2))
             ->method('sendHeader')
-            ->willReturnCallback(function($name, $value) use(&$sendHeaderArgs) {
-                $sendHeaderArgs[] = [$name, $value];
+            ->willReturnCallback(function($name, $value) use($invokedCount) {
+                switch ($invokedCount->numberOfInvocations()) {
+                case 1:
+                    $this->assertSame('Content-Type', $name);
+                    $this->assertSame('text/plain', $value);
+                    break;
+                case 2:
+                    $this->assertSame('Cache-Control', $name);
+                    $this->assertSame('no-cache', $value);
+                    break;
+                }
             });
         $response->expects($this->never())
-            ->method('sendCookie');
-        $response->expects($this->never())
             ->method('sendBody');
+
         $response
             ->SetHeader('Content-Type', 'text/plain')
             ->SetHeader('Cache-Control', 'no-cache')
             ->Send();
-        $this->assertSame(
-            [ ['Content-Type', 'text/plain'],
-              ['Cache-Control', 'no-cache'] ],
-            $sendHeaderArgs);
     }
 
     public function testSendWhenHeadersCanBeSentWithCookiesNoHeadersNoBody()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($invokedCount = $this->exactly(2))
+            ->method('SetCookie')
+            ->willReturnCallback(function($name, $value) use($invokedCount) {
+                switch ($invokedCount->numberOfInvocations()) {
+                case 1:
+                    $this->assertSame('USERNAME', $name);
+                    $this->assertSame('John Doe', $value);
+                    break;
+                case 2:
+                    $this->assertSame('SESSIONID', $name);
+                    $this->assertFalse($value);
+                    break;
+                }
+                return true;
+            });
+
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendCookie', 'sendBody'])
+                           'sendBody'])
             ->getMock();
         $response->expects($this->once())
             ->method('canSendHeaders')
@@ -182,29 +230,23 @@ class ResponseTest extends TestCase
             ->method('sendStatusCode');
         $response->expects($this->never())
             ->method('sendHeader');
-        $sendCookieArgs = [];
-        $response->expects($this->exactly(2))
-            ->method('sendCookie')
-            ->willReturnCallback(function($name, $value) use(&$sendCookieArgs) {
-                $sendCookieArgs[] = [$name, $value];
-            });
         $response->expects($this->never())
             ->method('sendBody');
         $response
             ->SetCookie('USERNAME', 'John Doe')
             ->DeleteCookie('SESSIONID')
             ->Send();
-        $this->assertSame(
-            [ ['USERNAME', 'John Doe'],
-              ['SESSIONID', false] ],
-            $sendCookieArgs);
     }
 
     public function testSendWhenHeadersCanBeSentWithBodyNoHeadersNoCookies()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->never())
+            ->method('SetCookie');
+
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendCookie', 'sendBody'])
+                           'sendBody'])
             ->getMock();
         $response->expects($this->once())
             ->method('canSendHeaders')
@@ -213,8 +255,6 @@ class ResponseTest extends TestCase
             ->method('sendStatusCode');
         $response->expects($this->never())
             ->method('sendHeader');
-        $response->expects($this->never())
-            ->method('sendCookie');
         $response->expects($this->once())
             ->method('sendBody');
         $response
@@ -224,26 +264,45 @@ class ResponseTest extends TestCase
 
     public function testSendWhenHeadersCanBeSentWithHeadersCookiesBody()
     {
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($invokedCount = $this->exactly(2))
+            ->method('SetCookie')
+            ->willReturnCallback(function($name, $value) use($invokedCount) {
+                switch ($invokedCount->numberOfInvocations()) {
+                case 1:
+                    $this->assertSame('USERNAME', $name);
+                    $this->assertSame('John Doe', $value);
+                    break;
+                case 2:
+                    $this->assertSame('SESSIONID', $name);
+                    $this->assertFalse($value);
+                    break;
+                }
+                return true;
+            });
+
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendCookie', 'sendBody'])
+                           'sendBody'])
             ->getMock();
         $response->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
         $response->expects($this->once())
             ->method('sendStatusCode');
-        $sendHeaderArgs = [];
-        $response->expects($this->exactly(2))
+        $response->expects($invokedCount = $this->exactly(2))
             ->method('sendHeader')
-            ->willReturnCallback(function($name, $value) use(&$sendHeaderArgs) {
-                $sendHeaderArgs[] = [$name, $value];
-            });
-        $sendCookieArgs = [];
-        $response->expects($this->exactly(2))
-            ->method('sendCookie')
-            ->willReturnCallback(function($name, $value) use(&$sendCookieArgs) {
-                $sendCookieArgs[] = [$name, $value];
+            ->willReturnCallback(function($name, $value) use($invokedCount) {
+                switch ($invokedCount->numberOfInvocations()) {
+                case 1:
+                    $this->assertSame('Content-Type', $name);
+                    $this->assertSame('text/plain', $value);
+                    break;
+                case 2:
+                    $this->assertSame('Cache-Control', $name);
+                    $this->assertSame('no-cache', $value);
+                    break;
+                }
             });
         $response->expects($this->once())
             ->method('sendBody');
@@ -255,14 +314,6 @@ class ResponseTest extends TestCase
             ->DeleteCookie('SESSIONID')
             ->SetBody('Hello, World!')
             ->Send();
-        $this->assertSame(
-            [ ['Content-Type', 'text/plain'],
-              ['Cache-Control', 'no-cache'] ],
-            $sendHeaderArgs);
-        $this->assertSame(
-            [ ['USERNAME', 'John Doe'],
-              ['SESSIONID', false] ],
-            $sendCookieArgs);
     }
 
     #endregion Send
