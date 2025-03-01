@@ -206,7 +206,7 @@ class SessionTest extends TestCase
         $session->expects($this->never())
             ->method('_session_regenerate_id');
 
-        $session->Start();
+        $this->assertSame($session, $session->Start());
     }
 
     function testStartDoesNothingWhenStatusIsActive()
@@ -220,7 +220,7 @@ class SessionTest extends TestCase
         $session->expects($this->never())
             ->method('_session_regenerate_id');
 
-        $session->Start();
+        $this->assertSame($session, $session->Start());
     }
 
     function testStartWhenStatusIsNone()
@@ -234,7 +234,7 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_regenerate_id');
 
-        $session->Start();
+        $this->assertSame($session, $session->Start());
     }
 
     #endregion Start
@@ -250,7 +250,7 @@ class SessionTest extends TestCase
         $session->expects($this->never())
             ->method('_session_write_close');
 
-        $session->Close();
+        $this->assertSame($session, $session->Close());
     }
 
     function testCloseDoesNothingWhenStatusIsNone()
@@ -262,7 +262,7 @@ class SessionTest extends TestCase
         $session->expects($this->never())
             ->method('_session_write_close');
 
-        $session->Close();
+        $this->assertSame($session, $session->Close());
     }
 
     function testCloseWhenStatusIsActive()
@@ -274,7 +274,7 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_write_close');
 
-        $session->Close();
+        $this->assertSame($session, $session->Close());
     }
 
     #endregion Close
@@ -289,7 +289,7 @@ class SessionTest extends TestCase
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_DISABLED);
 
-        $session->Set('key1', 'value1');
+        $this->assertSame($session, $session->Set('key1', 'value1'));
 
         $this->assertFalse(isset($_SESSION));
     }
@@ -302,7 +302,7 @@ class SessionTest extends TestCase
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_NONE);
 
-        $session->Set('key1', 'value1');
+        $this->assertSame($session, $session->Set('key1', 'value1'));
 
         $this->assertFalse(isset($_SESSION));
     }
@@ -315,7 +315,7 @@ class SessionTest extends TestCase
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
 
-        $session->Set('key1', 'value1');
+        $this->assertSame($session, $session->Set('key1', 'value1'));
 
         $this->assertSame('value1', $_SESSION['key1']);
     }
@@ -451,7 +451,7 @@ class SessionTest extends TestCase
 
         $_SESSION['key1'] = 'value1';
 
-        $session->Remove('key1');
+        $this->assertSame($session, $session->Remove('key1'));
 
         $this->assertSame('value1', $_SESSION['key1']);
     }
@@ -466,7 +466,7 @@ class SessionTest extends TestCase
 
         $_SESSION['key1'] = 'value1';
 
-        $session->Remove('key1');
+        $this->assertSame($session, $session->Remove('key1'));
 
         $this->assertSame('value1', $_SESSION['key1']);
     }
@@ -479,7 +479,7 @@ class SessionTest extends TestCase
             ->method('_session_status')
             ->willReturn(\PHP_SESSION_ACTIVE);
 
-        $session->Remove('key1');
+        $this->assertSame($session, $session->Remove('key1'));
     }
 
     #[BackupGlobals(true)]
@@ -492,7 +492,7 @@ class SessionTest extends TestCase
 
         $_SESSION = [];
 
-        $session->Remove('key1');
+        $this->assertSame($session, $session->Remove('key1'));
 
         $this->assertArrayNotHasKey('key1', $_SESSION);
     }
@@ -507,7 +507,7 @@ class SessionTest extends TestCase
 
         $_SESSION['key1'] = 'value1';
 
-        $session->Remove('key1');
+        $this->assertSame($session, $session->Remove('key1'));
 
         $this->assertArrayNotHasKey('key1', $_SESSION);
     }
@@ -526,7 +526,7 @@ class SessionTest extends TestCase
         $session->expects($this->never())
             ->method('_session_unset');
 
-        $session->Clear();
+        $this->assertSame($session, $session->Clear());
     }
 
     #[BackupGlobals(true)]
@@ -539,7 +539,7 @@ class SessionTest extends TestCase
         $session->expects($this->never())
             ->method('_session_unset');
 
-        $session->Clear();
+        $this->assertSame($session, $session->Clear());
     }
 
     function testClearWhenStatusIsActive()
@@ -551,7 +551,7 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_unset');
 
-        $session->Clear();
+        $this->assertSame($session, $session->Clear());
     }
 
     #endregion Clear
@@ -576,7 +576,7 @@ class SessionTest extends TestCase
         $session->expects($this->never())
             ->method('_session_destroy');
 
-        $session->Destroy();
+        $this->assertSame($session, $session->Destroy());
     }
 
     #[BackupGlobals(true)]
@@ -597,7 +597,7 @@ class SessionTest extends TestCase
         $session->expects($this->never())
             ->method('_session_destroy');
 
-        $session->Destroy();
+        $this->assertSame($session, $session->Destroy());
     }
 
     function testDestroyWhenStatusIsActiveButCookieCannotBeDeleted()
@@ -623,7 +623,7 @@ class SessionTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Failed to delete session cookie.');
 
-        $session->Destroy();
+        $this->assertSame($session, $session->Destroy());
     }
 
     function testDestroyWhenStatusIsActiveAndCookieIsDeleted()
@@ -646,7 +646,7 @@ class SessionTest extends TestCase
         $session->expects($this->once())
             ->method('_session_destroy');
 
-        $session->Destroy();
+        $this->assertSame($session, $session->Destroy());
     }
 
     #endregion Destroy

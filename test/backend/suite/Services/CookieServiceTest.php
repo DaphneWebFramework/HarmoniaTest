@@ -51,6 +51,8 @@ class CookieServiceTest extends TestCase
         $cookieService->expects($this->once())
             ->method('_headers_sent')
             ->willReturn(true);
+        $cookieService->expects($this->never())
+            ->method('_setcookie');
 
         $this->assertFalse($cookieService->SetCookie('', ''));
     }
@@ -90,6 +92,8 @@ class CookieServiceTest extends TestCase
         $cookieService->expects($this->once())
             ->method('_headers_sent')
             ->willReturn(true);
+        $cookieService->expects($this->never())
+            ->method('_setcookie');
 
         $this->assertFalse($cookieService->DeleteCookie(''));
     }

@@ -30,8 +30,7 @@ class ResponseTest extends TestCase
     public function testConstruct()
     {
         $response = new Response();
-        $this->assertSame(StatusCode::OK,
-            AccessHelper::GetProperty($response, 'statusCode'));
+        $this->assertSame(StatusCode::OK, AccessHelper::GetProperty($response, 'statusCode'));
         $this->assertNull(AccessHelper::GetProperty($response, 'headers'));
         $this->assertNull(AccessHelper::GetProperty($response, 'cookies'));
         $this->assertNull(AccessHelper::GetProperty($response, 'body'));
@@ -45,8 +44,7 @@ class ResponseTest extends TestCase
     {
         $response = new Response();
         $this->assertSame($response, $response->SetStatusCode(StatusCode::ImATeapot));
-        $this->assertSame(StatusCode::ImATeapot,
-            AccessHelper::GetProperty($response, 'statusCode'));
+        $this->assertSame(StatusCode::ImATeapot, AccessHelper::GetProperty($response, 'statusCode'));
     }
 
     #endregion SetStatusCode
@@ -96,8 +94,7 @@ class ResponseTest extends TestCase
     {
         $response = new Response();
         $this->assertSame($response, $response->SetBody('Hello, World!'));
-        $this->assertSame('Hello, World!',
-            AccessHelper::GetProperty($response, 'body'));
+        $this->assertSame('Hello, World!', AccessHelper::GetProperty($response, 'body'));
     }
 
     public function testSetBodyWithStringable()
@@ -108,8 +105,7 @@ class ResponseTest extends TestCase
                 return 'I am a Stringable object.';
             }
         });
-        $this->assertSame('I am a Stringable object.',
-            AccessHelper::GetProperty($response, 'body'));
+        $this->assertSame('I am a Stringable object.', AccessHelper::GetProperty($response, 'body'));
     }
 
     #endregion SetBody
