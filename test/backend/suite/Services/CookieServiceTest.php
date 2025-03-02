@@ -5,6 +5,7 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Services\CookieService;
 
+use \Harmonia\Config;
 use \Harmonia\Server;
 use \TestToolkit\DataHelper;
 
@@ -13,6 +14,7 @@ class CookieServiceTest extends TestCase
 {
     private ?CookieService $originalCookieService = null;
     private ?Server $originalServer = null;
+    private ?Config $originalConfig = null;
 
     protected function setUp(): void
     {
@@ -23,12 +25,14 @@ class CookieServiceTest extends TestCase
                 ->getMock()
         );
         $this->originalServer = Server::ReplaceInstance($this->createMock(Server::class));
+        $this->originalConfig = Config::ReplaceInstance($this->createMock(Config::class));
     }
 
     protected function tearDown(): void
     {
         CookieService::ReplaceInstance($this->originalCookieService);
         Server::ReplaceInstance($this->originalServer);
+        Config::ReplaceInstance($this->originalConfig);
     }
 
     private function options($isSecure): array
@@ -124,6 +128,64 @@ class CookieServiceTest extends TestCase
     }
 
     #endregion DeleteCookie
+
+    #region GenerateCookieName -------------------------------------------------
+
+    function testGenerateCookieNameWhenConfigAppNameIsNotSetOrEmpty()
+    {
+        $config = Config::Instance();
+        $config->expects($this->once())
+            ->method('OptionOrDefault')
+            ->with('AppName', '')
+            ->willReturn('');
+
+        $this->assertSame(
+            'HARMONIA_INTEGRITY_TOKEN',
+            CookieService::Instance()->GenerateCookieName('INTEGRITY_TOKEN')
+        );
+    }
+
+    function testGenerateCookieNameWhenConfigAppNameIsSetAndNotEmpty()
+    {
+        $config = Config::Instance();
+        $config->expects($this->once())
+            ->method('OptionOrDefault')
+            ->with('AppName', '')
+            ->willReturn('MyApp');
+
+        $this->assertSame(
+            'MYAPP_INTEGRITY_TOKEN',
+            CookieService::Instance()->GenerateCookieName('INTEGRITY_TOKEN')
+        );
+    }
+
+    function testGenerateCookieNameWithLowerCaseSuffix()
+    {
+        $config = Config::Instance();
+        $config->expects($this->once())
+            ->method('OptionOrDefault')
+            ->with('AppName', '')
+            ->willReturn('MyApp');
+
+        $this->assertSame(
+            'MYAPP_INTEGRITY_TOKEN',
+            CookieService::Instance()->GenerateCookieName('integrity_token')
+        );
+    }
+
+    function testGenerateCookieNameWithEmptySuffix()
+    {
+        $config = Config::Instance();
+        $config->expects($this->never())
+            ->method('OptionOrDefault');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Suffix cannot be empty.');
+
+        CookieService::Instance()->GenerateCookieName('');
+    }
+
+    #endregion GenerateCookieName
 
     #region Data Providers -----------------------------------------------------
 

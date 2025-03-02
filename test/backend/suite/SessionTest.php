@@ -6,7 +6,6 @@ use \PHPUnit\Framework\Attributes\DataProviderExternal;
 
 use \Harmonia\Session;
 
-use \Harmonia\Config;
 use \Harmonia\Server;
 use \Harmonia\Services\CookieService;
 use \TestToolkit\AccessHelper;
@@ -17,7 +16,6 @@ class SessionTest extends TestCase
 {
     private ?Session $originalSession = null;
     private ?Server $originalServer = null;
-    private ?Config $originalConfig = null;
     private ?CookieService $originalCookieService = null;
 
     protected function setUp(): void
@@ -34,8 +32,6 @@ class SessionTest extends TestCase
         );
         $this->originalServer = Server::ReplaceInstance(
             $this->createMock(Server::class));
-        $this->originalConfig = Config::ReplaceInstance(
-            $this->createMock(Config::class));
         $this->originalCookieService = CookieService::ReplaceInstance(
             $this->createMock(CookieService::class));
     }
@@ -44,7 +40,6 @@ class SessionTest extends TestCase
     {
         Session::ReplaceInstance($this->originalSession);
         Server::ReplaceInstance($this->originalServer);
-        Config::ReplaceInstance($this->originalConfig);
         CookieService::ReplaceInstance($this->originalCookieService);
     }
 
@@ -78,12 +73,6 @@ class SessionTest extends TestCase
 
     function testConstructSetsIniOptions()
     {
-        $config = Config::Instance();
-        $config->expects($this->once())
-            ->method('OptionOrDefault')
-            ->with('AppName', '')
-            ->willReturn('');
-
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
@@ -126,12 +115,6 @@ class SessionTest extends TestCase
             ->method('IsSecure')
             ->willReturn($isSecure);
 
-        $config = Config::Instance();
-        $config->expects($this->once())
-            ->method('OptionOrDefault')
-            ->with('AppName', '')
-            ->willReturn('');
-
         $session = Session::Instance();
         $session->expects($this->once())
             ->method('_session_status')
@@ -148,13 +131,13 @@ class SessionTest extends TestCase
         AccessHelper::CallConstructor($session);
     }
 
-    function testConstructSetsSessionNameWhenConfigAppNameIsNotSetOrEmpty()
+    function testConstructSetsSessionName()
     {
-        $config = Config::Instance();
-        $config->expects($this->once())
-            ->method('OptionOrDefault')
-            ->with('AppName', '')
-            ->willReturn('');
+        $cookieService = CookieService::Instance();
+        $cookieService->expects($this->once())
+            ->method('GenerateCookieName')
+            ->with('SID')
+            ->willReturn('MYAPP_SID');
 
         $session = Session::Instance();
         $session->expects($this->once())
@@ -162,26 +145,7 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_NONE);
         $session->expects($this->once())
             ->method('_session_name')
-            ->with('HARMONIA_SID');
-
-        AccessHelper::CallConstructor($session);
-    }
-
-    function testConstructSetsSessionNameWhenConfigAppNameIsNotEmpty()
-    {
-        $config = Config::Instance();
-        $config->expects($this->once())
-            ->method('OptionOrDefault')
-            ->with('AppName', '')
-            ->willReturn('MyCoolApp');
-
-        $session = Session::Instance();
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_NONE);
-        $session->expects($this->once())
-            ->method('_session_name')
-            ->with('MYCOOLAPP_SID');
+            ->with('MYAPP_SID');
 
         AccessHelper::CallConstructor($session);
     }
