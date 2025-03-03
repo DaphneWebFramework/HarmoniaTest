@@ -114,14 +114,12 @@ class ResponseTest extends TestCase
 
     public function testSendWhenHeadersCannotBeSent()
     {
-        $cookieService = CookieService::Instance();
-        $cookieService->expects($this->never())
-            ->method('SetCookie');
-
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendBody'])
             ->getMock();
+        $cookieService = CookieService::Instance();
+
         $response->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(false);
@@ -129,6 +127,8 @@ class ResponseTest extends TestCase
             ->method('sendStatusCode');
         $response->expects($this->never())
             ->method('sendHeader');
+        $cookieService->expects($this->never())
+            ->method('SetCookie');
         $response->expects($this->never())
             ->method('sendBody');
 
@@ -137,14 +137,12 @@ class ResponseTest extends TestCase
 
     public function testSendWhenHeadersCanBeSentWithNoHeadersNoCookiesNoBody()
     {
-        $cookieService = CookieService::Instance();
-        $cookieService->expects($this->never())
-            ->method('SetCookie');
-
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendBody'])
             ->getMock();
+        $cookieService = CookieService::Instance();
+
         $response->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
@@ -152,6 +150,8 @@ class ResponseTest extends TestCase
             ->method('sendStatusCode');
         $response->expects($this->never())
             ->method('sendHeader');
+        $cookieService->expects($this->never())
+            ->method('SetCookie');
         $response->expects($this->never())
             ->method('sendBody');
 
@@ -160,14 +160,12 @@ class ResponseTest extends TestCase
 
     public function testSendWhenHeadersCanBeSentWithHeadersNoCookiesNoBody()
     {
-        $cookieService = CookieService::Instance();
-        $cookieService->expects($this->never())
-            ->method('SetCookie');
-
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendBody'])
             ->getMock();
+        $cookieService = CookieService::Instance();
+
         $response->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
@@ -187,6 +185,8 @@ class ResponseTest extends TestCase
                     break;
                 }
             });
+        $cookieService->expects($this->never())
+            ->method('SetCookie');
         $response->expects($this->never())
             ->method('sendBody');
 
@@ -198,7 +198,19 @@ class ResponseTest extends TestCase
 
     public function testSendWhenHeadersCanBeSentWithCookiesNoHeadersNoBody()
     {
+        $response = $this->getMockBuilder(Response::class)
+            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
+                           'sendBody'])
+            ->getMock();
         $cookieService = CookieService::Instance();
+
+        $response->expects($this->once())
+            ->method('canSendHeaders')
+            ->willReturn(true);
+        $response->expects($this->once())
+            ->method('sendStatusCode');
+        $response->expects($this->never())
+            ->method('sendHeader');
         $cookieService->expects($invokedCount = $this->exactly(2))
             ->method('SetCookie')
             ->willReturnCallback(function($name, $value) use($invokedCount) {
@@ -214,20 +226,9 @@ class ResponseTest extends TestCase
                 }
                 return true;
             });
-
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendBody'])
-            ->getMock();
-        $response->expects($this->once())
-            ->method('canSendHeaders')
-            ->willReturn(true);
-        $response->expects($this->once())
-            ->method('sendStatusCode');
-        $response->expects($this->never())
-            ->method('sendHeader');
         $response->expects($this->never())
             ->method('sendBody');
+
         $response
             ->SetCookie('USERNAME', 'John Doe')
             ->DeleteCookie('SESSIONID')
@@ -236,14 +237,12 @@ class ResponseTest extends TestCase
 
     public function testSendWhenHeadersCanBeSentWithBodyNoHeadersNoCookies()
     {
-        $cookieService = CookieService::Instance();
-        $cookieService->expects($this->never())
-            ->method('SetCookie');
-
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendBody'])
             ->getMock();
+        $cookieService = CookieService::Instance();
+
         $response->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
@@ -251,8 +250,11 @@ class ResponseTest extends TestCase
             ->method('sendStatusCode');
         $response->expects($this->never())
             ->method('sendHeader');
+        $cookieService->expects($this->never())
+            ->method('SetCookie');
         $response->expects($this->once())
             ->method('sendBody');
+
         $response
             ->SetBody('Hello, World!')
             ->Send();
@@ -260,27 +262,12 @@ class ResponseTest extends TestCase
 
     public function testSendWhenHeadersCanBeSentWithHeadersCookiesBody()
     {
-        $cookieService = CookieService::Instance();
-        $cookieService->expects($invokedCount = $this->exactly(2))
-            ->method('SetCookie')
-            ->willReturnCallback(function($name, $value) use($invokedCount) {
-                switch ($invokedCount->numberOfInvocations()) {
-                case 1:
-                    $this->assertSame('USERNAME', $name);
-                    $this->assertSame('John Doe', $value);
-                    break;
-                case 2:
-                    $this->assertSame('SESSIONID', $name);
-                    $this->assertSame('', $value);
-                    break;
-                }
-                return true;
-            });
-
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
                            'sendBody'])
             ->getMock();
+        $cookieService = CookieService::Instance();
+
         $response->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
@@ -300,8 +287,24 @@ class ResponseTest extends TestCase
                     break;
                 }
             });
+        $cookieService->expects($invokedCount = $this->exactly(2))
+            ->method('SetCookie')
+            ->willReturnCallback(function($name, $value) use($invokedCount) {
+                switch ($invokedCount->numberOfInvocations()) {
+                case 1:
+                    $this->assertSame('USERNAME', $name);
+                    $this->assertSame('John Doe', $value);
+                    break;
+                case 2:
+                    $this->assertSame('SESSIONID', $name);
+                    $this->assertSame('', $value);
+                    break;
+                }
+                return true;
+            });
         $response->expects($this->once())
             ->method('sendBody');
+
         $response
             ->SetStatusCode(StatusCode::MovedPermanently)
             ->SetHeader('Content-Type', 'text/plain')
@@ -321,6 +324,7 @@ class ResponseTest extends TestCase
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['SetStatusCode', 'SetHeader', 'Send', 'exitScript'])
             ->getMock();
+
         $response->expects($this->once())
             ->method('SetStatusCode')
             ->with(StatusCode::Found)
@@ -333,6 +337,7 @@ class ResponseTest extends TestCase
             ->method('Send');
         $response->expects($this->once())
             ->method('exitScript');
+
         $response->Redirect('https://example.com', true);
     }
 
@@ -341,6 +346,7 @@ class ResponseTest extends TestCase
         $response = $this->getMockBuilder(Response::class)
             ->onlyMethods(['SetStatusCode', 'SetHeader', 'Send', 'exitScript'])
             ->getMock();
+
         $response->expects($this->once())
             ->method('SetStatusCode')
             ->with(StatusCode::Found)
@@ -353,6 +359,7 @@ class ResponseTest extends TestCase
             ->method('Send');
         $response->expects($this->never())
             ->method('exitScript');
+
         $response->Redirect('https://example.com', false);
     }
 

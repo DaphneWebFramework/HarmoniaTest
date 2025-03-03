@@ -52,6 +52,7 @@ class CookieServiceTest extends TestCase
     function testSetCookieWhenHeadersSent()
     {
         $cookieService = CookieService::Instance();
+
         $cookieService->expects($this->once())
             ->method('_headers_sent')
             ->willReturn(true);
@@ -64,25 +65,23 @@ class CookieServiceTest extends TestCase
     #[DataProvider('setCookieDataProvider')]
     function testSetCookie($cookieValue, $isSecure, $returnValue)
     {
-        $cookieName = 'test_cookie';
-
+        $cookieService = CookieService::Instance();
         $server = Server::Instance();
+
         $server->expects($this->once())
             ->method('IsSecure')
             ->willReturn($isSecure);
-
-        $cookieService = CookieService::Instance();
         $cookieService->expects($this->once())
             ->method('_headers_sent')
             ->willReturn(false);
         $cookieService->expects($this->once())
             ->method('_setcookie')
-            ->with($cookieName, $cookieValue, $this->options($isSecure))
+            ->with('cookie-name', $cookieValue, $this->options($isSecure))
             ->willReturn($returnValue);
 
         $this->assertSame(
             $returnValue,
-            $cookieService->SetCookie($cookieName, $cookieValue)
+            $cookieService->SetCookie('cookie-name', $cookieValue)
         );
     }
 
@@ -93,6 +92,7 @@ class CookieServiceTest extends TestCase
     function testDeleteCookieWhenHeadersSent()
     {
         $cookieService = CookieService::Instance();
+
         $cookieService->expects($this->once())
             ->method('_headers_sent')
             ->willReturn(true);
@@ -105,25 +105,23 @@ class CookieServiceTest extends TestCase
     #[DataProvider('deleteCookieDataProvider')]
     function testDeleteCookie($isSecure, $returnValue)
     {
-        $cookieName = 'test_cookie';
-
+        $cookieService = CookieService::Instance();
         $server = Server::Instance();
+
         $server->expects($this->once())
             ->method('IsSecure')
             ->willReturn($isSecure);
-
-        $cookieService = CookieService::Instance();
         $cookieService->expects($this->once())
             ->method('_headers_sent')
             ->willReturn(false);
         $cookieService->expects($this->once())
             ->method('_setcookie')
-            ->with($cookieName, '', $this->options($isSecure))
+            ->with('cookie-name', '', $this->options($isSecure))
             ->willReturn($returnValue);
 
         $this->assertSame(
             $returnValue,
-            $cookieService->DeleteCookie($cookieName)
+            $cookieService->DeleteCookie('cookie-name')
         );
     }
 
@@ -133,7 +131,9 @@ class CookieServiceTest extends TestCase
 
     function testGenerateCookieNameWhenConfigAppNameIsNotSetOrEmpty()
     {
+        $cookieService = CookieService::Instance();
         $config = Config::Instance();
+
         $config->expects($this->once())
             ->method('OptionOrDefault')
             ->with('AppName', '')
@@ -141,13 +141,15 @@ class CookieServiceTest extends TestCase
 
         $this->assertSame(
             'HARMONIA_INTEGRITY_TOKEN',
-            CookieService::Instance()->GenerateCookieName('INTEGRITY_TOKEN')
+            $cookieService->GenerateCookieName('INTEGRITY_TOKEN')
         );
     }
 
     function testGenerateCookieNameWhenConfigAppNameIsSetAndNotEmpty()
     {
+        $cookieService = CookieService::Instance();
         $config = Config::Instance();
+
         $config->expects($this->once())
             ->method('OptionOrDefault')
             ->with('AppName', '')
@@ -155,13 +157,15 @@ class CookieServiceTest extends TestCase
 
         $this->assertSame(
             'MYAPP_INTEGRITY_TOKEN',
-            CookieService::Instance()->GenerateCookieName('INTEGRITY_TOKEN')
+            $cookieService->GenerateCookieName('INTEGRITY_TOKEN')
         );
     }
 
     function testGenerateCookieNameWithLowerCaseSuffix()
     {
+        $cookieService = CookieService::Instance();
         $config = Config::Instance();
+
         $config->expects($this->once())
             ->method('OptionOrDefault')
             ->with('AppName', '')
@@ -169,20 +173,21 @@ class CookieServiceTest extends TestCase
 
         $this->assertSame(
             'MYAPP_INTEGRITY_TOKEN',
-            CookieService::Instance()->GenerateCookieName('integrity_token')
+            $cookieService->GenerateCookieName('integrity_token')
         );
     }
 
     function testGenerateCookieNameWithEmptySuffix()
     {
+        $cookieService = CookieService::Instance();
         $config = Config::Instance();
+
         $config->expects($this->never())
             ->method('OptionOrDefault');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Suffix cannot be empty.');
-
-        CookieService::Instance()->GenerateCookieName('');
+        $cookieService->GenerateCookieName('');
     }
 
     #endregion GenerateCookieName
