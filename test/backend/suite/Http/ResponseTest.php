@@ -83,7 +83,7 @@ class ResponseTest extends TestCase
         $this->assertSame($response, $response->DeleteCookie('name'));
         $cookies = AccessHelper::GetProperty($response, 'cookies');
         $this->assertInstanceof(CArray::class, $cookies);
-        $this->assertFalse($cookies->Get('name'));
+        $this->assertSame('', $cookies->Get('name'));
     }
 
     #endregion DeleteCookie
@@ -209,7 +209,7 @@ class ResponseTest extends TestCase
                     break;
                 case 2:
                     $this->assertSame('SESSIONID', $name);
-                    $this->assertFalse($value);
+                    $this->assertSame('', $value);
                     break;
                 }
                 return true;
@@ -271,7 +271,7 @@ class ResponseTest extends TestCase
                     break;
                 case 2:
                     $this->assertSame('SESSIONID', $name);
-                    $this->assertFalse($value);
+                    $this->assertSame('', $value);
                     break;
                 }
                 return true;

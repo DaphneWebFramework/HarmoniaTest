@@ -118,7 +118,7 @@ class CookieServiceTest extends TestCase
             ->willReturn(false);
         $cookieService->expects($this->once())
             ->method('_setcookie')
-            ->with($cookieName, false, $this->options($isSecure))
+            ->with($cookieName, '', $this->options($isSecure))
             ->willReturn($returnValue);
 
         $this->assertSame(
@@ -192,9 +192,9 @@ class CookieServiceTest extends TestCase
     static function setCookieDataProvider()
     {
         return DataHelper::Cartesian(
-            ['test_value', false], // cookie value
-            [false, true],         // is secure
-            [false, true]          // return value
+            ['test_value', ''], // cookie value
+            [false, true],      // is secure
+            [false, true]       // return value
         );
     }
 
