@@ -215,6 +215,171 @@ class DatabaseTest extends TestCase
 
     #endregion LastAffectedRowCount
 
+    #region WithTransaction ----------------------------------------------------
+
+    function testWithTransactionReturnsFalseWhenNewConnectionThrows()
+    {
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willThrowException(new \RuntimeException());
+
+        $result = $database->WithTransaction(function() {
+            return 'any result';
+        });
+        $this->assertFalse($result);
+    }
+
+    function testWithTransactionReturnsFalseWhenBeginTransactionThrows()
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('BeginTransaction')
+            ->willThrowException(new \RuntimeException());
+        $connection->expects($this->once())
+            ->method('RollbackTransaction');
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $result = $database->WithTransaction(function() {
+            $this->fail('Callback should not be executed');
+        });
+        $this->assertFalse($result);
+    }
+
+    function testWithTransactionReturnsFalseWhenCallbackThrows()
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('BeginTransaction');
+        $connection->expects($this->never())
+            ->method('CommitTransaction');
+        $connection->expects($this->once())
+            ->method('RollbackTransaction');
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $result = $database->WithTransaction(function() {
+            throw new \RuntimeException();
+        });
+        $this->assertFalse($result);
+    }
+
+    function testWithTransactionReturnsFalseWhenCommitTransactionThrows(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('BeginTransaction');
+        $connection->expects($this->once())
+            ->method('CommitTransaction')
+            ->willThrowException(new \RuntimeException());
+        $connection->expects($this->once())
+            ->method('RollbackTransaction');
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $result = $database->WithTransaction(function() {
+            return 42;
+        });
+        $this->assertFalse($result);
+    }
+
+    function testWithTransactionReturnsFalseWhenRollbackThrows()
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('BeginTransaction');
+        $connection->expects($this->never())
+            ->method('CommitTransaction');
+        $connection->expects($this->once())
+            ->method('RollbackTransaction')
+            ->willThrowException(new \RuntimeException());
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $result = $database->WithTransaction(function() {
+            throw new \RuntimeException('Error in callback');
+        });
+        $this->assertFalse($result);
+    }
+
+    function testWithTransactionReturnsCallbackResultOfNullOnSuccess(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('BeginTransaction');
+        $connection->expects($this->once())
+            ->method('CommitTransaction');
+        $connection->expects($this->never())
+            ->method('RollbackTransaction');
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $result = $database->WithTransaction(function() {
+            // no return statement
+        });
+        $this->assertNull($result);
+    }
+
+    function testWithTransactionReturnsCallbackResultOfFalseOnSuccess(): void
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('BeginTransaction');
+        $connection->expects($this->once())
+            ->method('CommitTransaction');
+        $connection->expects($this->never())
+            ->method('RollbackTransaction');
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $result = $database->WithTransaction(function() {
+            return false;
+        });
+        $this->assertFalse($result);
+    }
+
+    function testWithTransactionReturnsCallbackResultOnSuccess()
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('BeginTransaction');
+        $connection->expects($this->once())
+            ->method('CommitTransaction');
+        $connection->expects($this->never())
+            ->method('RollbackTransaction');
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $result = $database->WithTransaction(function() {
+            return 'any result';
+        });
+        $this->assertSame('any result', $result);
+    }
+
+    #endregion WithTransaction
+
     #region Data Providers -----------------------------------------------------
 
     static function nullOrResultDataProvider()

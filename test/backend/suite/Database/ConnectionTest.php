@@ -462,6 +462,255 @@ class ConnectionTest extends TestCase
 
     #endregion LastAffectedRowCount
 
+    #region BeginTransaction ---------------------------------------------------
+
+    function testBeginTransactionThrowsIfHandleBeginTransactionFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('begin_transaction')
+            ->willReturn(false);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Unknown database'],
+                ['errno', 1049]
+            ]);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown database');
+        $this->expectExceptionCode(1049);
+
+        $connection->BeginTransaction();
+    }
+
+    function testBeginTransactionThrowsIfHandleBeginTransactionFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('begin_transaction')
+            ->willThrowException(new \mysqli_sql_exception('Unknown database', 1049));
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown database');
+        $this->expectExceptionCode(1049);
+
+        $connection->BeginTransaction();
+    }
+
+    function testBeginTransactionSucceedsWhenHandleBeginTransactionSucceeds()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('begin_transaction')
+            ->willReturn(true);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $connection->BeginTransaction();
+    }
+
+    #endregion BeginTransaction
+
+    #region CommitTransaction --------------------------------------------------
+
+    function testCommitTransactionThrowsIfHandleCommitFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('commit')
+            ->willReturn(false);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Unknown database'],
+                ['errno', 1049]
+            ]);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown database');
+        $this->expectExceptionCode(1049);
+
+        $connection->CommitTransaction();
+    }
+
+    function testCommitTransactionThrowsIfHandleCommitFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('commit')
+            ->willThrowException(new \mysqli_sql_exception('Unknown database', 1049));
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown database');
+        $this->expectExceptionCode(1049);
+
+        $connection->CommitTransaction();
+    }
+
+    function testCommitTransactionSucceedsWhenHandleCommitSucceeds()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('commit')
+            ->willReturn(true);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $connection->CommitTransaction();
+    }
+
+    #endregion CommitTransaction
+
+    #region RollbackTransaction ------------------------------------------------
+
+    function testRollbackTransactionThrowsIfHandleRollbackFailsWhenReportModeIsOff()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('rollback')
+            ->willReturn(false);
+        $handle->expects($this->any())
+            ->method('__get')
+            ->willReturnMap([
+                ['error', 'Unknown database'],
+                ['errno', 1049]
+            ]);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown database');
+        $this->expectExceptionCode(1049);
+
+        $connection->RollbackTransaction();
+    }
+
+    function testRollbackTransactionThrowsIfHandleRollbackFailsWhenReportModeIsStrict()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('rollback')
+            ->willThrowException(new \mysqli_sql_exception('Unknown database', 1049));
+        $handle->expects($this->never())
+            ->method('__get');
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Unknown database');
+        $this->expectExceptionCode(1049);
+
+        $connection->RollbackTransaction();
+    }
+
+    function testRollbackTransactionSucceedsWhenHandleRollbackSucceeds()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('rollback')
+            ->willReturn(true);
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['createHandle'])
+            ->getMock();
+        $connection->expects($this->once())
+            ->method('createHandle')
+            ->with('localhost', 'root', '')
+            ->willReturn($handle);
+        $connection->__construct('localhost', 'root', '');
+
+        $connection->RollbackTransaction();
+    }
+
+    #endregion RollbackTransaction
+
     #region createHandle -------------------------------------------------------
 
     function testCreateHandleThrowsIfNewMysqliFailsWhenReportModeIsOff()
