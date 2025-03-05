@@ -2,12 +2,12 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
-use \PHPUnit\Framework\Attributes\DataProviderExternal;
 
 use \Harmonia\Services\CookieService;
 
 use \Harmonia\Config;
 use \Harmonia\Server;
+use \TestToolkit\AccessHelper;
 use \TestToolkit\DataHelper;
 
 #[CoversClass(CookieService::class)]
@@ -48,7 +48,9 @@ class CookieServiceTest extends TestCase
         $cookieService->expects($this->never())
             ->method('_setcookie');
 
-        $this->assertFalse($cookieService->SetCookie('', ''));
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('HTTP headers have already been sent.');
+        $cookieService->SetCookie('', '');
     }
 
     #[DataProvider('setCookieDataProvider')]
@@ -75,35 +77,35 @@ class CookieServiceTest extends TestCase
             ])
             ->willReturn($returnValue);
 
-        $this->assertSame(
-            $returnValue,
-            $cookieService->SetCookie('cookie-name', $cookieValue)
-        );
+        AccessHelper::CallConstructor($cookieService); // Initialize options
+
+        if ($returnValue === false) {
+            $this->expectException(\RuntimeException::class);
+            $this->expectExceptionMessage('Failed to set or delete cookie.');
+        }
+        $cookieService->SetCookie('cookie-name', $cookieValue);
     }
 
     #endregion SetCookie
 
     #region DeleteCookie -------------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'BooleanProvider')]
-    function testDeleteCookie($returnValue)
+    function testDeleteCookie()
     {
         $cookieService = $this->systemUnderTest('SetCookie');
 
         $cookieService->expects($this->once())
             ->method('SetCookie')
-            ->with('cookie-name', '')
-            ->willReturn($returnValue);
+            ->with('cookie-name', '');
 
-        $this->assertSame($returnValue, $cookieService->DeleteCookie('cookie-name'));
+        $cookieService->DeleteCookie('cookie-name');
     }
 
     #endregion DeleteCookie
 
     #region DeleteCsrfCookie ---------------------------------------------------
 
-    #[DataProviderExternal(DataHelper::class, 'BooleanProvider')]
-    function testDeleteCsrfCookie($returnValue)
+    function testDeleteCsrfCookie()
     {
         $cookieService = $this->systemUnderTest('DeleteCookie', 'CsrfCookieName');
 
@@ -112,10 +114,9 @@ class CookieServiceTest extends TestCase
             ->willReturn('cookie-name');
         $cookieService->expects($this->once())
             ->method('DeleteCookie')
-            ->with('cookie-name')
-            ->willReturn($returnValue);
+            ->with('cookie-name');
 
-        $this->assertSame($returnValue, $cookieService->DeleteCsrfCookie());
+        $cookieService->DeleteCsrfCookie();
     }
 
     #endregion DeleteCsrfCookie

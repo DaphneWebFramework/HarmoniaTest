@@ -565,7 +565,7 @@ class SessionTest extends TestCase
         $cookieService->expects($this->once())
             ->method('DeleteCookie')
             ->with('HARMONIA_SID')
-            ->willReturn(false);
+            ->willThrowException(new \RuntimeException('Failed to set or delete cookie.'));
 
         $session = Session::Instance();
         $session->expects($this->once())
@@ -580,7 +580,7 @@ class SessionTest extends TestCase
             ->method('_session_destroy');
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to delete session cookie.');
+        $this->expectExceptionMessage('Failed to set or delete cookie.');
 
         $this->assertSame($session, $session->Destroy());
     }
@@ -590,8 +590,7 @@ class SessionTest extends TestCase
         $cookieService = CookieService::Instance();
         $cookieService->expects($this->once())
             ->method('DeleteCookie')
-            ->with('HARMONIA_SID')
-            ->willReturn(true);
+            ->with('HARMONIA_SID');
 
         $session = Session::Instance();
         $session->expects($this->once())
