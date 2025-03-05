@@ -135,7 +135,7 @@ class SessionTest extends TestCase
     {
         $cookieService = CookieService::Instance();
         $cookieService->expects($this->once())
-            ->method('GenerateCookieName')
+            ->method('AppSpecificCookieName')
             ->with('SID')
             ->willReturn('MYAPP_SID');
 
