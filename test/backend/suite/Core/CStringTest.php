@@ -806,6 +806,16 @@ class CStringTest extends TestCase
 
     #region Apply, ApplyInPlace ------------------------------------------------
 
+    function testApplyThrowsOnNonStringReturn()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Applied function must return an string.');
+        $cstr = new CString('hello');
+        $cstr->Apply(function(string $value) {
+            return 123;
+        });
+    }
+
     function testApplyWithoutAdditionalArguments()
     {
         $cstr = new CString('hello world', 'ASCII');
@@ -866,6 +876,16 @@ class CStringTest extends TestCase
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($applied, 'encoding')
         );
+    }
+
+    function testApplyInPlaceThrowsOnNonStringReturn()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Applied function must return an string.');
+        $cstr = new CString('hello');
+        $cstr->ApplyInPlace(function(string $value) {
+            return 456;
+        });
     }
 
     function testApplyInPlaceWithoutAdditionalArguments()
