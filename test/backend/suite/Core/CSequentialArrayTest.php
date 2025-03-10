@@ -270,6 +270,72 @@ class CSequentialArrayTest extends TestCase
 
     #endregion InsertAfter
 
+    #region Apply, ApplyInPlace ------------------------------------------------
+
+    function testApplyThrowsOnNonArrayReturn()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Applied function must return an array.');
+        $carr = new CSequentialArray([1, 2, 3]);
+        $carr->Apply(function(array $arr) {
+            return 'not an array';
+        });
+    }
+
+    function testApplyThrowsOnNonSequentialArrayReturn()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Applied function must return a sequential array.');
+        $carr = new CSequentialArray([1, 2, 3]);
+        $carr->Apply(function(array $arr) {
+            return ['a' => 1, 'b' => 2, 'c' => 3];
+        });
+    }
+
+    function testApplySucceeds()
+    {
+        $carr = new CSequentialArray([1, 2, 3, 4]);
+        $applied = $carr->Apply(function(array $arr) {
+            return array_values(array_reverse($arr));
+        });
+        $this->assertNotSame($carr, $applied);
+        $this->assertSame([4, 3, 2, 1], $applied->ToArray());
+        $this->assertSame([1, 2, 3, 4], $carr->ToArray());
+    }
+
+    function testApplyInPlaceThrowsOnNonArrayReturn()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Applied function must return an array.');
+        $carr = new CSequentialArray([1, 2, 3]);
+        $carr->ApplyInPlace(function(array $arr) {
+            return 'not an array';
+        });
+    }
+
+    function testApplyInPlaceThrowsOnNonSequentialArrayReturn()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Applied function must return a sequential array.');
+        $carr = new CSequentialArray([1, 2, 3]);
+        $carr->ApplyInPlace(function(array $arr) {
+            return ['a' => 1, 'b' => 2, 'c' => 3];
+        });
+    }
+
+    function testApplyInPlaceSucceeds()
+    {
+        $carr = new CSequentialArray([1, 2, 3, 4]);
+        $this->assertSame($carr, $carr->ApplyInPlace(function(array $arr) {
+            return array_values(array_map(function($x) {
+                return $x * 10;
+            }, $arr));
+        }));
+        $this->assertSame([10, 20, 30, 40], $carr->ToArray());
+    }
+
+    #endregion Apply, ApplyInPlace
+
     #region Interface: ArrayAccess ---------------------------------------------
 
     function testOffsetExists()
