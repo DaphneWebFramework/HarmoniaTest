@@ -161,6 +161,128 @@ class CArrayTest extends TestCase
 
     #endregion Clear
 
+    #region Apply, ApplyInPlace ------------------------------------------------
+
+    function testApplyThrowsOnNonArrayReturn()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Applied function must return an array.');
+        $carr = new CArray([1, 2, 3]);
+        $carr->Apply(function(array $arr) {
+            return 'not an array';
+        });
+    }
+
+    function testApplyWithoutAdditionalArguments()
+    {
+        $carr = new CArray([1, 2, 3, 4]);
+        $applied = $carr->Apply('array_reverse');
+        $this->assertNotSame($carr, $applied);
+        $this->assertSame([4, 3, 2, 1], $applied->ToArray());
+        $this->assertSame([1, 2, 3, 4], $carr->ToArray());
+    }
+
+    function testApplyWithAdditionalArguments()
+    {
+        $carr = new CArray([10, 20, 30, 40, 50]);
+        $applied = $carr->Apply('array_slice', 1, 3);
+        $this->assertNotSame($carr, $applied);
+        $this->assertSame([20, 30, 40], $applied->ToArray());
+        $this->assertSame([10, 20, 30, 40, 50], $carr->ToArray());
+    }
+
+    function testApplyWithLambdaWithoutAdditionalArguments()
+    {
+        $carr = new CArray([1, 2, 3]);
+        $applied = $carr->Apply(
+            function(array $arr) {
+                return array_map(function($x) {
+                    return $x * 2;
+                }, $arr);
+            }
+        );
+        $this->assertNotSame($carr, $applied);
+        $this->assertSame([2, 4, 6], $applied->ToArray());
+        $this->assertSame([1, 2, 3], $carr->ToArray());
+    }
+
+    function testApplyWithLambdaWithAdditionalArguments()
+    {
+        $carr = new CArray([1, 2, 3]);
+        $applied = $carr->Apply(
+            function(array $arr, int $multiplier, int $adder) {
+                return array_map(function($x) use ($multiplier, $adder) {
+                    return $x * $multiplier + $adder;
+                }, $arr);
+            },
+            3,
+            5
+        );
+        $this->assertNotSame($carr, $applied);
+        $this->assertSame([8, 11, 14], $applied->ToArray());
+        $this->assertSame([1, 2, 3], $carr->ToArray());
+    }
+
+    function testApplyInPlaceThrowsOnNonArrayReturn()
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Applied function must return an array.');
+        $carr = new CArray([1, 2, 3]);
+        $carr->ApplyInPlace(function(array $arr) {
+            return 'not an array';
+        });
+    }
+
+    function testApplyInPlaceWithoutAdditionalArguments()
+    {
+        $carr = new CArray([1, 2, 3, 4]);
+        $this->assertSame($carr, $carr->ApplyInPlace('array_reverse'));
+        $this->assertSame([4, 3, 2, 1], $carr->ToArray());
+    }
+
+    function testApplyInPlaceWithAdditionalArguments()
+    {
+        $carr = new CArray([10, 20, 30, 40, 50]);
+        $this->assertSame($carr, $carr->ApplyInPlace('array_slice', 1, 3));
+        $this->assertSame([20, 30, 40], $carr->ToArray());
+    }
+
+    function testApplyInPlaceWithLambdaWithoutAdditionalArguments()
+    {
+        $carr = new CArray([1, 2, 3]);
+        $this->assertSame(
+            $carr,
+            $carr->ApplyInPlace(
+                function(array $arr) {
+                    return array_map(function($x) {
+                        return $x * 2;
+                    }, $arr);
+                }
+            )
+        );
+        $this->assertSame([2, 4, 6], $carr->ToArray());
+    }
+
+    function testApplyInPlaceWithLambdaWithAdditionalArguments()
+    {
+        $carr = new CArray([1, 2, 3]);
+        $this->assertSame(
+            $carr,
+            $carr->ApplyInPlace(
+                function(array $arr, int $multiplier, int $adder) {
+                    return array_map(function($x) use ($multiplier, $adder) {
+                        return $x * $multiplier + $adder;
+                    }, $arr);
+                },
+                3,
+                5
+            )
+        );
+        $this->assertSame([8, 11, 14], $carr->ToArray());
+    }
+
+    #endregion Apply, ApplyInPlace
+
     #region Interface: ArrayAccess ---------------------------------------------
 
     function testOffsetExists()
