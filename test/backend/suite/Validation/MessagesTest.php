@@ -115,6 +115,5 @@ class MessagesTest extends TestCase
         ];
     }
 
-
     #endregion Data Providers
 }
