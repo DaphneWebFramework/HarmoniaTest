@@ -70,6 +70,20 @@ class CFileTest extends TestCase
         $this->assertStringEqualsFile(self::FILENAME, 'Hello World');
     }
 
+    function testOpenWithStringableFilename()
+    {
+        $bytes = 'Hello World';
+        \file_put_contents(self::FILENAME, $bytes);
+        $file = CFile::Open(new class {
+            public function __toString() {
+                return CFileTest::FILENAME;
+            }
+        }, CFile::MODE_READ);
+        $this->assertInstanceOf(CFile::class, $file);
+        $this->assertSame($bytes, $file->Read());
+        $file->Close();
+    }
+
     #endregion Open
 
     #region Close --------------------------------------------------------------
