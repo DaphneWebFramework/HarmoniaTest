@@ -59,7 +59,7 @@ class RuleFactoryTest extends TestCase
     {
         $rule = RuleFactory::Create($ruleName);
         $this->assertInstanceof(
-            "\\Harmonia\\Validation\\Rules\\{$ruleName}Rule",
+            '\\Harmonia\\Validation\\Rules\\' . \ucfirst($ruleName) . 'Rule',
             $rule
         );
     }
