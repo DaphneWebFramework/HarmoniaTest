@@ -58,10 +58,11 @@ class RuleFactoryTest extends TestCase
     function testCreateReturnsRuleObjectWhenRuleExists($ruleName)
     {
         $rule = RuleFactory::Create($ruleName);
-        $this->assertInstanceof(
-            '\\Harmonia\\Validation\\Rules\\' . \ucfirst($ruleName) . 'Rule',
-            $rule
-        );
+
+        $ruleClassName = '\\Harmonia\\Validation\\Rules\\'
+                       . \ucfirst(\strtolower($ruleName))
+                       . 'Rule';
+        $this->assertInstanceof($ruleClassName, $rule);
     }
 
     function testCreateRetrievesRuleFromCacheWhenCalledMoreThanOnce()
