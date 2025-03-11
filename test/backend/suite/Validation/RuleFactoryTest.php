@@ -58,8 +58,15 @@ class RuleFactoryTest extends TestCase
     function testCreateReturnsRuleObjectWhenRuleExists($ruleName)
     {
         $rule = RuleFactory::Create($ruleName);
+        // Fix: Prevent PHPUnit errors like: "UnknownClassOrInterfaceException:
+        // Class or interface "\Harmonia\Validation\Rules\arrayRule" does not
+        // exist" on Linux. Without ucfirst(), rule names would retain their
+        // camelCase format instead of matching the PascalCase class names.
+        // Instead of "\\Harmonia\\Validation\\Rules\\{$ruleName}Rule", we apply
+        // ucfirst() to ensure the correct class name, preventing class loading
+        // failures on such case-sensitive filesystems.
         $this->assertInstanceof(
-            "\\Harmonia\\Validation\\Rules\\{$ruleName}Rule",
+            '\\Harmonia\\Validation\\Rules\\' . \ucfirst($ruleName) . 'Rule',
             $rule
         );
     }
