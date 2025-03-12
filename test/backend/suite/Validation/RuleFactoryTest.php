@@ -37,10 +37,10 @@ class RuleFactoryTest extends TestCase
 
     #region Create -------------------------------------------------------------
 
-    #[DataProvider('ruleNamesCausingAssertDataProvider')]
-    function testCreateAsserts($ruleName)
+    #[DataProvider('invalidRuleNameDataProvider')]
+    function testCreateThrowsIfRuleNameIsInvalid($ruleName)
     {
-        $this->expectException(\AssertionError::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(
             'Rule name must be non-empty, trimmed, and lowercased');
         RuleFactory::Create($ruleName);
@@ -87,7 +87,7 @@ class RuleFactoryTest extends TestCase
 
     #region Data Providers -----------------------------------------------------
 
-    static function ruleNamesCausingAssertDataProvider()
+    static function invalidRuleNameDataProvider()
     {
         return [
             'empty' => [''],
