@@ -41,8 +41,8 @@ class CompiledRulesTest extends TestCase
             'name' => 'required',
             'email' => 'email'
         ]);
-
         $mrc = $sut->MetaRulesCollection();
+
         $this->assertInstanceOf(StandardMetaRule::class, $mrc['name'][0]);
         $this->assertInstanceOf(StandardMetaRule::class, $mrc['email'][0]);
     }
@@ -52,7 +52,6 @@ class CompiledRulesTest extends TestCase
         $sut = new CompiledRules([
             'age' => function($value) { return $value >= 18; }
         ]);
-
         $mrc = $sut->MetaRulesCollection();
 
         $this->assertInstanceOf(CustomMetaRule::class, $mrc['age'][0]);
@@ -65,7 +64,6 @@ class CompiledRulesTest extends TestCase
             'name' => 'string',
             'age' => function($value) { return $value >= 18; }
         ]);
-
         $mrc = $sut->MetaRulesCollection();
 
         $this->assertInstanceOf(StandardMetaRule::class, $mrc['id'][0]);

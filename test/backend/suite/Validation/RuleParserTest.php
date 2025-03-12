@@ -34,60 +34,91 @@ class RuleParserTest extends TestCase
 
     #region Parse --------------------------------------------------------------
 
-    function testParseThrowsIfRuleIsEmpty()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rule must be a non-empty string.');
-        RuleParser::Parse('');
-    }
-
-    function testParseThrowsIfRuleIsWhitespace()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rule must be a non-empty string.');
-        RuleParser::Parse('   ');
-    }
-
-    #[DataProvider('parseDataProvider')]
+    #[DataProvider('validRuleDataProvider')]
     function testParseSucceeds($expected, $rule)
     {
         $this->assertSame($expected, RuleParser::Parse($rule));
+    }
+
+    #[DataProvider('invalidRuleDataProvider')]
+    function testParseThrowsIfRuleIsInvalid($rule)
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Rule must be a non-empty string.');
+        RuleParser::Parse($rule);
     }
 
     #endregion Parse
 
     #region Data Providers -----------------------------------------------------
 
-    static function parseDataProvider()
+    static function validRuleDataProvider()
     {
         return [
-            [['name', null]   , 'name'         ],
-            [['name', null]   , ' name'        ],
-            [['name', null]   , 'name '        ],
-            [['name', null]   , ' name '       ],
-            [['name', null]   , 'name:'        ],
-            [['name', null]   , ' name:'       ],
-            [['name', null]   , 'name: '       ],
-            [['name', null]   , ' name: '      ],
-            [['name', null]   , 'name :'       ],
-            [['name', null]   , ' name :'      ],
-            [['name', null]   , 'name : '      ],
-            [['name', null]   , ' name : '     ],
-            [['name', 'param'], 'name:param'   ],
-            [['name', 'param'], ' name:param'  ],
-            [['name', 'param'], 'name:param '  ],
-            [['name', 'param'], ' name:param ' ],
+            [['name', null], 'name'  ],
+            [['name', null], 'name ' ],
+            [['name', null], ' name' ],
+            [['name', null], ' name '],
+
+            [['name', null], 'name:'  ],
+            [['name', null], 'name: ' ],
+            [['name', null], ' name:' ],
+            [['name', null], ' name: '],
+
+            [['name', null], 'name :'  ],
+            [['name', null], 'name : ' ],
+            [['name', null], ' name :' ],
+            [['name', null], ' name : '],
+
+            [['name', 'param'], 'name:param'  ],
+            [['name', 'param'], 'name:param ' ],
+            [['name', 'param'], ' name:param' ],
+            [['name', 'param'], ' name:param '],
+
             [['name', 'param'], 'name :param'  ],
-            [['name', 'param'], 'name: param'  ],
-            [['name', 'param'], 'name : param' ],
+            [['name', 'param'], 'name :param ' ],
             [['name', 'param'], ' name :param' ],
-            [['name', 'param'], ' name: param' ],
-            [['name', 'param'], 'name:param '  ],
-            [['name', 'param'], 'name :param'  ],
-            [['name', 'param'], 'name: param ' ],
             [['name', 'param'], ' name :param '],
+
+            [['name', 'param'], 'name: param'  ],
+            [['name', 'param'], 'name: param ' ],
+            [['name', 'param'], ' name: param' ],
             [['name', 'param'], ' name: param '],
-            [['name', 'param'], 'name : param ']
+
+            [['name', 'param'], 'name : param'  ],
+            [['name', 'param'], 'name : param ' ],
+            [['name', 'param'], ' name : param' ],
+            [['name', 'param'], ' name : param '],
+
+            [['name', 'param:extra'  ], 'name:param:extra'  ],
+            [['name', 'param: extra' ], 'name:param: extra' ],
+            [['name', 'param :extra' ], 'name:param :extra' ],
+            [['name', 'param : extra'], 'name:param : extra'],
+
+            [['name', ':'], 'name::'],
+        ];
+    }
+
+    static function invalidRuleDataProvider()
+    {
+        return [
+            [''],
+            [' '],
+
+            [':'],
+            [': '],
+            [' :'],
+            [' : '],
+
+            [':param'],
+            [':param '],
+            [' :param'],
+            [' :param '],
+
+            [': param'],
+            [': param '],
+            [' : param'],
+            [' : param '],
         ];
     }
 

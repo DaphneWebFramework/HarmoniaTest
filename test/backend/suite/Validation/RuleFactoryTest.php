@@ -37,18 +37,13 @@ class RuleFactoryTest extends TestCase
 
     #region Create -------------------------------------------------------------
 
-    function testCreateThrowsIfRuleNameIsEmpty()
+    #[DataProvider('ruleNamesCausingAssertDataProvider')]
+    function testCreateAsserts($ruleName)
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rule must be a non-empty string.');
-        RuleFactory::Create('');
-    }
-
-    function testCreateThrowsIfRuleNameIsWhitespace()
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rule must be a non-empty string.');
-        RuleFactory::Create('   ');
+        $this->expectException(\AssertionError::class);
+        $this->expectExceptionMessage(
+            'Rule name must be non-empty, trimmed, and lowercased');
+        RuleFactory::Create($ruleName);
     }
 
     function testCreateReturnsNullIfRuleDoesNotExist()
@@ -64,22 +59,6 @@ class RuleFactoryTest extends TestCase
         $ruleClassName = '\\Harmonia\\Validation\\Rules\\'
                        . \ucfirst(\strtolower($ruleName))
                        . 'Rule';
-        $this->assertInstanceof($ruleClassName, $rule);
-    }
-
-    function testCreateReturnsRuleObjectWhenRuleExistsWithWhitespace()
-    {
-        $rule = RuleFactory::Create('  string  ');
-
-        $ruleClassName = '\\Harmonia\\Validation\\Rules\\StringRule';
-        $this->assertInstanceof($ruleClassName, $rule);
-    }
-
-    function testCreateReturnsRuleObjectWhenRuleExistsWithDifferentCase()
-    {
-        $rule = RuleFactory::Create('STRING');
-
-        $ruleClassName = '\\Harmonia\\Validation\\Rules\\StringRule';
         $this->assertInstanceof($ruleClassName, $rule);
     }
 
@@ -108,14 +87,24 @@ class RuleFactoryTest extends TestCase
 
     #region Data Providers -----------------------------------------------------
 
+    static function ruleNamesCausingAssertDataProvider()
+    {
+        return [
+            'empty' => [''],
+            'whitespace' => [' '],
+            'non-trimmed' => [' regex '],
+            'non-lowercase' => ['ReGeX'],
+        ];
+    }
+
     /**
-     * @todo When adding new rule classes, add their names here.
+     * @todo When adding new rule classes, add their names here as well.
      */
     static function existingRuleNameDataProvider()
     {
         return [
             ['array'], ['datetime'], ['email'], ['file'], ['integer'],
-            ['maxLength'], ['max'], ['minLength'], ['min'], ['numeric'],
+            ['maxlength'], ['max'], ['minlength'], ['min'], ['numeric'],
             ['regex'], ['string']
         ];
     }

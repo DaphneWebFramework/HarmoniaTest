@@ -64,30 +64,6 @@ class StandardMetaRuleTest extends TestCase
 
     #region Validate -----------------------------------------------------------
 
-    function testValidateSucceedsWhenRuleExists()
-    {
-        $sut = new StandardMetaRule('regex', '^\d{9}$');
-
-        $sut->Validate('passportNumber', '987654321');
-        $this->expectNotToPerformAssertions();
-    }
-
-    function testValidateSucceedsWhenRuleExistsWithWhiteSpace()
-    {
-        $sut = new StandardMetaRule('  regex  ', '^\d{9}$');
-
-        $sut->Validate('passportNumber', '987654321');
-        $this->expectNotToPerformAssertions();
-    }
-
-    function testValidateSucceedsWhenRuleExistsWithInvalidCase()
-    {
-        $sut = new StandardMetaRule('ReGeX', '^\d{9}$');
-
-        $sut->Validate('passportNumber', '987654321');
-        $this->expectNotToPerformAssertions();
-    }
-
     function testValidateThrowsWhenRuleDoesNotExist()
     {
         $sut = new StandardMetaRule('nonexistent', null);
@@ -95,6 +71,14 @@ class StandardMetaRuleTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage("Unknown rule 'nonexistent'");
         $sut->Validate('field1', 'value');
+    }
+
+    function testValidateSucceedsWhenRuleExists()
+    {
+        $sut = new StandardMetaRule('regex', '^\d{9}$');
+
+        $sut->Validate('passportNumber', '987654321');
+        $this->expectNotToPerformAssertions();
     }
 
     #endregion Validate
