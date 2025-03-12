@@ -44,9 +44,11 @@ class RuleFactoryTest extends TestCase
         RuleFactory::Create('');
     }
 
-    function testCreateReturnsNullIfRuleNameIsWhitespace()
+    function testCreateThrowsIfRuleNameIsWhitespace()
     {
-        $this->assertNull(RuleFactory::Create('   '));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Rule must be a non-empty string.');
+        RuleFactory::Create('   ');
     }
 
     function testCreateReturnsNullIfRuleDoesNotExist()
@@ -62,6 +64,22 @@ class RuleFactoryTest extends TestCase
         $ruleClassName = '\\Harmonia\\Validation\\Rules\\'
                        . \ucfirst(\strtolower($ruleName))
                        . 'Rule';
+        $this->assertInstanceof($ruleClassName, $rule);
+    }
+
+    function testCreateReturnsRuleObjectWhenRuleExistsWithWhitespace()
+    {
+        $rule = RuleFactory::Create('  string  ');
+
+        $ruleClassName = '\\Harmonia\\Validation\\Rules\\StringRule';
+        $this->assertInstanceof($ruleClassName, $rule);
+    }
+
+    function testCreateReturnsRuleObjectWhenRuleExistsWithDifferentCase()
+    {
+        $rule = RuleFactory::Create('STRING');
+
+        $ruleClassName = '\\Harmonia\\Validation\\Rules\\StringRule';
         $this->assertInstanceof($ruleClassName, $rule);
     }
 
