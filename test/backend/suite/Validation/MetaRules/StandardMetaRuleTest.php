@@ -16,7 +16,7 @@ class StandardMetaRuleTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfigMock());
+        $this->originalConfig = Config::ReplaceInstance($this->config());
         AccessHelper::SetStaticProperty(RuleFactory::class, 'ruleObjects', null);
         AccessHelper::SetStaticProperty(RuleFactory::class, 'nativeFunctions', null);
     }
@@ -26,13 +26,10 @@ class StandardMetaRuleTest extends TestCase
         Config::ReplaceInstance($this->originalConfig);
     }
 
-    private function createConfigMock()
+    private function config()
     {
         $mock = $this->createMock(Config::class);
-        $mock->expects($this->any())
-            ->method('Option')
-            ->with('Language')
-            ->willReturn('en');
+        $mock->method('Option')->with('Language')->willReturn('en');
         return $mock;
     }
 
