@@ -6,6 +6,7 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 use \Harmonia\Validation\Validator;
 
 use \Harmonia\Config;
+use \Harmonia\Validation\DataAccessor;
 
 #[CoversClass(Validator::class)]
 class ValidatorTest extends TestCase
@@ -45,10 +46,10 @@ class ValidatorTest extends TestCase
             $this->expectExceptionMessage($exceptionMessage);
         }
 
-        $sut->Validate($data);
+        $dataAccessor = $sut->Validate($data);
 
         if ($exceptionMessage === null) {
-            $this->expectNotToPerformAssertions();
+            $this->assertInstanceOf(DataAccessor::class, $dataAccessor);
         }
     }
 
