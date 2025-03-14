@@ -6,6 +6,8 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 use \Harmonia\Validation\DataAccessor;
 
 use \Harmonia\Config;
+use \Harmonia\Core\CArray;
+use \TestToolkit\AccessHelper;
 
 #[CoversClass(DataAccessor::class)]
 class DataAccessorTest extends TestCase
@@ -28,6 +30,34 @@ class DataAccessorTest extends TestCase
         $mock->method('Option')->with('Language')->willReturn('en');
         return $mock;
     }
+
+    #region __construct --------------------------------------------------------
+
+    function testConstructWithArray()
+    {
+        $sut = new DataAccessor(['name' => 'John']);
+        $this->assertIsArray(AccessHelper::GetProperty($sut, 'data'));
+        $this->assertSame('John', $sut->GetField('name'));
+    }
+
+    function testConstructWithObject()
+    {
+        $data = new \stdClass();
+        $data->name = 'John';
+        $sut = new DataAccessor($data);
+        $this->assertIsObject(AccessHelper::GetProperty($sut, 'data'));
+        $this->assertSame('John', $sut->GetField('name'));
+    }
+
+    function testConstructWithCArray()
+    {
+        $data = new CArray(['name' => 'John']);
+        $sut = new DataAccessor($data);
+        $this->assertIsArray(AccessHelper::GetProperty($sut, 'data'));
+        $this->assertSame('John', $sut->GetField('name'));
+    }
+
+    #endregion __construct
 
     #region HasField -----------------------------------------------------------
 
