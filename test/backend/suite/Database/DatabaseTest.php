@@ -11,6 +11,7 @@ use \Harmonia\Database\Proxies\MySQLiHandle;
 use \Harmonia\Database\Proxies\MySQLiResult;
 use \Harmonia\Database\Queries\Query;
 use \Harmonia\Database\ResultSet;
+use \Harmonia\Logger;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(Database::class)]
@@ -18,19 +19,23 @@ class DatabaseTest extends TestCase
 {
     private ?Database $originalDatabase = null;
     private ?Config $originalConfig = null;
+    private ?Logger $originalLogger = null;
 
     protected function setUp(): void
     {
-        $this->originalDatabase = Database::ReplaceInstance(
-            $this->createDatabasePartialMock());
-        $this->originalConfig = Config::ReplaceInstance(
-            $this->createConfigMock());
+        $this->originalDatabase =
+            Database::ReplaceInstance($this->createDatabasePartialMock());
+        $this->originalConfig =
+            Config::ReplaceInstance($this->createConfigMock());
+        $this->originalLogger =
+            Logger::ReplaceInstance($this->createStub(Logger::class));
     }
 
     protected function tearDown(): void
     {
         Database::ReplaceInstance($this->originalDatabase);
         Config::ReplaceInstance($this->originalConfig);
+        Logger::ReplaceInstance($this->originalLogger);
     }
 
     private function createDatabasePartialMock(): Database
