@@ -312,4 +312,22 @@ class ServerTest extends TestCase
     }
 
     #endregion RequestHeaders
+
+    #region ClientAddress ------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testClientAddressWithAddress()
+    {
+        $_SERVER['REMOTE_ADDR'] = '192.168.33.1';
+        $this->assertSame('192.168.33.1', Server::Instance()->ClientAddress());
+    }
+
+    #[BackupGlobals(true)]
+    function testClientAddressWithNoAddress()
+    {
+        unset($_SERVER['REMOTE_ADDR']);
+        $this->assertSame('', Server::Instance()->ClientAddress());
+    }
+
+    #endregion ClientAddress
 }
