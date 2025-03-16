@@ -85,9 +85,54 @@ class LoggerTest extends TestCase
 
     #endregion __construct
 
+    #region Debug --------------------------------------------------------------
+
+    function testDebugDoesNothingWhenNotInDebugMode()
+    {
+        $sut = $this->systemUnderTest('writeEntry');
+        $config = Config::Instance();
+
+        $config->expects($this->once())
+            ->method('OptionOrDefault')
+            ->with('IsDebug', false)
+            ->willReturn(false);
+        $sut->expects($this->never())
+            ->method('writeEntry');
+
+        AccessHelper::SetMockProperty(Logger::class, $sut, 'config', $config);
+        $sut->Debug('This should not be logged.');
+    }
+
+    function testDebugLogsMessageWhenInDebugMode()
+    {
+        $sut = $this->systemUnderTest('writeEntry', 'formatEntry', 'resolveMessage');
+        $config = Config::Instance();
+
+        $config->expects($this->once())
+            ->method('OptionOrDefault')
+            ->with('IsDebug', false)
+            ->willReturn(true);
+        $sut->expects($this->once())
+            ->method('resolveMessage')
+            ->with('Test message')
+            ->willReturn('Test message');
+        $sut->expects($this->once())
+            ->method('formatEntry')
+            ->with('DEBUG', 'Test message')
+            ->willReturn('[timestamp | localhost] DEBUG: Test message');
+        $sut->expects($this->once())
+            ->method('writeEntry')
+            ->with('[timestamp | localhost] DEBUG: Test message');
+
+        AccessHelper::SetMockProperty(Logger::class, $sut, 'config', $config);
+        $sut->Debug('Test message');
+    }
+
+    #endregion Debug
+
     #region Info ---------------------------------------------------------------
 
-    #[DataProvider('levelsBelowAllDataProvider')]
+    #[DataProvider('levelsBelowInfoDataProvider')]
     function testInfoDoesNothingWhenLogLevelBelow($level)
     {
         $sut = $this->systemUnderTest('writeEntry');
@@ -115,7 +160,7 @@ class LoggerTest extends TestCase
             ->method('writeEntry')
             ->with('[timestamp | localhost] INFO: Test message');
 
-        AccessHelper::SetMockProperty(Logger::class, $sut, 'level', 3); // LEVEL_ALL
+        AccessHelper::SetMockProperty(Logger::class, $sut, 'level', 3); // LEVEL_INFO
         $sut->Info('Test message');
     }
 
@@ -123,7 +168,7 @@ class LoggerTest extends TestCase
 
     #region Warning ------------------------------------------------------------
 
-    #[DataProvider('levelsBelowWarningsDataProvider')]
+    #[DataProvider('levelsBelowWarningDataProvider')]
     function testWarningDoesNothingWhenLogLevelBelow($level)
     {
         $sut = $this->systemUnderTest('writeEntry');
@@ -151,7 +196,7 @@ class LoggerTest extends TestCase
             ->method('writeEntry')
             ->with('[timestamp | localhost] WARNING: Test message');
 
-        AccessHelper::SetMockProperty(Logger::class, $sut, 'level', 2); // LEVEL_WARNINGS
+        AccessHelper::SetMockProperty(Logger::class, $sut, 'level', 2); // LEVEL_WARNING
         $sut->Warning('Test message');
     }
 
@@ -159,7 +204,7 @@ class LoggerTest extends TestCase
 
     #region Error --------------------------------------------------------------
 
-    #[DataProvider('levelsBelowErrorsDataProvider')]
+    #[DataProvider('levelsBelowErrorDataProvider')]
     function testErrorDoesNothingWhenLogLevelBelow($level)
     {
         $sut = $this->systemUnderTest('writeEntry');
@@ -187,7 +232,7 @@ class LoggerTest extends TestCase
             ->method('writeEntry')
             ->with('[timestamp | localhost] ERROR: Test message');
 
-        AccessHelper::SetMockProperty(Logger::class, $sut, 'level', 1); // LEVEL_ERRORS
+        AccessHelper::SetMockProperty(Logger::class, $sut, 'level', 1); // LEVEL_ERROR
         $sut->Error('Test message');
     }
 
@@ -377,24 +422,24 @@ class LoggerTest extends TestCase
 
     #region Data Providers -----------------------------------------------------
 
-    static function levelsBelowAllDataProvider()
+    static function levelsBelowInfoDataProvider()
     {
         return [
             [0], // LEVEL_NONE
-            [1], // LEVEL_ERRORS
-            [2]  // LEVEL_WARNINGS
+            [1], // LEVEL_ERROR
+            [2]  // LEVEL_WARNING
         ];
     }
 
-    static function levelsBelowWarningsDataProvider()
+    static function levelsBelowWarningDataProvider()
     {
         return [
             [0], // LEVEL_NONE
-            [1]  // LEVEL_ERRORS
+            [1]  // LEVEL_ERROR
         ];
     }
 
-    static function levelsBelowErrorsDataProvider()
+    static function levelsBelowErrorDataProvider()
     {
         return [
             [0] // LEVEL_NONE
