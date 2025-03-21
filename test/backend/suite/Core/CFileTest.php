@@ -22,9 +22,7 @@ class CFileTest extends TestCase
 
     function testOpenWithNonExistingFile()
     {
-        // PHPUnit may issue a warning when a non-existing file is accessed:
-        // "⚠ Open with non existing file". Using '@' suppresses this warning.
-        $this->assertNull(@CFile::Open('non_existing_file.txt'));
+        $this->assertNull(CFile::Open('non_existing_file.txt'));
     }
 
     function testOpenWithModeRead()
@@ -186,7 +184,7 @@ class CFileTest extends TestCase
         $content = 'Test Content';
         \file_put_contents(self::FILENAME, $content);
         $file = CFile::Open(self::FILENAME, CFile::MODE_READ);
-        $this->assertNull(@$file->Read(-5));
+        $this->assertNull($file->Read(-5));
         $file->Close();
     }
 
