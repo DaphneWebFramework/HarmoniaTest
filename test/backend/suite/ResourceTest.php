@@ -222,7 +222,6 @@ class ResourceTest extends TestCase
         $server->method('Url')
             ->willReturn(null);
 
-        $sut->Initialize(__DIR__);
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Server URL not available.');
         $sut->AppUrl();
@@ -322,4 +321,28 @@ class ResourceTest extends TestCase
     }
 
     #endregion AppUrl
+
+    #region AppSubdirectoryPath ------------------------------------------------
+
+    function testAppSubdirectoryPath()
+    {
+        $sut = $this->systemUnderTest('AppPath');
+
+        $sut->expects($this->once()) // once() is to ensure cache hit
+            ->method('AppPath')
+            ->willReturn(new CPath('path/to/app'));
+
+        $expected = 'path/to/app' . \DIRECTORY_SEPARATOR . 'subdir';
+        $this->assertEquals(
+            $expected,
+            AccessHelper::CallMethod($sut, 'AppSubdirectoryPath', ['subdir'])
+        );
+        // Cache hit:
+        $this->assertEquals(
+            $expected,
+            AccessHelper::CallMethod($sut, 'AppSubdirectoryPath', ['subdir'])
+        );
+    }
+
+    #endregion AppSubdirectoryPath
 }
