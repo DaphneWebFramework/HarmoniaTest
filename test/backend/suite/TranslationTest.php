@@ -197,19 +197,16 @@ class TranslationTest extends TestCase
 
     #region translations -------------------------------------------------------
 
-    function testTranslationsThrowsWhenLoadTranslationsFromFileThrows()
+    function testTranslationsThrowsWhenLoadFileThrows()
     {
-        $sut = $this->systemUnderTest(
-            'filePaths',
-            'loadTranslationsFromFile'
-        );
+        $sut = $this->systemUnderTest('filePaths', 'loadFile');
         $paths = [$this->createStub(CPath::class)];
 
         $sut->expects($this->once())
             ->method('filePaths')
             ->willReturn($paths);
         $sut->expects($this->once())
-            ->method('loadTranslationsFromFile')
+            ->method('loadFile')
             ->with($paths[0])
             ->willThrowException(new \RuntimeException());
 
@@ -220,10 +217,7 @@ class TranslationTest extends TestCase
     #[DataProvider('translationsDataProvider')]
     function testTranslations($expected, $base, $override)
     {
-        $sut = $this->systemUnderTest(
-            'filePaths',
-            'loadTranslationsFromFile'
-        );
+        $sut = $this->systemUnderTest('filePaths', 'loadFile');
         $paths = [
             $this->createStub(CPath::class),
             $this->createStub(CPath::class)
@@ -233,7 +227,7 @@ class TranslationTest extends TestCase
             ->method('filePaths')
             ->willReturn($paths);
         $sut->expects($invokedCount = $this->exactly(2))
-            ->method('loadTranslationsFromFile')
+            ->method('loadFile')
             ->willReturnCallback(function($filePath)
                 use($invokedCount, $paths, $base, $override)
             {
@@ -256,9 +250,9 @@ class TranslationTest extends TestCase
 
     #endregion translations
 
-    #region loadTranslationsFromFile -------------------------------------------
+    #region loadFile -----------------------------------------------------------
 
-    function testLoadTranslationsFromFileThrowsWhenFileOpenFails()
+    function testLoadFileThrowsWhenFileOpenFails()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -269,11 +263,11 @@ class TranslationTest extends TestCase
             ->willReturn(null);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to open translation file.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        $this->expectExceptionMessage('Translation file could not be opened.');
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenFileReadFails()
+    function testLoadFileThrowsWhenFileReadFails()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -290,11 +284,11 @@ class TranslationTest extends TestCase
             ->method('Close');
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Could not read translation file.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        $this->expectExceptionMessage('Translation file could not be read.');
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenWhenJsonDecodeFails()
+    function testLoadFileThrowsWhenWhenJsonDecodeFails()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -311,11 +305,11 @@ class TranslationTest extends TestCase
             ->method('Close');
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Translation file could not be decoded.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        $this->expectExceptionMessage('Translation file contains invalid JSON.');
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenRootIsNotArray()
+    function testLoadFileThrowsWhenRootIsNotArray()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -333,11 +327,11 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            'Translation file must have an object as its root structure.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+            'Translation file must contain an object at the root.');
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenTranslationIdIsNotString()
+    function testLoadFileThrowsWhenTranslationIdIsNotString()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -368,10 +362,10 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Translation ID must be a string.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenTranslationIdIsEmpty()
+    function testLoadFileThrowsWhenTranslationIdIsEmpty()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -402,10 +396,10 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Translation ID cannot be empty.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenUnitIsNotArray()
+    function testLoadFileThrowsWhenUnitIsNotArray()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -432,11 +426,11 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            'Each translation ID must map to an object of language-text pairs.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+            'Translation unit must be an object of language-text pairs.');
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenLanguageCodeIsNotString()
+    function testLoadFileThrowsWhenLanguageCodeIsNotString()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -462,10 +456,10 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Language code must be a string.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenLanguageCodeIsEmpty()
+    function testLoadFileThrowsWhenLanguageCodeIsEmpty()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -491,10 +485,10 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Language code cannot be empty.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileThrowsWhenTranslationIsNotString()
+    function testLoadFileThrowsWhenTranslationIsNotString()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -520,10 +514,10 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Translation text must be a string.');
-        AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadTranslationsFromFileSucceeds()
+    function testLoadFileSucceeds()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -552,7 +546,7 @@ class TranslationTest extends TestCase
         $file->expects($this->once())
             ->method('Close');
 
-        $root = AccessHelper::CallMethod($sut, 'loadTranslationsFromFile', [$path]);
+        $root = AccessHelper::CallMethod($sut, 'loadFile', [$path]);
 
         $expected = [
             'welcome_message' => [
@@ -574,7 +568,7 @@ class TranslationTest extends TestCase
         }
     }
 
-    #endregion loadTranslationsFromFile
+    #endregion loadFile
 
     #region language -----------------------------------------------------------
 
