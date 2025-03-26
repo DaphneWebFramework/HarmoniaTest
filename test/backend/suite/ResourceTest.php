@@ -345,4 +345,28 @@ class ResourceTest extends TestCase
     }
 
     #endregion AppSubdirectoryPath
+
+    #region AppSubdirectoryUrl -------------------------------------------------
+
+    function testAppSubdirectoryUrl()
+    {
+        $sut = $this->systemUnderTest('AppUrl');
+
+        $sut->expects($this->once()) // once() is to ensure cache hit
+            ->method('AppUrl')
+            ->willReturn(new CUrl('http://localhost/app/'));
+
+        $expected = 'http://localhost/app/subdir';
+        $this->assertEquals(
+            $expected,
+            AccessHelper::CallMethod($sut, 'AppSubdirectoryUrl', ['subdir'])
+        );
+        // Cache hit:
+        $this->assertEquals(
+            $expected,
+            AccessHelper::CallMethod($sut, 'AppSubdirectoryUrl', ['subdir'])
+        );
+    }
+
+    #endregion AppSubdirectoryUrl
 }
