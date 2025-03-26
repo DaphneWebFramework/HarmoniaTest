@@ -240,4 +240,31 @@ class CFileSystemTest extends TestCase
     }
 
     #endregion FindFiles
+
+    #region ModificationTime ---------------------------------------------------
+
+    function testModificationTimeReturnsZeroForNonExistingFileOrDirectory()
+    {
+        $this->assertFileDoesNotExist($this->testFilePath);
+        $this->assertSame(0, CFileSystem::Instance()->ModificationTime(
+            $this->testFilePath));
+    }
+
+    function testModificationTimeReturnsNonZeroTimestampForExistingFile()
+    {
+        \file_put_contents($this->testFilePath, 'content');
+        $this->assertFileExists($this->testFilePath);
+        $this->assertGreaterThan(0, CFileSystem::Instance()->ModificationTime(
+            $this->testFilePath));
+    }
+
+    function testModificationTimeReturnsNonZeroTimestampForExistingDirectory()
+    {
+        \mkdir($this->testDirectoryPath);
+        $this->assertDirectoryExists($this->testDirectoryPath);
+        $this->assertGreaterThan(0, CFileSystem::Instance()->ModificationTime(
+            $this->testDirectoryPath));
+    }
+
+    #endregion ModificationTime
 }
