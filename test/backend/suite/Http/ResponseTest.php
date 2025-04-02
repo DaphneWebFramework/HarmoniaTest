@@ -25,37 +25,44 @@ class ResponseTest extends TestCase
         CookieService::ReplaceInstance($this->originalCookieService);
     }
 
+    private function systemUnderTest(string ...$mockedMethods): Response
+    {
+        return $this->getMockBuilder(Response::class)
+            ->onlyMethods($mockedMethods)
+            ->getMock();
+    }
+
     #region __construct --------------------------------------------------------
 
-    public function testConstruct()
+    function testConstruct()
     {
-        $response = new Response();
-        $this->assertSame(StatusCode::OK, AccessHelper::GetProperty($response, 'statusCode'));
-        $this->assertNull(AccessHelper::GetProperty($response, 'headers'));
-        $this->assertNull(AccessHelper::GetProperty($response, 'cookies'));
-        $this->assertNull(AccessHelper::GetProperty($response, 'body'));
+        $sut = new Response();
+        $this->assertSame(StatusCode::OK, AccessHelper::GetProperty($sut, 'statusCode'));
+        $this->assertNull(AccessHelper::GetProperty($sut, 'headers'));
+        $this->assertNull(AccessHelper::GetProperty($sut, 'cookies'));
+        $this->assertNull(AccessHelper::GetProperty($sut, 'body'));
     }
 
     #endregion __construct
 
     #region SetStatusCode ---------------------------------------------------------
 
-    public function testSetStatusCode()
+    function testSetStatusCode()
     {
-        $response = new Response();
-        $this->assertSame($response, $response->SetStatusCode(StatusCode::ImATeapot));
-        $this->assertSame(StatusCode::ImATeapot, AccessHelper::GetProperty($response, 'statusCode'));
+        $sut = new Response();
+        $this->assertSame($sut, $sut->SetStatusCode(StatusCode::ImATeapot));
+        $this->assertSame(StatusCode::ImATeapot, AccessHelper::GetProperty($sut, 'statusCode'));
     }
 
     #endregion SetStatusCode
 
     #region SetHeader ----------------------------------------------------------
 
-    public function testSetHeader()
+    function testSetHeader()
     {
-        $response = new Response();
-        $this->assertSame($response, $response->SetHeader('Content-Type', 'text/plain'));
-        $headers = AccessHelper::GetProperty($response, 'headers');
+        $sut = new Response();
+        $this->assertSame($sut, $sut->SetHeader('Content-Type', 'text/plain'));
+        $headers = AccessHelper::GetProperty($sut, 'headers');
         $this->assertInstanceof(CArray::class, $headers);
         $this->assertSame('text/plain', $headers->Get('Content-Type'));
     }
@@ -64,11 +71,11 @@ class ResponseTest extends TestCase
 
     #region SetCookie ----------------------------------------------------------
 
-    public function testSetCookie()
+    function testSetCookie()
     {
-        $response = new Response();
-        $this->assertSame($response, $response->SetCookie('name', 'value'));
-        $cookies = AccessHelper::GetProperty($response, 'cookies');
+        $sut = new Response();
+        $this->assertSame($sut, $sut->SetCookie('name', 'value'));
+        $cookies = AccessHelper::GetProperty($sut, 'cookies');
         $this->assertInstanceof(CArray::class, $cookies);
         $this->assertSame('value', $cookies->Get('name'));
     }
@@ -77,11 +84,11 @@ class ResponseTest extends TestCase
 
     #region DeleteCookie -------------------------------------------------------
 
-    public function testDeleteCookie()
+    function testDeleteCookie()
     {
-        $response = new Response();
-        $this->assertSame($response, $response->DeleteCookie('name'));
-        $cookies = AccessHelper::GetProperty($response, 'cookies');
+        $sut = new Response();
+        $this->assertSame($sut, $sut->DeleteCookie('name'));
+        $cookies = AccessHelper::GetProperty($sut, 'cookies');
         $this->assertInstanceof(CArray::class, $cookies);
         $this->assertSame('', $cookies->Get('name'));
     }
@@ -90,88 +97,100 @@ class ResponseTest extends TestCase
 
     #region SetBody ------------------------------------------------------------
 
-    public function testSetBodyWithString()
+    function testSetBodyWithString()
     {
-        $response = new Response();
-        $this->assertSame($response, $response->SetBody('Hello, World!'));
-        $this->assertSame('Hello, World!', AccessHelper::GetProperty($response, 'body'));
+        $sut = new Response();
+        $this->assertSame($sut, $sut->SetBody('Hello, World!'));
+        $this->assertSame(
+            'Hello, World!',
+            AccessHelper::GetProperty($sut, 'body')
+        );
     }
 
-    public function testSetBodyWithStringable()
+    function testSetBodyWithStringable()
     {
-        $response = new Response();
-        $response->SetBody(new class {
-            public function __toString() {
+        $sut = new Response();
+        $sut->SetBody(new class implements \Stringable {
+            function __toString() {
                 return 'I am a Stringable object.';
             }
         });
-        $this->assertSame('I am a Stringable object.', AccessHelper::GetProperty($response, 'body'));
+        $this->assertSame(
+            'I am a Stringable object.',
+            AccessHelper::GetProperty($sut, 'body')
+        );
     }
 
     #endregion SetBody
 
     #region Send ---------------------------------------------------------------
 
-    public function testSendWhenHeadersCannotBeSent()
+    function testSendWhenHeadersCannotBeSent()
     {
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendBody'])
-            ->getMock();
+        $sut = $this->systemUnderTest(
+            'canSendHeaders',
+            'sendStatusCode',
+            'sendHeader',
+            'sendBody'
+        );
         $cookieService = CookieService::Instance();
 
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(false);
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendStatusCode');
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendHeader');
         $cookieService->expects($this->never())
             ->method('SetCookie');
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendBody');
 
-        $response->Send();
+        $sut->Send();
     }
 
-    public function testSendWhenHeadersCanBeSentWithNoHeadersNoCookiesNoBody()
+    function testSendWhenHeadersCanBeSentWithNoHeadersNoCookiesNoBody()
     {
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendBody'])
-            ->getMock();
+        $sut = $this->systemUnderTest(
+            'canSendHeaders',
+            'sendStatusCode',
+            'sendHeader',
+            'sendBody'
+        );
         $cookieService = CookieService::Instance();
 
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('sendStatusCode');
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendHeader');
         $cookieService->expects($this->never())
             ->method('SetCookie');
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendBody');
 
-        $response->Send();
+        $sut->Send();
     }
 
-    public function testSendWhenHeadersCanBeSentWithHeadersNoCookiesNoBody()
+    function testSendWhenHeadersCanBeSentWithHeadersNoCookiesNoBody()
     {
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendBody'])
-            ->getMock();
+        $sut = $this->systemUnderTest(
+            'canSendHeaders',
+            'sendStatusCode',
+            'sendHeader',
+            'sendBody'
+        );
         $cookieService = CookieService::Instance();
 
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('sendStatusCode');
-        $response->expects($invokedCount = $this->exactly(2))
+        $sut->expects($invokedCount = $this->exactly(2))
             ->method('sendHeader')
             ->willReturnCallback(function($name, $value) use($invokedCount) {
                 switch ($invokedCount->numberOfInvocations()) {
@@ -187,29 +206,30 @@ class ResponseTest extends TestCase
             });
         $cookieService->expects($this->never())
             ->method('SetCookie');
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendBody');
 
-        $response
-            ->SetHeader('Content-Type', 'text/plain')
+        $sut->SetHeader('Content-Type', 'text/plain')
             ->SetHeader('Cache-Control', 'no-cache')
             ->Send();
     }
 
-    public function testSendWhenHeadersCanBeSentWithCookiesNoHeadersNoBody()
+    function testSendWhenHeadersCanBeSentWithCookiesNoHeadersNoBody()
     {
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendBody'])
-            ->getMock();
+        $sut = $this->systemUnderTest(
+            'canSendHeaders',
+            'sendStatusCode',
+            'sendHeader',
+            'sendBody'
+        );
         $cookieService = CookieService::Instance();
 
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('sendStatusCode');
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendHeader');
         $cookieService->expects($invokedCount = $this->exactly(2))
             ->method('SetCookie')
@@ -226,54 +246,56 @@ class ResponseTest extends TestCase
                 }
                 return true;
             });
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendBody');
 
-        $response
-            ->SetCookie('USERNAME', 'John Doe')
+        $sut->SetCookie('USERNAME', 'John Doe')
             ->DeleteCookie('SESSIONID')
             ->Send();
     }
 
-    public function testSendWhenHeadersCanBeSentWithBodyNoHeadersNoCookies()
+    function testSendWhenHeadersCanBeSentWithBodyNoHeadersNoCookies()
     {
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendBody'])
-            ->getMock();
+        $sut = $this->systemUnderTest(
+            'canSendHeaders',
+            'sendStatusCode',
+            'sendHeader',
+            'sendBody'
+        );
         $cookieService = CookieService::Instance();
 
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('sendStatusCode');
-        $response->expects($this->never())
+        $sut->expects($this->never())
             ->method('sendHeader');
         $cookieService->expects($this->never())
             ->method('SetCookie');
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('sendBody');
 
-        $response
-            ->SetBody('Hello, World!')
+        $sut->SetBody('Hello, World!')
             ->Send();
     }
 
-    public function testSendWhenHeadersCanBeSentWithHeadersCookiesBody()
+    function testSendWhenHeadersCanBeSentWithHeadersCookiesBody()
     {
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['canSendHeaders', 'sendStatusCode', 'sendHeader',
-                           'sendBody'])
-            ->getMock();
+        $sut = $this->systemUnderTest(
+            'canSendHeaders',
+            'sendStatusCode',
+            'sendHeader',
+            'sendBody'
+        );
         $cookieService = CookieService::Instance();
 
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('canSendHeaders')
             ->willReturn(true);
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('sendStatusCode');
-        $response->expects($invokedCount = $this->exactly(2))
+        $sut->expects($invokedCount = $this->exactly(2))
             ->method('sendHeader')
             ->willReturnCallback(function($name, $value) use($invokedCount) {
                 switch ($invokedCount->numberOfInvocations()) {
@@ -302,11 +324,10 @@ class ResponseTest extends TestCase
                 }
                 return true;
             });
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('sendBody');
 
-        $response
-            ->SetStatusCode(StatusCode::MovedPermanently)
+        $sut->SetStatusCode(StatusCode::MovedPermanently)
             ->SetHeader('Content-Type', 'text/plain')
             ->SetHeader('Cache-Control', 'no-cache')
             ->SetCookie('USERNAME', 'John Doe')
@@ -319,48 +340,81 @@ class ResponseTest extends TestCase
 
     #region Redirect -----------------------------------------------------------
 
-    public function testRedirectWithExitScript()
+    function testRedirectWithStringableUrl()
     {
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['SetStatusCode', 'SetHeader', 'Send', 'exitScript'])
-            ->getMock();
-
-        $response->expects($this->once())
+        $sut = $this->systemUnderTest(
+            'SetStatusCode',
+            'SetHeader',
+            'Send',
+            'exitScript'
+        );
+        $sut->expects($this->once())
             ->method('SetStatusCode')
             ->with(StatusCode::Found)
-            ->willReturn($response);
-        $response->expects($this->once())
+            ->willReturn($sut);
+        $sut->expects($this->once())
             ->method('SetHeader')
             ->with('Location', 'https://example.com')
-            ->willReturn($response);
-        $response->expects($this->once())
+            ->willReturn($sut);
+        $sut->expects($this->once())
             ->method('Send');
-        $response->expects($this->once())
+        $sut->expects($this->once())
             ->method('exitScript');
 
-        $response->Redirect('https://example.com', true);
+        $sut->Redirect(new class implements \Stringable {
+            function __toString() {
+                return 'https://example.com';
+            }
+        });
     }
 
-    public function testRedirectWithoutExitScript()
+    function testRedirectWithExitScript()
     {
-        $response = $this->getMockBuilder(Response::class)
-            ->onlyMethods(['SetStatusCode', 'SetHeader', 'Send', 'exitScript'])
-            ->getMock();
-
-        $response->expects($this->once())
+        $sut = $this->systemUnderTest(
+            'SetStatusCode',
+            'SetHeader',
+            'Send',
+            'exitScript'
+        );
+        $sut->expects($this->once())
             ->method('SetStatusCode')
             ->with(StatusCode::Found)
-            ->willReturn($response);
-        $response->expects($this->once())
+            ->willReturn($sut);
+        $sut->expects($this->once())
             ->method('SetHeader')
             ->with('Location', 'https://example.com')
-            ->willReturn($response);
-        $response->expects($this->once())
+            ->willReturn($sut);
+        $sut->expects($this->once())
             ->method('Send');
-        $response->expects($this->never())
+        $sut->expects($this->once())
             ->method('exitScript');
 
-        $response->Redirect('https://example.com', false);
+        $sut->Redirect('https://example.com', true);
+    }
+
+    function testRedirectWithoutExitScript()
+    {
+        $sut = $this->systemUnderTest(
+            'SetStatusCode',
+            'SetHeader',
+            'Send',
+            'exitScript'
+        );
+
+        $sut->expects($this->once())
+            ->method('SetStatusCode')
+            ->with(StatusCode::Found)
+            ->willReturn($sut);
+        $sut->expects($this->once())
+            ->method('SetHeader')
+            ->with('Location', 'https://example.com')
+            ->willReturn($sut);
+        $sut->expects($this->once())
+            ->method('Send');
+        $sut->expects($this->never())
+            ->method('exitScript');
+
+        $sut->Redirect('https://example.com', false);
     }
 
     #endregion Redirect
