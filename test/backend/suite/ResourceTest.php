@@ -162,13 +162,16 @@ class ResourceTest extends TestCase
         # /tmp
         $serverPath = new CPath(\sys_get_temp_dir());
 
-        # test/backend/suite
+        # /vagrant/test/backend/suite
         $appPath = new CPath(__DIR__);
 
-        # /tmp/suite
-        $linkPath = CPath::Join($serverPath, $appPath->BaseName());
+        # suite
+        $appBaseName = $appPath->Apply('\basename');
 
-        # /tmp/suite -> test/backend/suite
+        # /tmp/suite
+        $linkPath = CPath::Join($serverPath, $appBaseName);
+
+        # /tmp/suite -> /vagrant/test/backend/suite
         if (\file_exists((string)$linkPath)) {
             \unlink((string)$linkPath);
         }
@@ -178,7 +181,9 @@ class ResourceTest extends TestCase
             ->willReturn($serverPath);
 
         $sut->Initialize($appPath);
-        $this->assertEquals($appPath->BaseName(), $sut->AppRelativePath());
+        // todo: Change to assertEquals and remove the cast to string after
+        // changing the return type of AppRelativePath to CPath.
+        $this->assertSame((string)$appBaseName, (string)$sut->AppRelativePath());
 
         \unlink((string)$linkPath);
     }
@@ -205,9 +210,9 @@ class ResourceTest extends TestCase
             ->willReturn(new CPath(__DIR__));
 
         $sut->Initialize(CPath::Join(__DIR__, 'Core'));
-        $this->assertSame('Core', (string)$sut->AppRelativePath());
+        $this->assertEquals('Core', $sut->AppRelativePath());
         // Cache hit:
-        $this->assertSame('Core', (string)$sut->AppRelativePath());
+        $this->assertEquals('Core', $sut->AppRelativePath());
     }
 
     #endregion AppRelativePath
@@ -299,7 +304,7 @@ class ResourceTest extends TestCase
             ->willReturn(new CPath(__DIR__));
 
         $sut->Initialize(__DIR__);
-        $this->assertSame('http://localhost/', (string)$sut->AppUrl());
+        $this->assertEquals('http://localhost/', $sut->AppUrl());
     }
 
     function testAppUrlWithAppPathUnderServerPath()
@@ -315,9 +320,9 @@ class ResourceTest extends TestCase
             ->willReturn(new CPath(__DIR__));
 
         $sut->Initialize(CPath::Join(__DIR__, 'Core'));
-        $this->assertSame('http://localhost/Core/', (string)$sut->AppUrl());
+        $this->assertEquals('http://localhost/Core/', $sut->AppUrl());
         // Cache hit:
-        $this->assertSame('http://localhost/Core/', (string)$sut->AppUrl());
+        $this->assertEquals('http://localhost/Core/', $sut->AppUrl());
     }
 
     #endregion AppUrl

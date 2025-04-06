@@ -257,17 +257,6 @@ class CPathTest extends TestCase
 
     #endregion ReadLink
 
-    #region BaseName -----------------------------------------------------------
-
-    #[DataProvider('baseNameDataProvider')]
-    function testBaseName($expected, $value)
-    {
-        $path = new CPath($value);
-        $this->assertSame($expected, $path->BaseName());
-    }
-
-    #endregion BaseName
-
     #region Data Providers -----------------------------------------------------
 
     static function joinDataProvider()
@@ -818,21 +807,6 @@ class CPathTest extends TestCase
             'non existing path' => [false, 'non_existing'],
             'path with invalid characters' => [false, '<>:"|?*'],
             'empty path' => [false, ''],
-        ];
-    }
-
-    static function baseNameDataProvider()
-    {
-        return [
-            ['sudoers.d', '/etc/sudoers.d/'],
-            ['sudoers.d', '/etc/sudoers.d'],
-            ['passwd', '/etc/passwd'],
-            ['etc', '/etc/'],
-            ['etc', 'etc/'],
-            ['etc', '/etc'],
-            ['.', '.'],
-            ['', '/'],
-            ['', '']
         ];
     }
 
