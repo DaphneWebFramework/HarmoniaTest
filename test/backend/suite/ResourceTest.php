@@ -162,13 +162,13 @@ class ResourceTest extends TestCase
         # /tmp
         $serverPath = new CPath(\sys_get_temp_dir());
 
-        # .../test/backend/suite
+        # test/backend/suite
         $appPath = new CPath(__DIR__);
 
         # /tmp/suite
         $linkPath = CPath::Join($serverPath, $appPath->BaseName());
 
-        # /tmp/suite -> .../test/backend/suite
+        # /tmp/suite -> test/backend/suite
         if (\file_exists((string)$linkPath)) {
             \unlink((string)$linkPath);
         }

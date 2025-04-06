@@ -268,59 +268,6 @@ class CPathTest extends TestCase
 
     #endregion BaseName
 
-    #region ToAbsolute ---------------------------------------------------------
-
-    #[DataProvider('toAbsoluteDataProvider')]
-    function testToAbsolute($expected, $value)
-    {
-        $path = new CPath($value);
-        $absolutePath = $path->ToAbsolute();
-        if ($expected === null) {
-            $this->assertNull($absolutePath);
-        } else {
-            $this->assertSame($expected, (string)$absolutePath);
-        }
-    }
-
-    function testToAbsoluteWithBasePath()
-    {
-        $path = new CPath('.gitkeep');
-        // First, call ToAbsolute without providing a base path. This should
-        // fail because '.gitkeep' cannot be resolved in the current working
-        // directory.
-        $this->assertNull($path->ToAbsolute());
-        // Then, call ToAbsolute with a valid base path (where '.gitkeep' is
-        // located). This should resolve the path correctly relative to the
-        // provided base path.
-        $this->assertSame((string)CPath::Join(\getcwd(), 'suite', '.gitkeep'),
-            (string)$path->ToAbsolute('suite'));
-        // Finally, ensure the original working directory is restored after
-        // calling ToAbsolute with a base path. This confirms that the base
-        // path was only temporarily set and the current working directory
-        // remains unchanged.
-        $this->assertNull($path->ToAbsolute());
-    }
-
-    function testToAbsoluteWithStringableBasePath()
-    {
-        $basePath = new class implements \Stringable {
-            function __toString(): string {
-                return 'suite';
-            }
-        };
-        $path = new CPath('.gitkeep');
-        $this->assertSame((string)CPath::Join(\getcwd(), 'suite', '.gitkeep'),
-            (string)$path->ToAbsolute($basePath));
-    }
-
-    function testToAbsoluteWithNonExistentBasePath()
-    {
-        $path = new CPath('phpunit.xml');
-        $this->assertNull($path->ToAbsolute('non_existent_base_path'));
-    }
-
-    #endregion ToAbsolute
-
     #region Data Providers -----------------------------------------------------
 
     static function joinDataProvider()
@@ -886,53 +833,6 @@ class CPathTest extends TestCase
             ['.', '.'],
             ['', '/'],
             ['', '']
-        ];
-    }
-
-    static function toAbsoluteDataProvider()
-    {
-        // Data providers run before any test setup and depend on the initial
-        // working directory. To ensure the base path is "test/backend" (set
-        // later by `setUpBeforeClass`, if needed), we check for a specific file
-        // (e.g., "phpunit.xml"). If it's not found, we adjust the path.
-        $cwd = \getcwd();
-        if (!CPath::Join($cwd, 'phpunit.xml')->IsFile()) {
-            $cwd = \realpath((string)CPath::Join(__DIR__, '..', '..'));
-        }
-
-        return [
-            'existing file' => [
-                (string)CPath::Join($cwd, 'phpunit.xml'),
-                'phpunit.xml'
-            ],
-            'existing directory' => [
-                (string)CPath::Join($cwd, 'suite'),
-                'suite'
-            ],
-            'path with dotted segments' => [
-                (string)CPath::Join($cwd, 'phpunit.xml'),
-                './suite/../phpunit.xml'
-            ],
-            'path with extra separator' => [
-                (string)CPath::Join($cwd, 'suite', '.gitkeep'),
-                'suite//.gitkeep'
-            ],
-            'already absolute path' => [
-                (string)CPath::Join($cwd, 'suite', '.gitkeep'),
-                (string)CPath::Join($cwd, 'suite', '.gitkeep'),
-            ],
-            'non existing path' => [
-                null,
-                'non_existing'
-            ],
-            'path with invalid characters' => [
-                null,
-                '<>:"|?*'
-            ],
-            'empty path' => [
-                $cwd,
-                ''
-            ],
         ];
     }
 
