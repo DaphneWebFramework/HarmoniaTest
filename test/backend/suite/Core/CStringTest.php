@@ -64,7 +64,7 @@ class CStringTest extends TestCase
     function testDefaultConstructor()
     {
         $cstr = new CString();
-        $this->assertSame('', (string)$cstr);
+        $this->assertEquals('', $cstr);
         $this->assertSame(
             \mb_internal_encoding(),
             AccessHelper::GetProperty($cstr, 'encoding')
@@ -75,7 +75,7 @@ class CStringTest extends TestCase
     {
         $original = new CString('Hello, World!', 'ISO-8859-1');
         $copy = new CString($original, 'UTF-8'); // 'UTF-8' should be ignored
-        $this->assertSame((string)$original, (string)$copy);
+        $this->assertEquals($original, $copy);
         $this->assertSame(
             AccessHelper::GetProperty($original, 'encoding'),
             AccessHelper::GetProperty($copy, 'encoding')
@@ -94,7 +94,7 @@ class CStringTest extends TestCase
             }
         };
         $cstr = new CString($stringable);
-        $this->assertSame('I am Stringable', (string)$cstr);
+        $this->assertEquals('I am Stringable', $cstr);
         $this->assertSame(
             \mb_internal_encoding(),
             AccessHelper::GetProperty($cstr, 'encoding')
@@ -109,7 +109,7 @@ class CStringTest extends TestCase
             }
         };
         $cstr = new CString($stringable, null);
-        $this->assertSame('I am Stringable', (string)$cstr);
+        $this->assertEquals('I am Stringable', $cstr);
         $this->assertSame(
             \mb_internal_encoding(),
             AccessHelper::GetProperty($cstr, 'encoding')
@@ -124,7 +124,7 @@ class CStringTest extends TestCase
             }
         };
         $cstr = new CString($stringable, 'ISO-8859-1');
-        $this->assertSame('I am Stringable', (string)$cstr);
+        $this->assertEquals('I am Stringable', $cstr);
         $this->assertSame(
             'ISO-8859-1',
             AccessHelper::GetProperty($cstr, 'encoding')
@@ -135,7 +135,7 @@ class CStringTest extends TestCase
     {
         $str = 'Hello, World!';
         $cstr = new CString($str);
-        $this->assertSame($str, (string)$cstr);
+        $this->assertEquals($str, $cstr);
         $this->assertSame(
             \mb_internal_encoding(),
             AccessHelper::GetProperty($cstr, 'encoding')
@@ -146,7 +146,7 @@ class CStringTest extends TestCase
     {
         $str = 'Hello, World!';
         $cstr = new CString($str, null);
-        $this->assertSame($str, (string)$cstr);
+        $this->assertEquals($str, $cstr);
         $this->assertSame(
             \mb_internal_encoding(),
             AccessHelper::GetProperty($cstr, 'encoding')
@@ -157,7 +157,7 @@ class CStringTest extends TestCase
     {
         $str = 'Hello, World!';
         $cstr = new CString($str, 'ISO-8859-1');
-        $this->assertSame($str, (string)$cstr);
+        $this->assertEquals($str, $cstr);
         $this->assertSame(
             'ISO-8859-1',
             AccessHelper::GetProperty($cstr, 'encoding')
@@ -242,7 +242,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $cstr->SetInPlace($offset, $character);
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     #endregion SetInPlace
@@ -254,7 +254,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $cstr->InsertInPlace($offset, $substring);
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     function testInsertInPlaceWithStringable()
@@ -266,7 +266,7 @@ class CStringTest extends TestCase
             }
         };
         $cstr->InsertInPlace(0, $stringable);
-        $this->assertSame('Hello, World!', (string)$cstr);
+        $this->assertEquals('Hello, World!', $cstr);
     }
 
     #endregion InsertInPlace
@@ -280,8 +280,8 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $prepended = $cstr->Prepend($substring);
         $this->assertNotSame($cstr, $prepended);
-        $this->assertSame($value, (string)$cstr);
-        $this->assertSame($expected, (string)$prepended);
+        $this->assertEquals($value, $cstr);
+        $this->assertEquals($expected, $prepended);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($prepended, 'encoding'),
@@ -294,7 +294,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->PrependInPlace($substring));
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     function testPrependWithStringable()
@@ -305,8 +305,7 @@ class CStringTest extends TestCase
                 return 'Hello, ';
             }
         };
-        $this->assertSame('Hello, World!',
-            (string)$cstr->Prepend($stringable));
+        $this->assertEquals('Hello, World!', $cstr->Prepend($stringable));
     }
 
     function testPrependInPlaceWithStringable()
@@ -317,8 +316,7 @@ class CStringTest extends TestCase
                 return 'Hello, ';
             }
         };
-        $this->assertSame('Hello, World!',
-            (string)$cstr->PrependInPlace($stringable));
+        $this->assertEquals('Hello, World!', $cstr->PrependInPlace($stringable));
     }
 
     #endregion Prepend, PrependInPlace
@@ -332,8 +330,8 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $appended = $cstr->Append($substring);
         $this->assertNotSame($cstr, $appended);
-        $this->assertSame($value, (string)$cstr);
-        $this->assertSame($expected, (string)$appended);
+        $this->assertEquals($value, $cstr);
+        $this->assertEquals($expected, $appended);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($appended, 'encoding'),
@@ -346,7 +344,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->AppendInPlace($substring));
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     function testAppendWithStringable()
@@ -357,8 +355,7 @@ class CStringTest extends TestCase
                 return ', World!';
             }
         };
-        $this->assertSame('Hello, World!',
-            (string)$cstr->Append($stringable));
+        $this->assertEquals('Hello, World!', $cstr->Append($stringable));
     }
 
     function testAppendInPlaceWithStringable()
@@ -369,8 +366,7 @@ class CStringTest extends TestCase
                 return ', World!';
             }
         };
-        $this->assertSame('Hello, World!',
-            (string)$cstr->AppendInPlace($stringable));
+        $this->assertEquals('Hello, World!', $cstr->AppendInPlace($stringable));
     }
 
     #endregion Append, AppendInPlace
@@ -382,7 +378,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $cstr->DeleteInPlace($offset, $count);
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     #endregion DeleteInPlace
@@ -394,7 +390,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $left = $cstr->Left($count);
-        $this->assertSame($expected, (string)$left);
+        $this->assertEquals($expected, $left);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($left, 'encoding'),
@@ -410,7 +406,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $right = $cstr->Right($count);
-        $this->assertSame($expected, (string)$right);
+        $this->assertEquals($expected, $right);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($right, 'encoding'),
@@ -426,7 +422,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $middle = $cstr->Middle($offset, $count);
-        $this->assertSame($expected, (string)$middle);
+        $this->assertEquals($expected, $middle);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($middle, 'encoding'),
@@ -444,8 +440,8 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $trimmed = $cstr->Trim($characters);
         $this->assertNotSame($cstr, $trimmed);
-        $this->assertSame($value, (string)$cstr);
-        $this->assertSame($expected, (string)$trimmed);
+        $this->assertEquals($value, $cstr);
+        $this->assertEquals($expected, $trimmed);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($trimmed, 'encoding'),
@@ -458,7 +454,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->TrimInPlace($characters));
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     #endregion Trim, TrimInPlace
@@ -472,8 +468,8 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $trimmed = $cstr->TrimLeft($characters);
         $this->assertNotSame($cstr, $trimmed);
-        $this->assertSame($value, (string)$cstr);
-        $this->assertSame($expected, (string)$trimmed);
+        $this->assertEquals($value, $cstr);
+        $this->assertEquals($expected, $trimmed);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($trimmed, 'encoding'),
@@ -486,7 +482,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->TrimLeftInPlace($characters));
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     #endregion TrimLeft, TrimLeftInPlace
@@ -500,8 +496,8 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $trimmed = $cstr->TrimRight($characters);
         $this->assertNotSame($cstr, $trimmed);
-        $this->assertSame($value, (string)$cstr);
-        $this->assertSame($expected, (string)$trimmed);
+        $this->assertEquals($value, $cstr);
+        $this->assertEquals($expected, $trimmed);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($trimmed, 'encoding'),
@@ -514,7 +510,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->TrimRightInPlace($characters));
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     #endregion TrimRight, TrimRightInPlace
@@ -527,8 +523,8 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $lowercased = $cstr->Lowercase();
         $this->assertNotSame($cstr, $lowercased);
-        $this->assertSame($value, (string)$cstr);
-        $this->assertSame($expected, (string)$lowercased);
+        $this->assertEquals($value, $cstr);
+        $this->assertEquals($expected, $lowercased);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($lowercased, 'encoding'),
@@ -540,7 +536,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->LowercaseInPlace());
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     #endregion Lowercase, LowercaseInPlace
@@ -553,8 +549,8 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $uppercased = $cstr->Uppercase();
         $this->assertNotSame($cstr, $uppercased);
-        $this->assertSame($value, (string)$cstr);
-        $this->assertSame($expected, (string)$uppercased);
+        $this->assertEquals($value, $cstr);
+        $this->assertEquals($expected, $uppercased);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($uppercased, 'encoding'),
@@ -566,7 +562,7 @@ class CStringTest extends TestCase
     {
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->UppercaseInPlace());
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     #endregion Uppercase, UppercaseInPlace
@@ -701,8 +697,8 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $replaced = $cstr->Replace($searchString, $replacement, $caseSensitive);
         $this->assertNotSame($cstr, $replaced);
-        $this->assertSame($value, (string)$cstr);
-        $this->assertSame($expected, (string)$replaced);
+        $this->assertEquals($value, $cstr);
+        $this->assertEquals($expected, $replaced);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($replaced, 'encoding'),
@@ -716,7 +712,7 @@ class CStringTest extends TestCase
         $cstr = new CString($value, $encoding);
         $this->assertSame($cstr, $cstr->ReplaceInPlace($searchString, $replacement,
             $caseSensitive));
-        $this->assertSame($expected, (string)$cstr);
+        $this->assertEquals($expected, $cstr);
     }
 
     function testReplaceWithStringable()
@@ -732,10 +728,14 @@ class CStringTest extends TestCase
                 return 'Universe!';
             }
         };
-        $this->assertSame('Hello, World!',
-            (string)$cstr->Replace($searchString, $replacement));
-        $this->assertSame('Hello, Universe!',
-            (string)$cstr->Replace($searchString, $replacement, false));
+        $this->assertEquals(
+            'Hello, World!',
+            $cstr->Replace($searchString, $replacement)
+        );
+        $this->assertEquals(
+            'Hello, Universe!',
+            $cstr->Replace($searchString, $replacement, false)
+        );
     }
 
     function testReplaceInPlaceWithStringable()
@@ -751,10 +751,14 @@ class CStringTest extends TestCase
                 return 'Universe!';
             }
         };
-        $this->assertSame('Hello, World!',
-            (string)$cstr->ReplaceInPlace($searchString, $replacement));
-        $this->assertSame('Hello, Universe!',
-            (string)$cstr->ReplaceInPlace($searchString, $replacement, false));
+        $this->assertEquals(
+            'Hello, World!',
+            $cstr->ReplaceInPlace($searchString, $replacement)
+        );
+        $this->assertEquals(
+            'Hello, Universe!',
+            $cstr->ReplaceInPlace($searchString, $replacement, false)
+        );
     }
 
     function testReplaceInPlaceWithInvalidPatternUnderEncoding()
@@ -764,7 +768,7 @@ class CStringTest extends TestCase
         // under EUC-KR encoding"
         @$cstr->ReplaceInPlace("\xC7\xCF\xB0", "\xC7\xCF");
         // Assert the value remains unchanged due to invalid pattern.
-        $this->assertSame("\xC7\xCF\xB0\xA1", (string)$cstr);
+        $this->assertEquals("\xC7\xCF\xB0\xA1", $cstr);
     }
 
     #endregion Replace, ReplaceInPlace
@@ -821,8 +825,8 @@ class CStringTest extends TestCase
         $cstr = new CString('hello world', 'ASCII');
         $applied = $cstr->Apply('rawurlencode');
         $this->assertNotSame($cstr, $applied);
-        $this->assertSame('hello%20world', (string)$applied);
-        $this->assertSame('hello world', (string)$cstr);
+        $this->assertEquals('hello%20world', $applied);
+        $this->assertEquals('hello world', $cstr);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($applied, 'encoding')
@@ -834,8 +838,8 @@ class CStringTest extends TestCase
         $cstr = new CString('hello world');
         $applied = $cstr->Apply('substr', 6, 5);
         $this->assertNotSame($cstr, $applied);
-        $this->assertSame('world', (string)$applied);
-        $this->assertSame('hello world', (string)$cstr);
+        $this->assertEquals('world', $applied);
+        $this->assertEquals('hello world', $cstr);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($applied, 'encoding')
@@ -851,8 +855,8 @@ class CStringTest extends TestCase
             }
         );
         $this->assertNotSame($cstr, $applied);
-        $this->assertSame('hexxo', (string)$applied);
-        $this->assertSame('hello', (string)$cstr);
+        $this->assertEquals('hexxo', $applied);
+        $this->assertEquals('hello', $cstr);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($applied, 'encoding')
@@ -870,8 +874,8 @@ class CStringTest extends TestCase
             '>'
         );
         $this->assertNotSame($cstr, $applied);
-        $this->assertSame('hello', (string)$cstr);
-        $this->assertSame('<hello>', (string)$applied);
+        $this->assertEquals('hello', $cstr);
+        $this->assertEquals('<hello>', $applied);
         $this->assertSame(
             AccessHelper::GetProperty($cstr, 'encoding'),
             AccessHelper::GetProperty($applied, 'encoding')
@@ -892,14 +896,14 @@ class CStringTest extends TestCase
     {
         $cstr = new CString('hello world');
         $this->assertSame($cstr, $cstr->ApplyInPlace('rawurlencode'));
-        $this->assertSame('hello%20world', (string)$cstr);
+        $this->assertEquals('hello%20world', $cstr);
     }
 
     function testApplyInPlaceWithAdditionalArguments()
     {
         $cstr = new CString('hello world');
         $this->assertSame($cstr, $cstr->ApplyInPlace('substr', 6, 5));
-        $this->assertSame('world', (string)$cstr);
+        $this->assertEquals('world', $cstr);
     }
 
     function testApplyInPlaceWithLambdaWithoutAdditionalArguments()
@@ -913,7 +917,7 @@ class CStringTest extends TestCase
                 }
             )
         );
-        $this->assertSame('hexxo', (string)$cstr);
+        $this->assertEquals('hexxo', $cstr);
     }
 
     function testApplyInPlaceWithLambdaWithAdditionalArguments()
@@ -929,7 +933,7 @@ class CStringTest extends TestCase
                 '>'
             )
         );
-        $this->assertSame('<hello>', (string)$cstr);
+        $this->assertEquals('<hello>', $cstr);
     }
 
     #endregion Apply, ApplyInPlace

@@ -15,7 +15,7 @@ class CUrlTest extends TestCase
     function testDefaultConstructor()
     {
         $url = new CUrl();
-        $this->assertSame('', (string)$url);
+        $this->assertEquals('', $url);
     }
 
     function testConstructorWithStringable()
@@ -26,19 +26,19 @@ class CUrlTest extends TestCase
             }
         };
         $url = new CUrl($stringable);
-        $this->assertSame('ftp://fileserver.com/data', (string)$url);
+        $this->assertEquals('ftp://fileserver.com/data', $url);
     }
 
     function testConstructorWithNativeString()
     {
         $url = new CUrl('https://openai.com');
-        $this->assertSame('https://openai.com', (string)$url);
+        $this->assertEquals('https://openai.com', $url);
     }
 
-    function testConstructorTrimsWhitespace()
+    function testConstructorRetainsWhitespace()
     {
         $url = new CUrl('   https://openai.com   ');
-        $this->assertSame('https://openai.com', (string)$url);
+        $this->assertEquals('   https://openai.com   ', $url);
     }
 
     #endregion __construct
@@ -50,7 +50,7 @@ class CUrlTest extends TestCase
     {
         $joined = CUrl::Join(...$segments);
         $this->assertInstanceOf(CUrl::class, $joined);
-        $this->assertSame($expected, (string)$joined);
+        $this->assertEquals($expected, $joined);
     }
 
     function testJoinWithMixedArguments()
@@ -66,7 +66,7 @@ class CUrlTest extends TestCase
             'to',
             'file.html'
         );
-        $this->assertSame('http://example.com/path/to/file.html', (string)$joined);
+        $this->assertEquals('http://example.com/path/to/file.html', $joined);
     }
 
     #endregion Join
@@ -77,7 +77,7 @@ class CUrlTest extends TestCase
     function testEnsureLeadingSlash(string $expected, string $str)
     {
         $url = new CUrl($str);
-        $this->assertSame($expected, (string)$url->EnsureLeadingSlash());
+        $this->assertEquals($expected, $url->EnsureLeadingSlash());
     }
 
     #endregion EnsureLeadingSlash
@@ -88,7 +88,7 @@ class CUrlTest extends TestCase
     function testEnsureTrailingSlash(string $expected, string $str)
     {
         $url = new CUrl($str);
-        $this->assertSame($expected, (string)$url->EnsureTrailingSlash());
+        $this->assertEquals($expected, $url->EnsureTrailingSlash());
     }
 
     #endregion EnsureTrailingSlash
@@ -99,7 +99,7 @@ class CUrlTest extends TestCase
     function testTrimLeadingSlashes(string $expected, string $str)
     {
         $url = new CUrl($str);
-        $this->assertSame($expected, (string)$url->TrimLeadingSlashes());
+        $this->assertEquals($expected, $url->TrimLeadingSlashes());
     }
 
     #endregion TrimLeadingSlashes
@@ -110,7 +110,7 @@ class CUrlTest extends TestCase
     function testTrimTrailingSlashes(string $expected, string $str)
     {
         $url = new CUrl($str);
-        $this->assertSame($expected, (string)$url->TrimTrailingSlashes());
+        $this->assertEquals($expected, $url->TrimTrailingSlashes());
     }
 
     #endregion TrimTrailingSlashes
@@ -203,8 +203,8 @@ class CUrlTest extends TestCase
             ['foo/bar', ['foo', '///', 'bar']],
             ['foo/bar', ['foo', '////', 'bar']],
 
-            ['/foo/bar/baz', ['   /foo   ', 'bar/   ', 'baz   ']],
-            ['/foo/bar   /', ['   /foo   ', 'bar   /']],
+            ['   /foo   /bar/   /baz   ', ['   /foo   ', 'bar/   ', 'baz   ']],
+            ['   /foo   /bar   /', ['   /foo   ', 'bar   /']],
 
             ['', ['']],
             ['', ['', '']],

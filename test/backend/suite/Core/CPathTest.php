@@ -44,7 +44,7 @@ class CPathTest extends TestCase
     function testDefaultConstructor()
     {
         $path = new CPath();
-        $this->assertSame('', (string)$path);
+        $this->assertEquals('', $path);
     }
 
     function testConstructorWithStringable()
@@ -55,19 +55,19 @@ class CPathTest extends TestCase
             }
         };
         $path = new CPath($stringable);
-        $this->assertSame('/home/user', (string)$path);
+        $this->assertEquals('/home/user', $path);
     }
 
     function testConstructorWithNativeString()
     {
         $path = new CPath('/var/www');
-        $this->assertSame('/var/www', (string)$path);
+        $this->assertEquals('/var/www', $path);
     }
 
-    function testConstructorTrimsWhitespace()
+    function testConstructorRetainsWhitespace()
     {
         $path = new CPath('   /usr/local   ');
-        $this->assertSame('/usr/local', (string)$path);
+        $this->assertEquals('   /usr/local   ', $path);
     }
 
     #endregion __construct
@@ -79,7 +79,7 @@ class CPathTest extends TestCase
     {
         $joined = CPath::Join(...$segments);
         $this->assertInstanceOf(CPath::class, $joined);
-        $this->assertSame($expected, (string)$joined);
+        $this->assertEquals($expected, $joined);
     }
 
     function testJoinWithMixedArguments()
@@ -95,7 +95,7 @@ class CPathTest extends TestCase
                 'htdocs',
                 'index.html'
             );
-            $this->assertSame('C:\\xampp\\htdocs\\index.html', (string)$joined);
+            $this->assertEquals('C:\\xampp\\htdocs\\index.html', $joined);
         } else {
             $joined = CPath::Join(
                 '/var',
@@ -107,7 +107,7 @@ class CPathTest extends TestCase
                 'html',
                 'index.html'
             );
-            $this->assertSame('/var/www/html/index.html', (string)$joined);
+            $this->assertEquals('/var/www/html/index.html', $joined);
         }
     }
 
@@ -119,7 +119,7 @@ class CPathTest extends TestCase
     function testEnsureLeadingSlash(string $expected, string $str)
     {
         $path = new CPath($str);
-        $this->assertSame($expected, (string)$path->EnsureLeadingSlash());
+        $this->assertEquals($expected, $path->EnsureLeadingSlash());
     }
 
     #endregion EnsureLeadingSlash
@@ -130,7 +130,7 @@ class CPathTest extends TestCase
     function testEnsureTrailingSlash(string $expected, string $str)
     {
         $path = new CPath($str);
-        $this->assertSame($expected, (string)$path->EnsureTrailingSlash());
+        $this->assertEquals($expected, $path->EnsureTrailingSlash());
     }
 
     #endregion EnsureTrailingSlash
@@ -141,7 +141,7 @@ class CPathTest extends TestCase
     function testTrimLeadingSlashes(string $expected, string $str)
     {
         $path = new CPath($str);
-        $this->assertSame($expected, (string)$path->TrimLeadingSlashes());
+        $this->assertEquals($expected, $path->TrimLeadingSlashes());
     }
 
     #endregion TrimLeadingSlashes
@@ -152,7 +152,7 @@ class CPathTest extends TestCase
     function testTrimTrailingSlashes(string $expected, string $str)
     {
         $path = new CPath($str);
-        $this->assertSame($expected, (string)$path->TrimTrailingSlashes());
+        $this->assertEquals($expected, $path->TrimTrailingSlashes());
     }
 
     #endregion TrimTrailingSlashes
@@ -410,8 +410,8 @@ class CPathTest extends TestCase
                 ['foo\\bar', ['foo', '\\/\\', 'bar']],
                 ['foo\\bar', ['foo', '\\/\\/', 'bar']],
 
-                ['C:\foo\bar/baz', ['   C:\\foo   ', 'bar/   ', 'baz   ']],
-                ['C:\foo\bar   /', ['   C:\\foo   ', 'bar   /']],
+                ['   C:\foo   \bar/   \baz   ', ['   C:\\foo   ', 'bar/   ', 'baz   ']],
+                ['   C:\foo   \bar   /', ['   C:\\foo   ', 'bar   /']],
 
                 ['', ['']],
                 ['', ['', '']],
@@ -544,8 +544,8 @@ class CPathTest extends TestCase
                 ['foo/bar', ['foo', '/', 'bar']],
                 ['foo/bar', ['foo', '//', 'bar']],
 
-                ['/foo/bar/baz', ['   /foo   ', 'bar/   ', 'baz   ']],
-                ['/foo/bar   /', ['   /foo   ', 'bar   /']],
+                ['   /foo   /bar/   /baz   ', ['   /foo   ', 'bar/   ', 'baz   ']],
+                ['   /foo   /bar   /', ['   /foo   ', 'bar   /']],
 
                 ['', ['']],
                 ['', ['', '']],
