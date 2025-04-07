@@ -181,9 +181,7 @@ class ResourceTest extends TestCase
             ->willReturn($serverPath);
 
         $sut->Initialize($appPath);
-        // todo: Change to assertEquals and remove the cast to string after
-        // changing the return type of AppRelativePath to CPath.
-        $this->assertSame((string)$appBaseName, (string)$sut->AppRelativePath());
+        $this->assertEquals($appBaseName, $sut->AppRelativePath());
 
         \unlink((string)$linkPath);
     }
