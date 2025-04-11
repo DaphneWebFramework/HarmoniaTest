@@ -103,25 +103,20 @@ class CookieServiceTest extends TestCase
 
     #endregion DeleteCookie
 
-    #region DeleteCsrfCookie ---------------------------------------------------
-
-    function testDeleteCsrfCookie()
-    {
-        $cookieService = $this->systemUnderTest('DeleteCookie', 'CsrfCookieName');
-
-        $cookieService->expects($this->once())
-            ->method('CsrfCookieName')
-            ->willReturn('cookie-name');
-        $cookieService->expects($this->once())
-            ->method('DeleteCookie')
-            ->with('cookie-name');
-
-        $cookieService->DeleteCsrfCookie();
-    }
-
-    #endregion DeleteCsrfCookie
-
     #region AppSpecificCookieName ----------------------------------------------
+
+    function testAppSpecificCookieNameWithEmptySuffix()
+    {
+        $cookieService = $this->systemUnderTest();
+        $config = Config::Instance();
+
+        $config->expects($this->never())
+            ->method('OptionOrDefault');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Suffix cannot be empty.');
+        $cookieService->AppSpecificCookieName('');
+    }
 
     function testAppSpecificCookieNameWhenConfigAppNameIsNotSetOrEmpty()
     {
@@ -171,20 +166,43 @@ class CookieServiceTest extends TestCase
         );
     }
 
-    function testAppSpecificCookieNameWithEmptySuffix()
+    #endregion AppSpecificCookieName
+
+    #region SetCsrfCookie ------------------------------------------------------
+
+    function testSetCsrfCookie()
     {
-        $cookieService = $this->systemUnderTest();
-        $config = Config::Instance();
+        $cookieService = $this->systemUnderTest('CsrfCookieName', 'SetCookie');
 
-        $config->expects($this->never())
-            ->method('OptionOrDefault');
+        $cookieService->expects($this->once())
+            ->method('CsrfCookieName')
+            ->willReturn('cookie-name');
+        $cookieService->expects($this->once())
+            ->method('SetCookie')
+            ->with('cookie-name', 'cookie-value');
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Suffix cannot be empty.');
-        $cookieService->AppSpecificCookieName('');
+        $cookieService->SetCsrfCookie('cookie-value');
     }
 
-    #endregion AppSpecificCookieName
+    #endregion SetCsrfCookie
+
+    #region DeleteCsrfCookie ---------------------------------------------------
+
+    function testDeleteCsrfCookie()
+    {
+        $cookieService = $this->systemUnderTest('DeleteCookie', 'CsrfCookieName');
+
+        $cookieService->expects($this->once())
+            ->method('CsrfCookieName')
+            ->willReturn('cookie-name');
+        $cookieService->expects($this->once())
+            ->method('DeleteCookie')
+            ->with('cookie-name');
+
+        $cookieService->DeleteCsrfCookie();
+    }
+
+    #endregion DeleteCsrfCookie
 
     #region CsrfCookieName -----------------------------------------------------
 
@@ -206,10 +224,13 @@ class CookieServiceTest extends TestCase
 
     static function setCookieDataProvider()
     {
+        // cookieValue
+        // isSecure
+        // returnValue
         return DataHelper::Cartesian(
-            ['test_value', ''], // cookie value
-            [false, true],      // is secure
-            [false, true]       // return value
+            ['cookie-value', ''],
+            [false, true],
+            [false, true]
         );
     }
 
