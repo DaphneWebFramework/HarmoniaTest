@@ -10,25 +10,33 @@ use \Harmonia\Core\CArray;
 use \Harmonia\Core\CString;
 use \Harmonia\Http\RequestMethod;
 use \Harmonia\Server;
+use \TestToolkit\AccessHelper;
 
 require_once 'StreamMockManager.php';
 
 #[CoversClass(Request::class)]
 class RequestTest extends TestCase
 {
-    private ?Request $originalRequest = null;
     private ?Server $originalServer = null;
 
     protected function setUp(): void
     {
-        $this->originalRequest = Request::ReplaceInstance(null);
-        $this->originalServer = Server::ReplaceInstance($this->createMock(Server::class));
+        $this->originalServer =
+            Server::ReplaceInstance($this->createMock(Server::class));
     }
 
     protected function tearDown(): void
     {
-        Request::ReplaceInstance($this->originalRequest);
         Server::ReplaceInstance($this->originalServer);
+    }
+
+    private function systemUnderTest(string ...$mockedMethods): Request
+    {
+        $sut = $this->getMockBuilder(Request::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods($mockedMethods)
+            ->getMock();
+        return AccessHelper::CallConstructor($sut);
     }
 
     #region Method_ ------------------------------------------------------------
@@ -36,11 +44,14 @@ class RequestTest extends TestCase
     #[DataProvider('methodDataProvider')]
     public function testMethod(?RequestMethod $expected, ?CString $serverRequestMethod)
     {
-        $request = Request::Instance();
-        $serverMock = Server::Instance();
-        $serverMock->method('RequestMethod')
+        $sut = $this->systemUnderTest();
+        $server = Server::Instance();
+
+        $server->expects($this->once())
+            ->method('RequestMethod')
             ->willReturn($serverRequestMethod);
-        $this->assertSame($expected, $request->Method_());
+
+        $this->assertSame($expected, $sut->Method_());
     }
 
     #endregion Method_
@@ -50,11 +61,14 @@ class RequestTest extends TestCase
     #[DataProvider('pathDataProvider')]
     public function testPath(?CString $expected, ?CString $serverRequestUri)
     {
-        $request = Request::Instance();
-        $serverMock = Server::Instance();
-        $serverMock->method('RequestUri')
+        $sut = $this->systemUnderTest();
+        $server = Server::Instance();
+
+        $server->expects($this->once())
+            ->method('RequestUri')
             ->willReturn($serverRequestUri);
-        $this->assertEquals($expected, $request->Path());
+
+        $this->assertEquals($expected, $sut->Path());
     }
 
     #endregion Path
@@ -64,12 +78,13 @@ class RequestTest extends TestCase
     #[BackupGlobals(true)]
     function testQueryParams()
     {
+        $sut = $this->systemUnderTest();
         $_GET['key1'] = 'value1';
         $_GET['key2'] = 'value2';
-        $request = Request::Instance();
+
         $this->assertEquals(
             ['key1' => 'value1', 'key2' => 'value2'],
-            $request->QueryParams()->ToArray()
+            $sut->QueryParams()->ToArray()
         );
     }
 
@@ -80,12 +95,13 @@ class RequestTest extends TestCase
     #[BackupGlobals(true)]
     function testFormParams()
     {
+        $sut = $this->systemUnderTest();
         $_POST['key1'] = 'value1';
         $_POST['key2'] = 'value2';
-        $request = Request::Instance();
+
         $this->assertEquals(
             ['key1' => 'value1', 'key2' => 'value2'],
-            $request->FormParams()->ToArray()
+            $sut->FormParams()->ToArray()
         );
     }
 
@@ -96,13 +112,14 @@ class RequestTest extends TestCase
     #[BackupGlobals(true)]
     function testFiles()
     {
+        $sut = $this->systemUnderTest();
         $_FILES['key1'] = ['name' => 'file1.txt', 'type' => 'text/plain'];
         $_FILES['key2'] = ['name' => 'file2.txt', 'type' => 'text/plain'];
-        $request = Request::Instance();
+
         $this->assertEquals(
             ['key1' => ['name' => 'file1.txt', 'type' => 'text/plain'],
              'key2' => ['name' => 'file2.txt', 'type' => 'text/plain']],
-            $request->Files()->ToArray()
+            $sut->Files()->ToArray()
         );
     }
 
@@ -113,12 +130,13 @@ class RequestTest extends TestCase
     #[BackupGlobals(true)]
     function testCookies()
     {
+        $sut = $this->systemUnderTest();
         $_COOKIE['key1'] = 'value1';
         $_COOKIE['key2'] = 'value2';
-        $request = Request::Instance();
+
         $this->assertEquals(
             ['key1' => 'value1', 'key2' => 'value2'],
-            $request->Cookies()->ToArray()
+            $sut->Cookies()->ToArray()
         );
     }
 
@@ -129,19 +147,22 @@ class RequestTest extends TestCase
     #[BackupGlobals(true)]
     function testHeaders()
     {
-        $request = Request::Instance();
-        $serverMock = Server::Instance();
-        $serverMock->method('RequestHeaders')
+        $sut = $this->systemUnderTest();
+        $server = Server::Instance();
+
+        $server->expects($this->once())
+            ->method('RequestHeaders')
             ->willReturn(new CArray([
                 'accept' => 'text/html',
                 'accept-encoding' => 'gzip, deflate',
                 'accept-language' => 'en-US',
             ]));
+
         $this->assertEquals(
             [ 'accept' => 'text/html',
               'accept-encoding' => 'gzip, deflate',
               'accept-language' => 'en-US' ],
-            $request->Headers()->ToArray()
+            $sut->Headers()->ToArray()
         );
     }
 
@@ -151,35 +172,38 @@ class RequestTest extends TestCase
 
     function testBodyWhenStreamCannotBeOpened()
     {
-        $request = Request::Instance();
-        $streamMockManager = StreamMockManager::Create();
-        $this->assertTrue($streamMockManager->Write('Hello from request body!'));
-        $streamMockManager->SimulateOpenError();
+        $sut = $this->systemUnderTest();
+        $smm = StreamMockManager::Create();
+
+        $this->assertTrue($smm->Write('Hello from request body!'));
+        $smm->SimulateOpenError();
         // Suppress the error message: file_get_contents(php://input): Failed to
         // open stream: "StreamMock::stream_open" call failed
-        $this->assertNull(@$request->Body());
+        $this->assertNull(@$sut->Body());
     }
 
     function testBodyWhenStreamCannotBeRead()
     {
-        $request = Request::Instance();
-        $streamMockManager = StreamMockManager::Create();
-        $this->assertTrue($streamMockManager->Write('Hello from request body!'));
-        $streamMockManager->SimulateReadError();
+        $sut = $this->systemUnderTest();
+        $smm = StreamMockManager::Create();
+
+        $this->assertTrue($smm->Write('Hello from request body!'));
+        $smm->SimulateReadError();
         // Suppress the error message: file_get_contents(php://input): Failed to
         // open stream: "StreamMock::stream_open" call failed
-        $this->assertTrue($request->Body()->IsEmpty());
+        $this->assertTrue($sut->Body()->IsEmpty());
     }
 
     function testBodyWithWorkingStream()
     {
-        $request = Request::Instance();
+        $sut = $this->systemUnderTest();
+        $smm = StreamMockManager::Create();
         $data = 'Hello from request body!';
-        $streamMockManager = StreamMockManager::Create();
-        $this->assertTrue($streamMockManager->Write($data));
-        $this->assertEquals($data, $request->Body());
+
+        $this->assertTrue($smm->Write($data));
+        $this->assertEquals($data, $sut->Body());
         // Multiple calls should return the same data
-        $this->assertEquals($data, $request->Body());
+        $this->assertEquals($data, $sut->Body());
     }
 
     #endregion Body
