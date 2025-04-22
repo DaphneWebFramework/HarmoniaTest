@@ -91,9 +91,9 @@ class SingletonTest extends TestCase
     function testUnserializeIsNotAllowed()
     {
         $instance = SingletonUnderTest::Instance();
-        $serialized = serialize($instance);
+        $serialized = \serialize($instance);
         $this->assertSame('O:18:"SingletonUnderTest":0:{}', $serialized);
         $this->expectException(\RuntimeException::class);
-        $unserialized = unserialize($serialized);
+        $unserialized = \unserialize($serialized);
     }
 }
