@@ -214,17 +214,17 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => [
                         'requiredWithout:PassportNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{3}-\d{2}-\d{4}$'
+                        'regex:/^\d{3}-\d{2}-\d{4}$/'
                     ],
                     'PassportNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{9}$'
+                        'regex:/^\d{9}$/'
                     ],
                     'DriverLicenseNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:PassportNumber',
-                        'regex:^DL\d{6}$'
+                        'regex:/^DL\d{6}$/'
                     ]
                 ],
                 [
@@ -238,17 +238,17 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => [
                         'requiredWithout:PassportNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{3}-\d{2}-\d{4}$'
+                        'regex:/^\d{3}-\d{2}-\d{4}$/'
                     ],
                     'PassportNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{9}$'
+                        'regex:/^\d{9}$/'
                     ],
                     'DriverLicenseNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:PassportNumber',
-                        'regex:^DL\d{6}$'
+                        'regex:/^DL\d{6}$/'
                     ]
                 ],
                 [
@@ -262,17 +262,17 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => [
                         'requiredWithout:PassportNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{3}-\d{2}-\d{4}$'
+                        'regex:/^\d{3}-\d{2}-\d{4}$/'
                     ],
                     'PassportNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{9}$'
+                        'regex:/^\d{9}$/'
                     ],
                     'DriverLicenseNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:PassportNumber',
-                        'regex:^DL\d{6}$'
+                        'regex:/^DL\d{6}$/'
                     ]
                 ],
                 [
@@ -286,17 +286,17 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => [
                         'requiredWithout:PassportNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{3}-\d{2}-\d{4}$'
+                        'regex:/^\d{3}-\d{2}-\d{4}$/'
                     ],
                     'PassportNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{9}$'
+                        'regex:/^\d{9}$/'
                     ],
                     'DriverLicenseNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:PassportNumber',
-                        'regex:^DL\d{6}$'
+                        'regex:/^DL\d{6}$/'
                     ]
                 ],
                 []
@@ -308,17 +308,17 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => [
                         'requiredWithout:PassportNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{3}-\d{2}-\d{4}$'
+                        'regex:/^\d{3}-\d{2}-\d{4}$/'
                     ],
                     'PassportNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{9}$'
+                        'regex:/^\d{9}$/'
                     ],
                     'DriverLicenseNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:PassportNumber',
-                        'regex:^DL\d{6}$'
+                        'regex:/^DL\d{6}$/'
                     ]
                 ],
                 [
@@ -334,17 +334,17 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => [
                         'requiredWithout:PassportNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{3}-\d{2}-\d{4}$'
+                        'regex:/^\d{3}-\d{2}-\d{4}$/'
                     ],
                     'PassportNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{9}$'
+                        'regex:/^\d{9}$/'
                     ],
                     'DriverLicenseNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:PassportNumber',
-                        'regex:^DL\d{6}$'
+                        'regex:/^DL\d{6}$/'
                     ]
                 ],
                 [
@@ -359,17 +359,17 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => [
                         'requiredWithout:PassportNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{3}-\d{2}-\d{4}$'
+                        'regex:/^\d{3}-\d{2}-\d{4}$/'
                     ],
                     'PassportNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{9}$'
+                        'regex:/^\d{9}$/'
                     ],
                     'DriverLicenseNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:PassportNumber',
-                        'regex:^DL\d{6}$'
+                        'regex:/^DL\d{6}$/'
                     ]
                 ],
                 [
@@ -384,17 +384,17 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => [
                         'requiredWithout:PassportNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{3}-\d{2}-\d{4}$'
+                        'regex:/^\d{3}-\d{2}-\d{4}$/'
                     ],
                     'PassportNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:DriverLicenseNumber',
-                        'regex:^\d{9}$'
+                        'regex:/^\d{9}$/'
                     ],
                     'DriverLicenseNumber' => [
                         'requiredWithout:SocialSecurityNumber',
                         'requiredWithout:PassportNumber',
-                        'regex:^DL\d{6}$'
+                        'regex:/^DL\d{6}$/'
                     ]
                 ],
                 [
@@ -483,8 +483,8 @@ class ValidatorTest extends TestCase
                 null,
                 [
                     'email',
-                    'regex:^[A-Za-z_][\w\-\.]{1,31}$',
-                    ['minLength:6', 'maxLength:72']
+                    'regex:/^[A-Za-z_][\w\-\.]{1,31}$/',
+                    ['minLength:8', 'maxLength:72']
                 ],
                 [
                     'john.doe@example.com',
@@ -496,7 +496,7 @@ class ValidatorTest extends TestCase
             'Passes account activate validation' => [
                 null,
                 [
-                    'regex:^[a-f0-9]{64}$'
+                    'regex:/^[a-f0-9]{64}$/'
                 ],
                 [
                     'a3f4b6e8129c0d5e7f8a6b4c3d2e1f09876e4c3b2a1f0e9d8c7b6a5f4e3d2c1b'
@@ -516,8 +516,8 @@ class ValidatorTest extends TestCase
             'Passes account reset password validation' => [
                 null,
                 [
-                    'regex:^[a-f0-9]{64}$',
-                    ['minLength:6', 'maxLength:72']
+                    'regex:/^[a-f0-9]{64}$/',
+                    ['minLength:8', 'maxLength:72']
                 ],
                 [
                     'a3f4b6e8129c0d5e7f8a6b4c3d2e1f09876e4c3b2a1f0e9d8c7b6a5f4e3d2c1b',
@@ -528,8 +528,8 @@ class ValidatorTest extends TestCase
             'Passes account login validation' => [
                 null,
                 [
-                    'regex:^[A-Za-z_][\w\-\.]{1,31}$',
-                    ['minLength:6', 'maxLength:72']
+                    'regex:/^[A-Za-z_][\w\-\.]{1,31}$/',
+                    ['minLength:8', 'maxLength:72']
                 ],
                 [
                     'john.doe',
@@ -540,8 +540,8 @@ class ValidatorTest extends TestCase
             'Passes account change password validation' => [
                 null,
                 [
-                    ['minLength:6', 'maxLength:72'],
-                    ['minLength:6', 'maxLength:72']
+                    ['minLength:8', 'maxLength:72'],
+                    ['minLength:8', 'maxLength:72']
                 ],
                 [
                     'OldPass123!',
@@ -553,8 +553,8 @@ class ValidatorTest extends TestCase
                 null,
                 [
                     'Email' => ['required', 'email'],
-                    'Username' => ['required', 'regex:^[A-Za-z_][\w\-\.]{1,31}$'],
-                    'PasswordHash' => ['required', 'regex:^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$']
+                    'Username' => ['required', 'regex:/^[A-Za-z_][\w\-\.]{1,31}$/'],
+                    'PasswordHash' => ['required', 'regex:/^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$/']
                 ],
                 [
                     'Email' => 'john.doe@example.com',
@@ -568,8 +568,8 @@ class ValidatorTest extends TestCase
                 [
                     'ID' => ['required', 'integer', 'min:1'],
                     'Email' => ['email'],
-                    'Username' => ['regex:^[A-Za-z_][\w\-\.]{1,31}$'],
-                    'PasswordHash' => ['regex:^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$']
+                    'Username' => ['regex:/^[A-Za-z_][\w\-\.]{1,31}$/'],
+                    'PasswordHash' => ['regex:/^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$/']
                 ],
                 [
                     'ID' => '23',
@@ -608,9 +608,9 @@ class ValidatorTest extends TestCase
                 null,
                 [
                     'Email' => ['required', 'email'],
-                    'Username' => ['required', 'regex:^[A-Za-z_][\w\-\.]{1,31}$'],
-                    'PasswordHash' => ['required', 'regex:^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$'],
-                    'ActivationCode' => ['required', 'regex:^[a-f0-9]{64}$']
+                    'Username' => ['required', 'regex:/^[A-Za-z_][\w\-\.]{1,31}$/'],
+                    'PasswordHash' => ['required', 'regex:/^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$/'],
+                    'ActivationCode' => ['required', 'regex:/^[a-f0-9]{64}$/']
                 ],
                 [
                     'Email' => 'john.doe@example.com',
@@ -625,9 +625,9 @@ class ValidatorTest extends TestCase
                 [
                     'ID' => ['required', 'integer', 'min:1'],
                     'Email' => ['email'],
-                    'Username' => ['regex:^[A-Za-z_][\w\-\.]{1,31}$'],
-                    'PasswordHash' => ['regex:^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$'],
-                    'ActivationCode' => ['regex:^[a-f0-9]{64}$']
+                    'Username' => ['regex:/^[A-Za-z_][\w\-\.]{1,31}$/'],
+                    'PasswordHash' => ['regex:/^\$2[aby]?\$\d{1,2}\$[.\/A-Za-z0-9]{53}$/'],
+                    'ActivationCode' => ['regex:/^[a-f0-9]{64}$/']
                 ],
                 [
                     'ID' => '23',
@@ -642,7 +642,7 @@ class ValidatorTest extends TestCase
                 null,
                 [
                     'AccountId' => ['required', 'integer', 'min:1'],
-                    'ResetCode' => ['required', 'regex:^[a-f0-9]{64}$']
+                    'ResetCode' => ['required', 'regex:/^[a-f0-9]{64}$/']
                 ],
                 [
                     'AccountId' => '45',
@@ -655,7 +655,7 @@ class ValidatorTest extends TestCase
                 [
                     'ID' => ['required', 'integer', 'min:1'],
                     'AccountId' => ['integer', 'min:1'],
-                    'ResetCode' => ['regex:^[a-f0-9]{64}$']
+                    'ResetCode' => ['regex:/^[a-f0-9]{64}$/']
                 ],
                 [
                     'ID' => '23',

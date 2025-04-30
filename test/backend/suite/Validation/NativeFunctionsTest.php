@@ -222,19 +222,21 @@ class NativeFunctionsTest extends TestCase
     static function matchRegexDataProvider()
     {
         return [
-            [true, 'abc123', '^[a-z]+\d+$'],
-            [true, 'test@example.com', '^[\w\.-]+@[\w\.-]+\.\w+$'],
-            [true, '123-456-7890', '^\d{3}-\d{3}-\d{4}$'],
-            [false, '1234567890', '^\d{3}-\d{3}-\d{4}$'],
-            [false, 'abc!', '^[a-z]+$'],
-            [false, 'user@domain', '^[\w\.-]+@[\w\.-]+\.\w+$'],
-            [false, 'abc123', '^(123|456)$'],
+            [true, 'abc123', '/^[a-z]+\d+$/'],
+            [false, 'abc!', '/^[a-z]+\d+$/'],
+            [true, '123-456-7890', '/^\d{3}-\d{3}-\d{4}$/'],
+            [false, '1234567890', '/^\d{3}-\d{3}-\d{4}$/'],
+            [true, 'test@example.com', '/^[\w\.-]+@[\w\.-]+\.\w+$/'],
+            [false, 'user@domain', '/^[\w\.-]+@[\w\.-]+\.\w+$/'],
+            [true, 'Şebnem Yılmaz', "/^[\p{L}\p{N}][\p{L}\p{N} .\-']{1,49}$/u"],
+            [false, ' 😎 Cool Name', "/^[\p{L}\p{N}][\p{L}\p{N} .\-']{1,49}$/u"],
+            [true, '山田 太郎', "/^[\p{L}\p{N}][\p{L}\p{N} .\-']{1,49}$/u"],
+            [false, '　山田', "/^[\p{L}\p{N}][\p{L}\p{N} .\-']{1,49}$/u"],
             // Malformed patterns for triggering compilation errors:
-            [false, 'abc', '['],       // Unclosed bracket
-            [false, '123', '(\d'],     // Unclosed parenthesis
-            [false, 'test', 'a{3,2}'], // Invalid quantifier order
-            [false, 'hello', '??'],    // Invalid syntax
-            [false, 'world', '[z-a]'], // Invalid range
+            [false, '123', '/(\d/'],     // Unclosed parenthesis
+            [false, 'test', '/a{3,2}/'], // Invalid quantifier order
+            [false, 'hello', '/??/'],    // Invalid syntax
+            [false, 'world', '/[z-a]/'], // Invalid range
         ];
     }
 
@@ -248,7 +250,7 @@ class NativeFunctionsTest extends TestCase
             [false, '2024-03-07 15:30', 'Y-m-d H:i:s'],
             [false, '07-03-24', 'd-m-Y'],
             [false, '31-04-2024', 'd-m-Y'], // Invalid date (April 31)
-            [false, '2023-02-29', 'Y-m-d'],  // 2023 is NOT a leap year
+            [false, '2023-02-29', 'Y-m-d'], // 2023 is NOT a leap year
             [false, 'not-a-date', 'Y-m-d'],
             [false, '15:30:45', 'Y-m-d H:i:s'],
         ];

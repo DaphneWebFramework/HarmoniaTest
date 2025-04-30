@@ -72,7 +72,7 @@ class StandardMetaRuleTest extends TestCase
 
     function testValidateSucceedsWhenRuleExists()
     {
-        $sut = new StandardMetaRule('regex', '^\d{9}$');
+        $sut = new StandardMetaRule('regex', '/^\d{9}$/');
 
         $sut->Validate('passportNumber', '987654321');
         $this->expectNotToPerformAssertions();
