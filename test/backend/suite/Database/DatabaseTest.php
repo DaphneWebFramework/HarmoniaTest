@@ -52,7 +52,7 @@ class DatabaseTest extends TestCase
         $config->expects($this->any())
             ->method('OptionOrDefault')
             ->willReturnMap([
-                ['DatabaseHostname', '', 'localhost'],
+                ['DatabaseHost', '', 'localhost'],
                 ['DatabaseUsername', '', 'root'],
                 ['DatabasePassword', '', 'pass123'],
                 ['DatabaseName', '', 'test_db']
@@ -72,7 +72,7 @@ class DatabaseTest extends TestCase
         $config->expects($this->any())
             ->method('OptionOrDefault')
             ->willReturnMap([
-                ['DatabaseHostname', '', ''],
+                ['DatabaseHost', '', ''],
                 ['DatabaseUsername', '', ''],
                 ['DatabasePassword', '', ''],
                 ['DatabaseName', '', '']
