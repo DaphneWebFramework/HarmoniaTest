@@ -70,6 +70,25 @@ class StandardMetaRuleTest extends TestCase
         $sut->Validate('field1', 'value');
     }
 
+    function testValidateThrowsWhenRuleFails()
+    {
+        $sut = new StandardMetaRule('regex', '/^[a-z]+$/');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Field 'field1' must match the required pattern: /^[a-z]+$/");
+        $sut->Validate('field1', '1234');
+    }
+
+    function testValidateThrowsCustomMessageWhenRuleFails()
+    {
+        $sut = new StandardMetaRule('regex', '/^[a-z]+$/', 'Custom error message');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Custom error message');
+        $sut->Validate('field1', '1234');
+    }
+
     function testValidateSucceedsWhenRuleExists()
     {
         $sut = new StandardMetaRule('regex', '/^\d{9}$/');

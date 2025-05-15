@@ -53,6 +53,18 @@ class ValidatorTest extends TestCase
         }
     }
 
+    function testValidateThrowsCustomMessageWhenRuleFails()
+    {
+        $sut = new \Harmonia\Validation\Validator(
+            ['username' => ['required', 'regex:/^[a-z]+$/']],
+            ['username.regex' => 'Custom error message']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Custom error message');
+        $sut->Validate(['username' => '1234']);
+    }
+
     #endregion Validate
 
     #region Data Providers -----------------------------------------------------
