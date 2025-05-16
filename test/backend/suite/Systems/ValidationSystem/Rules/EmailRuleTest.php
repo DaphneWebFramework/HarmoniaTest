@@ -1,16 +1,15 @@
 <?php declare(strict_types=1);
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
-use \PHPUnit\Framework\Attributes\DataProvider;
 
-use \Harmonia\Validation\Rules\IntegerRule;
+use \Harmonia\Systems\ValidationSystem\Rules\EmailRule;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\NativeFunctions;
+use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
-#[CoversClass(IntegerRule::class)]
-class IntegerRuleTest extends TestCase
+#[CoversClass(EmailRule::class)]
+class EmailRuleTest extends TestCase
 {
     private ?Config $originalConfig = null;
 
@@ -31,39 +30,39 @@ class IntegerRuleTest extends TestCase
         return $mock;
     }
 
-    private function systemUnderTest(): IntegerRule
+    private function systemUnderTest(): EmailRule
     {
-        return new IntegerRule($this->createMock(NativeFunctions::class));
+        return new EmailRule($this->createMock(NativeFunctions::class));
     }
 
     #region Validate -----------------------------------------------------------
 
-    function testValidateSucceedsWhenValueIsIntegerLike()
+    function testValidateSucceedsWhenValueIsValidEmail()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsIntegerLike')
-            ->with(123)
+            ->method('IsEmailAddress')
+            ->with('user@example.com')
             ->willReturn(true);
 
-        $sut->Validate('field1', 123, null);
+        $sut->Validate('field1', 'user@example.com', null);
     }
 
-    function testValidateThrowsWhenValueIsNotIntegerLike()
+    function testValidateThrowsWhenValueIsNotValidEmail()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsIntegerLike')
-            ->with('not-an-int')
+            ->method('IsEmailAddress')
+            ->with('invalid-email')
             ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must be an integer.");
-        $sut->Validate('field1', 'not-an-int', null);
+        $this->expectExceptionMessage("Field 'field1' must be a valid email address.");
+        $sut->Validate('field1', 'invalid-email', null);
     }
 
     #endregion Validate

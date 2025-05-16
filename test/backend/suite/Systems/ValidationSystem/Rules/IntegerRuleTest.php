@@ -1,15 +1,16 @@
 <?php declare(strict_types=1);
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
+use \PHPUnit\Framework\Attributes\DataProvider;
 
-use \Harmonia\Validation\Rules\NumericRule;
+use \Harmonia\Systems\ValidationSystem\Rules\IntegerRule;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\NativeFunctions;
+use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
-#[CoversClass(NumericRule::class)]
-class NumericRuleTest extends TestCase
+#[CoversClass(IntegerRule::class)]
+class IntegerRuleTest extends TestCase
 {
     private ?Config $originalConfig = null;
 
@@ -30,39 +31,39 @@ class NumericRuleTest extends TestCase
         return $mock;
     }
 
-    private function systemUnderTest(): NumericRule
+    private function systemUnderTest(): IntegerRule
     {
-        return new NumericRule($this->createMock(NativeFunctions::class));
+        return new IntegerRule($this->createMock(NativeFunctions::class));
     }
 
     #region Validate -----------------------------------------------------------
 
-    function testValidateSucceedsWhenValueIsNumeric()
+    function testValidateSucceedsWhenValueIsIntegerLike()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsNumeric')
+            ->method('IsIntegerLike')
             ->with(123)
             ->willReturn(true);
 
         $sut->Validate('field1', 123, null);
     }
 
-    function testValidateThrowsWhenValueIsNotNumeric()
+    function testValidateThrowsWhenValueIsNotIntegerLike()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsNumeric')
-            ->with('non-numeric')
+            ->method('IsIntegerLike')
+            ->with('not-an-int')
             ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must be numeric.");
-        $sut->Validate('field1', 'non-numeric', null);
+        $this->expectExceptionMessage("Field 'field1' must be an integer.");
+        $sut->Validate('field1', 'not-an-int', null);
     }
 
     #endregion Validate

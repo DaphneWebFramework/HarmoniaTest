@@ -3,7 +3,7 @@ use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
-use \Harmonia\Validation\RuleFactory;
+use \Harmonia\Systems\ValidationSystem\RuleFactory;
 
 use \Harmonia\Config;
 use \TestToolkit\AccessHelper;
@@ -53,7 +53,7 @@ class RuleFactoryTest extends TestCase
     {
         $rule = RuleFactory::Create($ruleName);
 
-        $ruleClassName = '\\Harmonia\\Validation\\Rules\\'
+        $ruleClassName = '\\Harmonia\\Systems\\ValidationSystem\\Rules\\'
                        . \ucfirst(\strtolower($ruleName))
                        . 'Rule';
         $this->assertInstanceof($ruleClassName, $rule);

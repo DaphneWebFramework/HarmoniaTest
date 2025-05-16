@@ -3,10 +3,10 @@ use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
-use \Harmonia\Validation\Validator;
+use \Harmonia\Systems\ValidationSystem\Validator;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\DataAccessor;
+use \Harmonia\Systems\ValidationSystem\DataAccessor;
 
 #[CoversClass(Validator::class)]
 class ValidatorTest extends TestCase
@@ -55,7 +55,7 @@ class ValidatorTest extends TestCase
 
     function testValidateThrowsCustomMessageWhenRuleFails()
     {
-        $sut = new \Harmonia\Validation\Validator(
+        $sut = new \Harmonia\Systems\ValidationSystem\Validator(
             ['username' => ['required', 'regex:/^[a-z]+$/']],
             ['username.regex' => 'Custom error message']
         );

@@ -2,7 +2,7 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\MetaRules\CustomMetaRule;
+use \Harmonia\Systems\ValidationSystem\MetaRules\CustomMetaRule;
 
 use \Harmonia\Config;
 

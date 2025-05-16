@@ -2,14 +2,14 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\Rules\MinRule;
+use \Harmonia\Systems\ValidationSystem\Rules\RegexRule;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\NativeFunctions;
+use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
-#[CoversClass(MinRule::class)]
-class MinRuleTest extends TestCase
+#[CoversClass(RegexRule::class)]
+class RegexRuleTest extends TestCase
 {
     private ?Config $originalConfig = null;
 
@@ -30,90 +30,85 @@ class MinRuleTest extends TestCase
         return $mock;
     }
 
-    private function systemUnderTest(): MinRule
+    private function systemUnderTest(): RegexRule
     {
-        return new MinRule($this->createMock(NativeFunctions::class));
+        return new RegexRule($this->createMock(NativeFunctions::class));
     }
 
     #region Validate -----------------------------------------------------------
 
-    function testValidateThrowsWhenValueIsNotNumeric()
+    function testValidateThrowsWhenValueIsNotString()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsNumeric')
-            ->with('non-numeric')
+            ->method('IsString')
+            ->with(12345)
             ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must be numeric.");
-        $sut->Validate('field1', 'non-numeric', 10);
+        $this->expectExceptionMessage("Field 'field1' must be a string.");
+        $sut->Validate('field1', 12345, '/^[a-z]+$/');
     }
 
-    function testValidateThrowsWhenParamIsNotNumeric()
+    function testValidateThrowsWhenParamIsNotString()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->exactly(2))
-            ->method('IsNumeric')
+            ->method('IsString')
             ->willReturnMap([
-                [5, true],
-                ['non-numeric', false]
+                ['hello', true],
+                [12345, false]
             ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Rule 'min' must be used with a number.");
-        $sut->Validate('field1', 5, 'non-numeric');
+        $this->expectExceptionMessage(
+            "Rule 'regex' must be used with a valid pattern.");
+        $sut->Validate('field1', 'hello', 12345);
     }
 
-    function testValidateSucceedsWhenValueExceedsMin()
+    function testValidateSucceedsWhenValueMatchesPattern()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->exactly(2))
-            ->method('IsNumeric')
+            ->method('IsString')
             ->willReturnMap([
-                [20, true],
-                [10, true]
+                ['hello', true],
+                ['/^[a-z]+$/', true]
             ]);
+        $nativeFunctions->expects($this->once())
+            ->method('MatchRegex')
+            ->with('hello', '/^[a-z]+$/')
+            ->willReturn(true);
 
-        $sut->Validate('field1', 20, 10);
+        $sut->Validate('field1', 'hello', '/^[a-z]+$/');
     }
 
-    function testValidateSucceedsWhenValueEqualsMin()
+    function testValidateThrowsWhenValueDoesNotMatchPattern()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->exactly(2))
-            ->method('IsNumeric')
+            ->method('IsString')
             ->willReturnMap([
-                [10, true],
-                [10, true]
+                ['123', true],
+                ['/^[a-z]+$/', true]
             ]);
-
-        $sut->Validate('field1', 10, 10);
-    }
-
-    function testValidateThrowsWhenValueIsLessThanMin()
-    {
-        $sut = $this->systemUnderTest();
-        $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
-
-        $nativeFunctions->expects($this->exactly(2))
-            ->method('IsNumeric')
-            ->willReturnMap([
-                [5, true],
-                [10, true]
-            ]);
+        $nativeFunctions->expects($this->once())
+            ->method('MatchRegex')
+            ->with('123', '/^[a-z]+$/')
+            ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must have a minimum value of 10.");
-        $sut->Validate('field1', 5, 10);
+        $this->expectExceptionMessage(
+            "Field 'field1' must match the required pattern: /^[a-z]+$/");
+        $sut->Validate('field1', '123', '/^[a-z]+$/');
     }
 
     #endregion Validate

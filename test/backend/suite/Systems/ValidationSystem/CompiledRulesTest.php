@@ -2,11 +2,11 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\CompiledRules;
+use \Harmonia\Systems\ValidationSystem\CompiledRules;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\MetaRules\CustomMetaRule;
-use \Harmonia\Validation\MetaRules\StandardMetaRule;
+use \Harmonia\Systems\ValidationSystem\MetaRules\CustomMetaRule;
+use \Harmonia\Systems\ValidationSystem\MetaRules\StandardMetaRule;
 
 #[CoversClass(CompiledRules::class)]
 class CompiledRulesTest extends TestCase

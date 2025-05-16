@@ -2,14 +2,13 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\Rules\EmailRule;
-
+use \Harmonia\Systems\ValidationSystem\Rules\StringRule;
 use \Harmonia\Config;
-use \Harmonia\Validation\NativeFunctions;
+use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
-#[CoversClass(EmailRule::class)]
-class EmailRuleTest extends TestCase
+#[CoversClass(StringRule::class)]
+class StringRuleTest extends TestCase
 {
     private ?Config $originalConfig = null;
 
@@ -30,39 +29,39 @@ class EmailRuleTest extends TestCase
         return $mock;
     }
 
-    private function systemUnderTest(): EmailRule
+    private function systemUnderTest(): StringRule
     {
-        return new EmailRule($this->createMock(NativeFunctions::class));
+        return new StringRule($this->createMock(NativeFunctions::class));
     }
 
     #region Validate -----------------------------------------------------------
 
-    function testValidateSucceedsWhenValueIsValidEmail()
+    function testValidateSucceedsWhenValueIsString()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsEmailAddress')
-            ->with('user@example.com')
+            ->method('IsString')
+            ->with('valid-string')
             ->willReturn(true);
 
-        $sut->Validate('field1', 'user@example.com', null);
+        $sut->Validate('field1', 'valid-string', null);
     }
 
-    function testValidateThrowsWhenValueIsNotValidEmail()
+    function testValidateThrowsWhenValueIsNotString()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsEmailAddress')
-            ->with('invalid-email')
+            ->method('IsString')
+            ->with(12345)
             ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must be a valid email address.");
-        $sut->Validate('field1', 'invalid-email', null);
+        $this->expectExceptionMessage("Field 'field1' must be a string.");
+        $sut->Validate('field1', 12345, null);
     }
 
     #endregion Validate

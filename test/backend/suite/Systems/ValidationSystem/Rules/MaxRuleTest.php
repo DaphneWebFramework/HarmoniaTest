@@ -2,14 +2,14 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\Rules\RegexRule;
+use \Harmonia\Systems\ValidationSystem\Rules\MaxRule;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\NativeFunctions;
+use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
-#[CoversClass(RegexRule::class)]
-class RegexRuleTest extends TestCase
+#[CoversClass(MaxRule::class)]
+class MaxRuleTest extends TestCase
 {
     private ?Config $originalConfig = null;
 
@@ -30,85 +30,90 @@ class RegexRuleTest extends TestCase
         return $mock;
     }
 
-    private function systemUnderTest(): RegexRule
+    private function systemUnderTest(): MaxRule
     {
-        return new RegexRule($this->createMock(NativeFunctions::class));
+        return new MaxRule($this->createMock(NativeFunctions::class));
     }
 
     #region Validate -----------------------------------------------------------
 
-    function testValidateThrowsWhenValueIsNotString()
+    function testValidateThrowsWhenValueIsNotNumeric()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsString')
-            ->with(12345)
+            ->method('IsNumeric')
+            ->with('non-numeric')
             ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must be a string.");
-        $sut->Validate('field1', 12345, '/^[a-z]+$/');
+        $this->expectExceptionMessage("Field 'field1' must be numeric.");
+        $sut->Validate('field1', 'non-numeric', 100);
     }
 
-    function testValidateThrowsWhenParamIsNotString()
+    function testValidateThrowsWhenParamIsNotNumeric()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->exactly(2))
-            ->method('IsString')
+            ->method('IsNumeric')
             ->willReturnMap([
-                ['hello', true],
-                [12345, false]
+                [50, true],
+                ['non-numeric', false]
             ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage(
-            "Rule 'regex' must be used with a valid pattern.");
-        $sut->Validate('field1', 'hello', 12345);
+        $this->expectExceptionMessage("Rule 'max' must be used with a number.");
+        $sut->Validate('field1', 50, 'non-numeric');
     }
 
-    function testValidateSucceedsWhenValueMatchesPattern()
+    function testValidateSucceedsWhenValueIsLessThanMax()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->exactly(2))
-            ->method('IsString')
+            ->method('IsNumeric')
             ->willReturnMap([
-                ['hello', true],
-                ['/^[a-z]+$/', true]
+                [50, true],
+                [100, true]
             ]);
-        $nativeFunctions->expects($this->once())
-            ->method('MatchRegex')
-            ->with('hello', '/^[a-z]+$/')
-            ->willReturn(true);
 
-        $sut->Validate('field1', 'hello', '/^[a-z]+$/');
+        $sut->Validate('field1', 50, 100);
     }
 
-    function testValidateThrowsWhenValueDoesNotMatchPattern()
+    function testValidateSucceedsWhenValueEqualsMax()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->exactly(2))
-            ->method('IsString')
+            ->method('IsNumeric')
             ->willReturnMap([
-                ['123', true],
-                ['/^[a-z]+$/', true]
+                [100, true],
+                [100, true]
             ]);
-        $nativeFunctions->expects($this->once())
-            ->method('MatchRegex')
-            ->with('123', '/^[a-z]+$/')
-            ->willReturn(false);
+
+        $sut->Validate('field1', 100, 100);
+    }
+
+    function testValidateThrowsWhenValueExceedsMax()
+    {
+        $sut = $this->systemUnderTest();
+        $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
+
+        $nativeFunctions->expects($this->exactly(2))
+            ->method('IsNumeric')
+            ->willReturnMap([
+                [150, true],
+                [100, true]
+            ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage(
-            "Field 'field1' must match the required pattern: /^[a-z]+$/");
-        $sut->Validate('field1', '123', '/^[a-z]+$/');
+        $this->expectExceptionMessage("Field 'field1' must have a maximum value of 100.");
+        $sut->Validate('field1', 150, 100);
     }
 
     #endregion Validate

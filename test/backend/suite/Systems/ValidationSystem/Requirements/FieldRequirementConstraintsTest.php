@@ -2,10 +2,10 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\Requirements\FieldRequirementConstraints;
+use \Harmonia\Systems\ValidationSystem\Requirements\FieldRequirementConstraints;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\MetaRules\IMetaRule;
+use \Harmonia\Systems\ValidationSystem\MetaRules\IMetaRule;
 
 #[CoversClass(FieldRequirementConstraints::class)]
 class FieldRequirementConstraintsTest extends TestCase

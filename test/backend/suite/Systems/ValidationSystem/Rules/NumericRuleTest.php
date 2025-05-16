@@ -2,14 +2,14 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\Rules\ArrayRule;
+use \Harmonia\Systems\ValidationSystem\Rules\NumericRule;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\NativeFunctions;
+use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
-#[CoversClass(ArrayRule::class)]
-class ArrayRuleTest extends TestCase
+#[CoversClass(NumericRule::class)]
+class NumericRuleTest extends TestCase
 {
     private ?Config $originalConfig = null;
 
@@ -30,39 +30,39 @@ class ArrayRuleTest extends TestCase
         return $mock;
     }
 
-    private function systemUnderTest(): ArrayRule
+    private function systemUnderTest(): NumericRule
     {
-        return new ArrayRule($this->createMock(NativeFunctions::class));
+        return new NumericRule($this->createMock(NativeFunctions::class));
     }
 
     #region Validate -----------------------------------------------------------
 
-    function testValidateSucceedsWhenValueIsArray()
+    function testValidateSucceedsWhenValueIsNumeric()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsArray')
-            ->with([])
+            ->method('IsNumeric')
+            ->with(123)
             ->willReturn(true);
 
-        $sut->Validate('field1', [], null);
+        $sut->Validate('field1', 123, null);
     }
 
-    function testValidateThrowsWhenValueIsNotArray()
+    function testValidateThrowsWhenValueIsNotNumeric()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
 
         $nativeFunctions->expects($this->once())
-            ->method('IsArray')
-            ->with('not-an-array')
+            ->method('IsNumeric')
+            ->with('non-numeric')
             ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must be an array.");
-        $sut->Validate('field1', 'not-an-array', null);
+        $this->expectExceptionMessage("Field 'field1' must be numeric.");
+        $sut->Validate('field1', 'non-numeric', null);
     }
 
     #endregion Validate

@@ -2,10 +2,10 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\Rules\DatetimeRule;
+use \Harmonia\Systems\ValidationSystem\Rules\DatetimeRule;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\NativeFunctions;
+use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(DatetimeRule::class)]

@@ -2,11 +2,11 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Validation\MetaRules\StandardMetaRule;
+use \Harmonia\Systems\ValidationSystem\MetaRules\StandardMetaRule;
 
 use \Harmonia\Config;
 use \Harmonia\Core\CArray;
-use \Harmonia\Validation\RuleFactory;
+use \Harmonia\Systems\ValidationSystem\RuleFactory;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(StandardMetaRule::class)]

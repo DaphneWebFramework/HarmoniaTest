@@ -3,7 +3,7 @@ use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
-use \Harmonia\Validation\RuleParser;
+use \Harmonia\Systems\ValidationSystem\RuleParser;
 
 use \Harmonia\Config;
 

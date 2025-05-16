@@ -3,7 +3,7 @@ use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
-use \Harmonia\Validation\DataAccessor;
+use \Harmonia\Systems\ValidationSystem\DataAccessor;
 
 use \Harmonia\Config;
 use \Harmonia\Core\CArray;

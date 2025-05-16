@@ -3,11 +3,11 @@ use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
-use \Harmonia\Validation\Requirements\RequirementEngine;
+use \Harmonia\Systems\ValidationSystem\Requirements\RequirementEngine;
 
 use \Harmonia\Config;
-use \Harmonia\Validation\DataAccessor;
-use \Harmonia\Validation\MetaRules\IMetaRule;
+use \Harmonia\Systems\ValidationSystem\DataAccessor;
+use \Harmonia\Systems\ValidationSystem\MetaRules\IMetaRule;
 
 #[CoversClass(RequirementEngine::class)]
 class RequirementEngineTest extends TestCase
