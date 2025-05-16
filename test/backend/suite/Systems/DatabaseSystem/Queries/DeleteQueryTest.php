@@ -2,7 +2,7 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Database\Queries\DeleteQuery;
+use \Harmonia\Systems\DatabaseSystem\Queries\DeleteQuery;
 
 #[CoversClass(DeleteQuery::class)]
 class DeleteQueryTest extends TestCase

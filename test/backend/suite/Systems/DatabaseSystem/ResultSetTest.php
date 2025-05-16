@@ -2,9 +2,9 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Database\ResultSet;
+use \Harmonia\Systems\DatabaseSystem\ResultSet;
 
-use \Harmonia\Database\Proxies\MySQLiResult;
+use \Harmonia\Systems\DatabaseSystem\Proxies\MySQLiResult;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(ResultSet::class)]

@@ -2,7 +2,7 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Database\Queries\InsertQuery;
+use \Harmonia\Systems\DatabaseSystem\Queries\InsertQuery;
 
 #[CoversClass(InsertQuery::class)]
 class InsertQueryTest extends TestCase

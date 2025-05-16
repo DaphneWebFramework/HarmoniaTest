@@ -2,7 +2,7 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Database\Queries\UpdateQuery;
+use \Harmonia\Systems\DatabaseSystem\Queries\UpdateQuery;
 
 #[CoversClass(UpdateQuery::class)]
 class UpdateQueryTest extends TestCase

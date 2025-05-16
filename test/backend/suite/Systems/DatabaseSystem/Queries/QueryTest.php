@@ -2,7 +2,7 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Database\Queries\Query;
+use \Harmonia\Systems\DatabaseSystem\Queries\Query;
 
 use \TestToolkit\AccessHelper;
 

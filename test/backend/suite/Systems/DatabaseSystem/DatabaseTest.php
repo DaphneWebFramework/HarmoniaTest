@@ -3,15 +3,15 @@ use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
-use \Harmonia\Database\Database;
+use \Harmonia\Systems\DatabaseSystem\Database;
 
 use \Harmonia\Config;
-use \Harmonia\Database\Connection;
-use \Harmonia\Database\Proxies\MySQLiHandle;
-use \Harmonia\Database\Proxies\MySQLiResult;
-use \Harmonia\Database\Queries\Query;
-use \Harmonia\Database\ResultSet;
 use \Harmonia\Logger;
+use \Harmonia\Systems\DatabaseSystem\Connection;
+use \Harmonia\Systems\DatabaseSystem\Proxies\MySQLiHandle;
+use \Harmonia\Systems\DatabaseSystem\Proxies\MySQLiResult;
+use \Harmonia\Systems\DatabaseSystem\Queries\Query;
+use \Harmonia\Systems\DatabaseSystem\ResultSet;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(Database::class)]

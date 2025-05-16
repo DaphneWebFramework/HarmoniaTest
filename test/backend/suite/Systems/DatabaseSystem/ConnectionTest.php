@@ -4,12 +4,12 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 use \PHPUnit\Framework\Attributes\RequiresPhp;
 
-use \Harmonia\Database\Connection;
+use \Harmonia\Systems\DatabaseSystem\Connection;
 
-use \Harmonia\Database\Proxies\MySQLiHandle;
-use \Harmonia\Database\Proxies\MySQLiResult;
-use \Harmonia\Database\Proxies\MySQLiStatement;
-use \Harmonia\Database\Queries\Query;
+use \Harmonia\Systems\DatabaseSystem\Proxies\MySQLiHandle;
+use \Harmonia\Systems\DatabaseSystem\Proxies\MySQLiResult;
+use \Harmonia\Systems\DatabaseSystem\Proxies\MySQLiStatement;
+use \Harmonia\Systems\DatabaseSystem\Queries\Query;
 use \TestToolkit\AccessHelper;
 
 if (!\class_exists('mysqli_sql_exception')) {

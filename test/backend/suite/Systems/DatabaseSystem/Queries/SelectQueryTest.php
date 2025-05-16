@@ -2,7 +2,7 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
-use \Harmonia\Database\Queries\SelectQuery;
+use \Harmonia\Systems\DatabaseSystem\Queries\SelectQuery;
 
 #[CoversClass(SelectQuery::class)]
 class SelectQueryTest extends TestCase
