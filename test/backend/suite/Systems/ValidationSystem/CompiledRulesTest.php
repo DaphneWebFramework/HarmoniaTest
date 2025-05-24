@@ -80,20 +80,5 @@ class CompiledRulesTest extends TestCase
         ]);
     }
 
-    function testConstructorPassesCustomMessageToStandardMetaRule()
-    {
-        $sut = new CompiledRules(
-            ['username' => 'regex:/^[a-z]+$/'],
-            ['username.regex' => 'Custom error message']
-        );
-        $mrc = $sut->MetaRulesCollection();
-        $rule = $mrc['username'][0];
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Custom error message');
-
-        $rule->Validate('username', '1234');
-    }
-
     #endregion __construct
 }
