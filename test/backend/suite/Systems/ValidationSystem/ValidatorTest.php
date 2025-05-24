@@ -53,16 +53,103 @@ class ValidatorTest extends TestCase
         }
     }
 
-    function testValidateThrowsCustomMessageWhenRuleFails()
+    function testValidateThrowsCustomMessageForRequiredRule()
     {
-        $sut = new \Harmonia\Systems\ValidationSystem\Validator(
-            ['username' => ['required', 'regex:/^[a-z]+$/']],
-            ['username.regex' => 'Custom error message']
+        $sut = new Validator(
+            ['email' => ['required']],
+            ['email.required' => 'Email is mandatory.']
         );
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Custom error message');
-        $sut->Validate(['username' => '1234']);
+        $this->expectExceptionMessage('Email is mandatory.');
+        $sut->Validate([]); // no email provided
+    }
+
+    function testValidateThrowsCustomMessageForRequiredWithoutWhenAllMissing()
+    {
+        $sut = new Validator(
+            ['email' => ['requiredWithout:username']],
+            ['email.requiredWithout' => 'Either email or username must be provided.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Either email or username must be provided.');
+        $sut->Validate([]); // both missing
+    }
+
+    function testValidateThrowsCustomMessageForRequiredWithoutWhenBothPresent()
+    {
+        $sut = new Validator(
+            ['email' => ['requiredWithout:username']],
+            ['email.requiredWithout' => 'Only one of email or username is allowed.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Only one of email or username is allowed.');
+        $sut->Validate([
+            'email' => 'john@example.com',
+            'username' => 'johndoe'
+        ]);
+    }
+
+    function testValidateThrowsCustomMessageForStandardRules()
+    {
+        $sut = new Validator(
+            ['username' => ['required', 'regex:/^[a-z]+$/']],
+            ['username.regex' => 'Username must contain only lowercase letters.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Username must contain only lowercase letters.');
+        $sut->Validate(['username' => '1234']); // does not match regex
+    }
+
+    function testValidateMatchesCustomMessageKeyCaseInsensitivelyForRuleName()
+    {
+        $sut = new Validator(
+            ['age' => ['min:18']],
+            ['age.MIN' => 'Age must be at least 18.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Age must be at least 18.');
+        $sut->Validate(['age' => 16]);
+    }
+
+    function testValidateMatchesCustomMessageKeyForIntegerFieldName()
+    {
+        $sut = new Validator(
+            [0 => ['required']],
+            ['0.required' => 'The first item is required.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('The first item is required.');
+        $sut->Validate([]); // index 0 not provided
+    }
+
+    function testValidateMatchesCustomMessageKeyWithDottedFieldName()
+    {
+        $sut = new Validator(
+            ['profile.email' => ['required']],
+            ['profile.email.required' => 'Email is required in profile.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Email is required in profile.');
+        $sut->Validate([]); // no profile.email
+    }
+
+    function testValidateIgnoresCustomMessageForMismatchedField()
+    {
+        $sut = new Validator(
+            ['email' => ['required']],
+            ['username.required' => 'This message should not be used.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Required field 'email' is missing.");
+        $sut->Validate([]);
     }
 
     #endregion Validate
