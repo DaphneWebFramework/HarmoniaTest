@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
+use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Services\SecurityService;
 
@@ -144,4 +145,38 @@ class SecurityServiceTest extends TestCase
     }
 
     #endregion VerifyCsrfToken
+
+    #region IsValidToken -------------------------------------------------------
+
+    function testIsValidTokenReturnsTrueForValidToken()
+    {
+        $this->assertTrue(SecurityService::IsValidToken(
+            '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        ));
+    }
+
+    #[DataProvider('invalidTokenProvider')]
+    function testIsValidTokenReturnsFalseForInvalidTokens(string $input)
+    {
+        $this->assertFalse(SecurityService::IsValidToken($input));
+    }
+
+    #endregion IsValidToken
+
+    #region Data Providers -----------------------------------------------------
+
+    static function invalidTokenProvider()
+    {
+        return [
+            'empty' => [''],
+            'too short' => ['abc'],
+            'too long' => [\str_repeat('a', 65)],
+            'invalid chars' =>
+                ['abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-'],
+            'uppercase hex chars' =>
+                ['ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789'],
+        ];
+    }
+
+    #endregion Data Providers
 }
