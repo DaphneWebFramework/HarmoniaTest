@@ -34,6 +34,25 @@ class FakeResultSetTest extends TestCase
 
     #endregion __construct
 
+    #region Columns ------------------------------------------------------------
+
+    function testColumnsReturnsEmptyArrayForEmptyResultSet()
+    {
+        $sut = new FakeResultSet();
+        $this->assertSame([], $sut->Columns());
+    }
+
+    function testColumnsReturnsFieldNamesFromFirstRow()
+    {
+        $sut = new FakeResultSet([
+            ['id' => 1, 'email' => 'john@example.com'],
+            ['id' => 2, 'displayName' => 'Marry']
+        ]);
+        $this->assertSame(['id', 'email'], $sut->Columns());
+    }
+
+    #endregion Columns
+
     #region RowCount -----------------------------------------------------------
 
     function testRowCountReturnsZeroForEmptyResultSet()
