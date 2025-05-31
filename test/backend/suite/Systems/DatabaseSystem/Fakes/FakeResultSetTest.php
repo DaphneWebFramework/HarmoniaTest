@@ -5,25 +5,44 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 use \Harmonia\Systems\DatabaseSystem\Fakes\FakeResultSet;
 
 use \Harmonia\Systems\DatabaseSystem\ResultSet;
+use \TestToolkit\AccessHelper;
 
 #[CoversClass(FakeResultSet::class)]
 class FakeResultSetTest extends TestCase
 {
-    function testColumnsReturnsFieldNames()
+    #region __construct --------------------------------------------------------
+
+    function testConstructInitializesEmptyResultSet()
+    {
+        $sut = new FakeResultSet();
+        $this->assertSame([], AccessHelper::GetProperty($sut, 'rows'));
+        $this->assertSame(0, AccessHelper::GetProperty($sut, 'cursor'));
+    }
+
+    function testConstructInitializesPopulatedResultSet()
     {
         $sut = new FakeResultSet([
-            ['id' => 1, 'email' => 'x@example.com']
+            ['id' => 1, 'email' => 'john@example.com'],
+            ['id' => 2, 'email' => 'marry@example.com']
         ]);
-        $this->assertSame(['id', 'email'], $sut->Columns());
+        $this->assertSame([
+            ['id' => 1, 'email' => 'john@example.com'],
+            ['id' => 2, 'email' => 'marry@example.com']
+        ], AccessHelper::GetProperty($sut, 'rows'));
+        $this->assertSame(0, AccessHelper::GetProperty($sut, 'cursor'));
     }
 
-    function testColumnsReturnsEmptyArrayWhenNoRows()
+    #endregion __construct
+
+    #region RowCount -----------------------------------------------------------
+
+    function testRowCountReturnsZeroForEmptyResultSet()
     {
-        $sut = new FakeResultSet([]);
-        $this->assertSame([], $sut->Columns());
+        $sut = new FakeResultSet();
+        $this->assertSame(0, $sut->RowCount());
     }
 
-    function testRowCountIsAccurate()
+    function testRowCountReturnsCorrectCountForPopulatedResultSet()
     {
         $sut = new FakeResultSet([
             ['id' => 1],
@@ -33,41 +52,68 @@ class FakeResultSetTest extends TestCase
         $this->assertSame(3, $sut->RowCount());
     }
 
-    function testRowReturnsRowsInSequence()
+    #endregion RowCount
+
+    #region Row ----------------------------------------------------------------
+
+    function testRowReturnsNullForEmptyResultSet()
     {
-        $rows = [
-            ['id' => 1, 'email' => 'a@example.com'],
-            ['id' => 2, 'email' => 'b@example.com'],
-        ];
-        $sut = new FakeResultSet($rows);
-        $this->assertSame($rows[0], $sut->Row());
-        $this->assertSame($rows[1], $sut->Row());
+        $sut = new FakeResultSet();
         $this->assertNull($sut->Row());
     }
 
-    function testRowReturnsNullWhenExhausted()
-    {
-        $sut = new FakeResultSet([]);
-        $this->assertNull($sut->Row());
-    }
-
-    function testRowModeNumericReturnsIndexedArray()
+    function testRowReturnsSingleRowCorrectly()
     {
         $sut = new FakeResultSet([
-            ['id' => 42, 'email' => 'x@example.com']
+            ['id' => 1, 'email' => 'john@example.com']
         ]);
-        $row = $sut->Row(ResultSet::ROW_MODE_NUMERIC);
-        $this->assertSame([42, 'x@example.com'], $row);
+        $this->assertSame(['id' => 1, 'email' => 'john@example.com'], $sut->Row());
+        $this->assertNull($sut->Row());
     }
 
-    function testRowModeInvalidThrows()
+    function testRowReturnsRowsInDefinedOrder()
     {
-        $sut = new FakeResultSet([['a' => 1]]);
-        $this->expectException(\InvalidArgumentException::class);
-        $sut->Row(999); // Invalid row mode
+        $sut = new FakeResultSet([
+            ['id' => 1],
+            ['id' => 2]
+        ]);
+        $this->assertSame(['id' => 1], $sut->Row());
+        $this->assertSame(['id' => 2], $sut->Row());
+        $this->assertNull($sut->Row());
     }
 
-    function testIteratorYieldsAllRows()
+    function testRowReturnsNumericArrayWhenModeIsNumeric()
+    {
+        $sut = new FakeResultSet([
+            ['id' => 42, 'email' => 'john@example.com']
+        ]);
+        $this->assertSame(
+            [42, 'john@example.com'],
+            $sut->Row(ResultSet::ROW_MODE_NUMERIC)
+        );
+    }
+
+    function testRowThrowsExceptionWhenModeIsInvalid()
+    {
+        $sut = new FakeResultSet([['id' => 1]]);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid row mode: 999');
+        $sut->Row(999);
+    }
+
+    #endregion Row
+
+    #region getIterator --------------------------------------------------------
+
+    function testGetIteratorWithEmptyResultSet()
+    {
+        $sut = new FakeResultSet();
+        $iterator = $sut->getIterator();
+        $this->assertInstanceOf(\Traversable::class, $iterator);
+        $this->assertEmpty(\iterator_to_array($iterator));
+    }
+
+    function testGetIteratorWithNonEmptyResultSet()
     {
         $rows = [
             ['id' => 1],
@@ -81,4 +127,6 @@ class FakeResultSetTest extends TestCase
         }
         $this->assertSame($rows, $result);
     }
+
+    #endregion getIterator
 }
