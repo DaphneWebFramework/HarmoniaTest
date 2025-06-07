@@ -72,6 +72,55 @@ class FakeDatabaseTest extends TestCase
 
     #endregion Expect
 
+    #region VerifyAllExpectationsMet -------------------------------------------
+
+    function testVerifyAllExpectationsMetThrowsWhenExpectationIsNotExecuted()
+    {
+        $sut = new FakeDatabase();
+        $sut->Expect('SELECT 1', times: 1);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            'One or more expected queries were not executed.');
+        $sut->VerifyAllExpectationsMet();
+    }
+
+    function testVerifyAllExpectationsMetThrowsWhenExpectationsPartiallyUsed()
+    {
+        $sut = new FakeDatabase();
+        $sut->Expect('SELECT 1', times: 3);
+
+        $query = $this->createQuery('SELECT 1');
+        $sut->Execute($query);
+        $sut->Execute($query);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            'One or more expected queries were not executed.');
+        $sut->VerifyAllExpectationsMet();
+    }
+
+    function testVerifyAllExpectationsMetSucceedsWhenAllExpectationsAreUsed()
+    {
+        $sut = new FakeDatabase();
+        $sut->Expect('SELECT 1', times: 1);
+        $sut->Execute($this->createQuery('SELECT 1'));
+
+        $this->expectNotToPerformAssertions();
+        $sut->VerifyAllExpectationsMet();
+    }
+
+    function testVerifyAllExpectationsMetIgnoresUnlimitedExpectations()
+    {
+        $sut = new FakeDatabase();
+        $sut->Expect('SELECT 1'); // times: null (unlimited)
+
+        $this->expectNotToPerformAssertions();
+        $sut->VerifyAllExpectationsMet();
+    }
+
+    #endregion VerifyAllExpectationsMet
+
     #region Execute ------------------------------------------------------------
 
     function testExecuteThrowsWhenNoExpectationMatches()
