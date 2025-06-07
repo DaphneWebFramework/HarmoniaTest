@@ -165,7 +165,7 @@ class CStringTest extends TestCase
     }
 
     #[DataProvider('singleByteEncodingProvider')]
-    function testConstructorWithSingleByteEncoding($encoding)
+    function testConstructorWithSingleByteEncoding($encoding, $sampleString)
     {
         $cstr = new CString('', $encoding);
         $this->assertTrue(AccessHelper::GetProperty($cstr, 'isSingleByte'));
