@@ -13,7 +13,7 @@ use \Harmonia\Core\CPath;
 use \TestToolkit\AccessHelper;
 use \TestToolkit\DataHelper;
 
-class TestTranslation extends Translation {
+class _Translation extends Translation {
     protected function filePaths(): array {
         return []; // Not used in tests.
     }
@@ -26,8 +26,8 @@ class TranslationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->originalConfig = Config::ReplaceInstance(
-            $this->createMock(Config::class));
+        $this->originalConfig =
+            Config::ReplaceInstance($this->createMock(Config::class));
     }
 
     protected function tearDown(): void
@@ -37,7 +37,7 @@ class TranslationTest extends TestCase
 
     private function systemUnderTest(string ...$mockedMethods): Translation
     {
-        return $this->getMockBuilder(TestTranslation::class)
+        return $this->getMockBuilder(_Translation::class)
             ->disableOriginalConstructor()
             ->onlyMethods($mockedMethods)
             ->getMock();
@@ -191,6 +191,195 @@ class TranslationTest extends TestCase
 
         $result = $sut->Get('field_must_be_numeric', 'price');
         $this->assertSame("Field 'price' must be numeric.", $result);
+    }
+
+    function testGetReturnsTranslationViaAlias()
+    {
+        $sut = $this->systemUnderTest('translations', 'language');
+
+        $sut->expects($this->exactly(2))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'A' => new CArray([
+                    'en' => 'It works!'
+                ]),
+                'B' => 'A'
+            ]));
+        $sut->expects($this->once())
+            ->method('language')
+            ->willReturn('en');
+
+        $this->assertSame('It works!', $sut->Get('B'));
+    }
+
+    function testGetReturnsTranslationViaChainedAlias()
+    {
+        $sut = $this->systemUnderTest('translations', 'language');
+
+        $sut->expects($this->exactly(3))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'A' => new CArray([
+                    'en' => 'It works!'
+                ]),
+                'B' => 'A',
+                'C' => 'B'
+            ]));
+        $sut->expects($this->once())
+            ->method('language')
+            ->willReturn('en');
+
+        $this->assertSame('It works!', $sut->Get('C'));
+    }
+
+    function testGetReturnsFormattedTranslationViaAlias()
+    {
+        $sut = $this->systemUnderTest('translations', 'language');
+
+        $sut->expects($this->exactly(2))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'A' => new CArray([
+                    'en' => 'Hi %s!'
+                ]),
+                'B' => 'A'
+            ]));
+        $sut->expects($this->once())
+            ->method('language')
+            ->willReturn('en');
+
+        $this->assertSame('Hi Alice!', $sut->Get('B', 'Alice'));
+    }
+
+    function testGetReturnsFormattedTranslationViaChainedAlias()
+    {
+        $sut = $this->systemUnderTest('translations', 'language');
+
+        $sut->expects($this->exactly(3))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'A' => new CArray([
+                    'en' => 'Hi %s!'
+                ]),
+                'B' => 'A',
+                'C' => 'B'
+            ]));
+        $sut->expects($this->once())
+            ->method('language')
+            ->willReturn('en');
+
+        $this->assertSame('Hi Alice!', $sut->Get('C', 'Alice'));
+    }
+
+    function testGetThrowsWhenAliasTargetMissing()
+    {
+        $sut = $this->systemUnderTest('translations');
+
+        $sut->expects($this->exactly(2))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'B' => 'A'
+            ]));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Translation ID 'A' not found.");
+        $sut->Get('B');
+    }
+
+    function testGetThrowsWhenChainedAliasTargetMissing()
+    {
+        $sut = $this->systemUnderTest('translations');
+
+        $sut->expects($this->exactly(3))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'B' => 'A',
+                'C' => 'B'
+            ]));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Translation ID 'A' not found.");
+        $sut->Get('C');
+    }
+
+    function testGetThrowsWhenLanguageNotFoundViaAlias()
+    {
+        $sut = $this->systemUnderTest('translations', 'language');
+
+        $sut->expects($this->exactly(2))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'A' => new CArray([
+                    'tr' => 'Ana sayfa'
+                ]),
+                'B' => 'A'
+            ]));
+        $sut->expects($this->once())
+            ->method('language')
+            ->willReturn('en');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Language 'en' not found for translation ID 'A'.");
+        $sut->Get('B');
+    }
+
+    function testGetThrowsWhenLanguageNotFoundViaChainedAlias()
+    {
+        $sut = $this->systemUnderTest('translations', 'language');
+
+        $sut->expects($this->exactly(3))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'A' => new CArray([
+                    'tr' => 'Ana sayfa'
+                ]),
+                'B' => 'A',
+                'C' => 'B'
+            ]));
+        $sut->expects($this->once())
+            ->method('language')
+            ->willReturn('en');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Language 'en' not found for translation ID 'A'.");
+        $sut->Get('C');
+    }
+
+    function testGetThrowsWhenAliasCycleDetected()
+    {
+        $sut = $this->systemUnderTest('translations');
+
+        $sut->expects($this->exactly(2))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'A' => 'B',
+                'B' => 'A'
+            ]));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Alias cycle detected with translation ID 'A'.");
+        $sut->Get('A');
+    }
+
+    function testGetThrowsWhenChainedAliasCycleDetected()
+    {
+        $sut = $this->systemUnderTest('translations');
+
+        $sut->expects($this->exactly(3))
+            ->method('translations')
+            ->willReturn(new CArray([
+                'A' => 'C',
+                'B' => 'A',
+                'C' => 'B'
+            ]));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Alias cycle detected with translation ID 'C'.");
+        $sut->Get('C');
     }
 
     #endregion Get
@@ -399,7 +588,7 @@ class TranslationTest extends TestCase
         AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadFileThrowsWhenUnitIsNotArray()
+    function testLoadFileThrowsWhenUnitIsNotArrayOrString()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -413,7 +602,7 @@ class TranslationTest extends TestCase
             ->method('Read')
             ->willReturn(<<<JSON
                 {
-                  "welcome_message": "not an object",
+                  "welcome_message": 123,
                   "logout_confirmation": {
                     "en": "Are you sure you want to log out?",
                     "tr": "Çıkış yapmak istediğinizden emin misiniz?",
@@ -426,7 +615,7 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            'Translation unit must be an object of language-text pairs.');
+            'Translation unit must be an object of language-text pairs or an alias string.');
         AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
@@ -517,7 +706,7 @@ class TranslationTest extends TestCase
         AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadFileSucceeds()
+    function testLoadFileSucceedsWithUnits()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -546,26 +735,59 @@ class TranslationTest extends TestCase
         $file->expects($this->once())
             ->method('Close');
 
-        $root = AccessHelper::CallMethod($sut, 'loadFile', [$path]);
+        $actual = AccessHelper::CallMethod($sut, 'loadFile', [$path]);
 
-        $expected = [
-            'welcome_message' => [
+        $expected = new CArray([
+            'welcome_message' => new CArray([
                 'en' => 'Welcome to our application!',
                 'tr' => 'Uygulamamıza hoş geldiniz!',
                 'se' => 'Välkommen till vår applikation!'
-            ],
-            'logout_confirmation' => [
+            ]),
+            'logout_confirmation' => new CArray([
                 'en' => 'Are you sure you want to log out?',
                 'tr' => 'Çıkış yapmak istediğinizden emin misiniz?',
                 'se' => 'Är du säker på att du vill logga ut?'
-            ]
-        ];
-        $this->assertInstanceOf(CArray::class, $root);
-        $this->assertCount(\count($expected), $root);
-        foreach ($root as $translationId => $unit) {
-            $this->assertInstanceOf(CArray::class, $unit);
-            $this->assertSame($expected[$translationId], $unit->ToArray());
-        }
+            ])
+        ]);
+        $this->assertEquals($expected, $actual);
+    }
+
+    function testLoadFileSucceedsWithUnitAndAlias()
+    {
+        $sut = $this->systemUnderTest('openFile');
+        $path = $this->createStub(CPath::class);
+        $file = $this->createMock(CFile::class);
+
+        $sut->expects($this->once())
+            ->method('openFile')
+            ->with($path)
+            ->willReturn($file);
+        $file->expects($this->once())
+            ->method('Read')
+            ->willReturn(<<<JSON
+                {
+                  "home_page": {
+                    "en": "Home page",
+                    "tr": "Ana sayfa",
+                    "se": "Hem sida"
+                  },
+                  "title": "home_page"
+                }
+            JSON);
+        $file->expects($this->once())
+            ->method('Close');
+
+        $actual = AccessHelper::CallMethod($sut, 'loadFile', [$path]);
+
+        $expected = new CArray([
+            'home_page' => new CArray([
+                'en' => 'Home page',
+                'tr' => 'Ana sayfa',
+                'se' => 'Hem sida',
+            ]),
+            'title' => 'home_page'
+        ]);
+        $this->assertEquals($expected, $actual);
     }
 
     #endregion loadFile
@@ -800,6 +1022,80 @@ class TranslationTest extends TestCase
                         'en' => 'Confirm logout?',
                         'se' => 'Bekräfta utloggning?'
                     ]
+                ])
+            ],
+            'alias in base, unit in override' => [
+                new CArray([
+                    'title' => 'home_page',
+                    'home_page' => [
+                        'en' => 'Home page',
+                        'tr' => 'Ana sayfa',
+                        'se' => 'Hem sida'
+                    ]
+                ]),
+                new CArray([
+                    'title' => 'home_page'
+                ]),
+                new CArray([
+                    'home_page' => [
+                        'en' => 'Home page',
+                        'tr' => 'Ana sayfa',
+                        'se' => 'Hem sida'
+                    ]
+                ])
+            ],
+            'alias overriden by unit' => [
+                new CArray([
+                    'title' => [
+                        'en' => 'Create Account',
+                        'tr' => 'Hesap Oluştur',
+                        'se' => 'Skapa konto'
+                    ],
+                    'home_page' => [
+                        'en' => 'Home page',
+                        'tr' => 'Ana sayfa',
+                        'se' => 'Hem sida'
+                    ]
+                ]),
+                new CArray([
+                    'title' => 'home_page',
+                    'home_page' => [
+                        'en' => 'Home page',
+                        'tr' => 'Ana sayfa',
+                        'se' => 'Hem sida'
+                    ]
+                ]),
+                new CArray([
+                    'title' => [
+                        'en' => 'Create Account',
+                        'tr' => 'Hesap Oluştur',
+                        'se' => 'Skapa konto'
+                    ]
+                ])
+            ],
+            'unit overriden by alias' => [
+                new CArray([
+                    'title' => 'home_page',
+                    'home_page' => [
+                        'en' => 'Home page',
+                        'tr' => 'Ana sayfa',
+                        'se' => 'Hem sida'
+                    ]
+                ]),
+                new CArray([
+                    'title' => [
+                        'en' => 'Create Account',
+                        'tr' => 'Hesap Oluştur',
+                        'se' => 'Skapa konto'
+                    ],
+                    'home_page' => [
+                        'en' => 'Home page',
+                        'tr' => 'Ana sayfa',
+                        'se' => 'Hem sida'
+                    ]
+                ]),
+                new CArray([
+                    'title' => 'home_page'
                 ])
             ]
         ];
