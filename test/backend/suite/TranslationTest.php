@@ -57,7 +57,7 @@ class TranslationTest extends TestCase
         $sut->Get('field_must_be_numeric');
     }
 
-    function testGetThrowsWhenTranslationIdNotFound()
+    function testGetThrowsWhenTranslationKeyNotFound()
     {
         $sut = $this->systemUnderTest('translations');
         $translations = $this->createMock(CArray::class);
@@ -72,7 +72,7 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            "Translation ID 'field_must_be_numeric' not found.");
+            "Translation 'field_must_be_numeric' not found.");
         $sut->Get('field_must_be_numeric');
     }
 
@@ -96,7 +96,7 @@ class TranslationTest extends TestCase
         $sut->Get('field_must_be_numeric');
     }
 
-    function testGetThrowsWhenLanguageNotFoundForTranslationId()
+    function testGetThrowsWhenLanguageNotFoundForTranslationKey()
     {
         $sut = $this->systemUnderTest('translations', 'language');
         $translations = $this->createMock(CArray::class);
@@ -123,7 +123,7 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            "Language 'fr' not found for translation ID 'field_must_be_numeric'.");
+            "Language 'fr' not found for translation 'field_must_be_numeric'.");
         $sut->Get('field_must_be_numeric');
     }
 
@@ -282,7 +282,7 @@ class TranslationTest extends TestCase
             ]));
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Translation ID 'A' not found.");
+        $this->expectExceptionMessage("Translation 'A' not found.");
         $sut->Get('B');
     }
 
@@ -298,7 +298,7 @@ class TranslationTest extends TestCase
             ]));
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Translation ID 'A' not found.");
+        $this->expectExceptionMessage("Translation 'A' not found.");
         $sut->Get('C');
     }
 
@@ -320,7 +320,7 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            "Language 'en' not found for translation ID 'A'.");
+            "Language 'en' not found for translation 'A'.");
         $sut->Get('B');
     }
 
@@ -343,7 +343,7 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            "Language 'en' not found for translation ID 'A'.");
+            "Language 'en' not found for translation 'A'.");
         $sut->Get('C');
     }
 
@@ -360,7 +360,7 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            "Alias cycle detected with translation ID 'A'.");
+            "Alias cycle detected with translation 'A'.");
         $sut->Get('A');
     }
 
@@ -378,7 +378,7 @@ class TranslationTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            "Alias cycle detected with translation ID 'C'.");
+            "Alias cycle detected with translation 'C'.");
         $sut->Get('C');
     }
 
@@ -520,7 +520,7 @@ class TranslationTest extends TestCase
         AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadFileThrowsWhenTranslationIdIsNotString()
+    function testLoadFileThrowsWhenTranslationKeyIsNotString()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -550,11 +550,11 @@ class TranslationTest extends TestCase
             ->method('Close');
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Translation ID must be a string.');
+        $this->expectExceptionMessage('Translation key must be a string.');
         AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
-    function testLoadFileThrowsWhenTranslationIdIsEmpty()
+    function testLoadFileThrowsWhenTranslationKeyIsEmpty()
     {
         $sut = $this->systemUnderTest('openFile');
         $path = $this->createStub(CPath::class);
@@ -584,7 +584,7 @@ class TranslationTest extends TestCase
             ->method('Close');
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Translation ID cannot be empty.');
+        $this->expectExceptionMessage('Translation key cannot be empty.');
         AccessHelper::CallMethod($sut, 'loadFile', [$path]);
     }
 
@@ -821,7 +821,7 @@ class TranslationTest extends TestCase
             ->willReturn($language);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Language setting is not a string.');
+        $this->expectExceptionMessage('Language code must be a string.');
         AccessHelper::CallMethod($sut, 'language');
     }
 
@@ -886,7 +886,7 @@ class TranslationTest extends TestCase
                 ]),
                 new CArray() // override
             ],
-            'distinct translation IDs' => [
+            'distinct translation keys' => [
                 new CArray([
                     'welcome_message' => [
                         'en' => 'Welcome to our application!',
