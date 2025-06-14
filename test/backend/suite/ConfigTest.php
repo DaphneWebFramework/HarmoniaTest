@@ -6,6 +6,7 @@ use \Harmonia\Config;
 
 use \Harmonia\Core\CPath;
 use \Harmonia\Core\CFileSystem;
+use \TestToolkit\AccessHelper;
 
 #[CoversClass(Config::class)]
 class ConfigTest extends TestCase
@@ -48,7 +49,7 @@ class ConfigTest extends TestCase
     function testConstructor()
     {
         $config = Config::Instance();
-        $this->assertCount(0, $config->Options());
+        $this->assertCount(0, AccessHelper::GetProperty($config, 'options'));
         $this->assertNull($config->OptionsFilePath());
     }
 
@@ -78,8 +79,10 @@ class ConfigTest extends TestCase
         $config = Config::Instance();
         $config->Load($this->testFilePath);
         $this->assertSame($this->testFilePath, $config->OptionsFilePath());
-        $this->assertSame(['key1' => 'value1', 'key2' => 'value2'],
-                          $config->Options()->ToArray());
+        $this->assertSame(
+            ['key1' => 'value1', 'key2' => 'value2'],
+            AccessHelper::GetProperty($config, 'options')->ToArray()
+        );
     }
 
     #endregion Load
@@ -105,8 +108,10 @@ class ConfigTest extends TestCase
         PHP);
         $config = Config::Instance();
         $config->Load($this->testFilePath);
-        $this->assertSame(['key1' => 'value1', 'key2' => 'value2'],
-                          $config->Options()->ToArray());
+        $this->assertSame(
+            ['key1' => 'value1', 'key2' => 'value2'],
+            AccessHelper::GetProperty($config, 'options')->ToArray()
+        );
         $this->createTestFile(<<<PHP
             <?php
             return [
@@ -117,8 +122,10 @@ class ConfigTest extends TestCase
 
         PHP);
         $config->Reload();
-        $this->assertSame(['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3'],
-                          $config->Options()->ToArray());
+        $this->assertSame(
+            ['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3'],
+            AccessHelper::GetProperty($config, 'options')->ToArray()
+        );
     }
 
     #endregion Reload
