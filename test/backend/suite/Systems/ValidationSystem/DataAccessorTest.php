@@ -290,4 +290,61 @@ class DataAccessorTest extends TestCase
     }
 
     #endregion GetField
+
+    #region GetFieldOrDefault --------------------------------------------------
+
+    function testGetFieldOrDefaultReturnsNullWhenFieldDoesNotExist()
+    {
+        $sut = $this->getMockBuilder(DataAccessor::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['HasField', 'GetField'])
+            ->getMock();
+
+        $sut->expects($this->once())
+            ->method('HasField')
+            ->with('key')
+            ->willReturn(false);
+        $sut->expects($this->never())
+            ->method('GetField');
+
+        $this->assertNull($sut->GetFieldOrDefault('key'));
+    }
+
+    function testGetFieldOrDefaultReturnsDefaultWhenFieldDoesNotExist()
+    {
+        $sut = $this->getMockBuilder(DataAccessor::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['HasField', 'GetField'])
+            ->getMock();
+
+        $sut->expects($this->once())
+            ->method('HasField')
+            ->with('key')
+            ->willReturn(false);
+        $sut->expects($this->never())
+            ->method('GetField');
+
+        $this->assertSame('default', $sut->GetFieldOrDefault('key', 'default'));
+    }
+
+    function testGetFieldOrDefaultReturnsValueWhenFieldExists()
+    {
+        $sut = $this->getMockBuilder(DataAccessor::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['HasField', 'GetField'])
+            ->getMock();
+
+        $sut->expects($this->once())
+            ->method('HasField')
+            ->with('key')
+            ->willReturn(true);
+        $sut->expects($this->once())
+            ->method('GetField')
+            ->with('key')
+            ->willReturn('value');
+
+        $this->assertSame('value', $sut->GetFieldOrDefault('key', 'default'));
+    }
+
+    #endregion GetFieldOrDefault
 }
