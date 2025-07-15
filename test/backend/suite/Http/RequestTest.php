@@ -189,9 +189,7 @@ class RequestTest extends TestCase
 
         $this->assertTrue($smm->Write('Hello from request body!'));
         $smm->SimulateReadError();
-        // Suppress the error message: file_get_contents(php://input): Failed to
-        // open stream: "StreamMock::stream_open" call failed
-        $this->assertTrue($sut->Body()->IsEmpty());
+        $this->assertSame('', $sut->Body());
     }
 
     function testBodyWithWorkingStream()
@@ -201,9 +199,9 @@ class RequestTest extends TestCase
         $data = 'Hello from request body!';
 
         $this->assertTrue($smm->Write($data));
-        $this->assertEquals($data, $sut->Body());
+        $this->assertSame($data, $sut->Body());
         // Multiple calls should return the same data
-        $this->assertEquals($data, $sut->Body());
+        $this->assertSame($data, $sut->Body());
     }
 
     #endregion Body
