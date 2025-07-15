@@ -206,6 +206,185 @@ class RequestTest extends TestCase
 
     #endregion Body
 
+    #region JsonBody -----------------------------------------------------------
+
+    public function testJsonBodyWhenMediaTypeIsNotJson()
+    {
+        $sut = $this->systemUnderTest('IsMediaType');
+
+        $sut->expects($this->once())
+            ->method('IsMediaType')
+            ->with('application/json')
+            ->willReturn(false);
+
+        $this->assertSame([], $sut->JsonBody());
+    }
+
+    public function testJsonBodyWhenBodyIsNull()
+    {
+        $sut = $this->systemUnderTest('IsMediaType', 'Body');
+
+        $sut->expects($this->once())
+            ->method('IsMediaType')
+            ->with('application/json')
+            ->willReturn(true);
+        $sut->expects($this->once())
+            ->method('Body')
+            ->willReturn(null);
+
+        $this->assertSame([], $sut->JsonBody());
+    }
+
+    public function testJsonBodyWhenJsonIsInvalid()
+    {
+        $sut = $this->systemUnderTest('IsMediaType', 'Body');
+
+        $sut->expects($this->once())
+            ->method('IsMediaType')
+            ->with('application/json')
+            ->willReturn(true);
+        $sut->expects($this->once())
+            ->method('Body')
+            ->willReturn('{invalid');
+
+        $this->assertSame([], $sut->JsonBody());
+    }
+
+    public function testJsonBodyWhenJsonIsValidButNotArray()
+    {
+        $sut = $this->systemUnderTest('IsMediaType', 'Body');
+
+        $sut->expects($this->once())
+            ->method('IsMediaType')
+            ->with('application/json')
+            ->willReturn(true);
+        $sut->expects($this->once())
+            ->method('Body')
+            ->willReturn('"just a string"');
+
+        $this->assertSame([], $sut->JsonBody());
+    }
+
+    public function testJsonBodyWhenJsonIsValid()
+    {
+        $sut = $this->systemUnderTest('IsMediaType', 'Body');
+
+        $sut->expects($this->once())
+            ->method('IsMediaType')
+            ->with('application/json')
+            ->willReturn(true);
+        $sut->expects($this->once())
+            ->method('Body')
+            ->willReturn('{"user":"john","active":true}');
+
+        $this->assertSame(
+            ['user' => 'john', 'active' => true],
+            $sut->JsonBody()
+        );
+    }
+
+    #endregion JsonBody
+
+    #region IsMediaType --------------------------------------------------------
+
+    public function testIsMediaTypeReturnsFalseWhenHeaderIsMissing()
+    {
+        $sut = $this->systemUnderTest('Headers');
+        $headers = $this->createMock(CArray::class);
+
+        $sut->expects($this->once())
+            ->method('Headers')
+            ->willReturn($headers);
+        $headers->expects($this->once())
+            ->method('Get')
+            ->with('content-type')
+            ->willReturn(null);
+
+        $this->assertFalse($sut->IsMediaType('application/json'));
+    }
+
+    public function testIsMediaTypeReturnsFalseWhenHeaderIsNotAString()
+    {
+        $sut = $this->systemUnderTest('Headers');
+        $headers = $this->createMock(CArray::class);
+
+        $sut->expects($this->once())
+            ->method('Headers')
+            ->willReturn($headers);
+        $headers->expects($this->once())
+            ->method('Get')
+            ->with('content-type')
+            ->willReturn(['not', 'a', 'string']);
+
+        $this->assertFalse($sut->IsMediaType('application/json'));
+    }
+
+    public function testIsMediaTypeReturnsFalseWhenHeaderIsDifferent()
+    {
+        $sut = $this->systemUnderTest('Headers');
+        $headers = $this->createMock(CArray::class);
+
+        $sut->expects($this->once())
+            ->method('Headers')
+            ->willReturn($headers);
+        $headers->expects($this->once())
+            ->method('Get')
+            ->with('content-type')
+            ->willReturn('text/plain');
+
+        $this->assertFalse($sut->IsMediaType('application/json'));
+    }
+
+    public function testIsMediaTypeReturnsTrueWhenExactMatch()
+    {
+        $sut = $this->systemUnderTest('Headers');
+        $headers = $this->createMock(CArray::class);
+
+        $sut->expects($this->once())
+            ->method('Headers')
+            ->willReturn($headers);
+        $headers->expects($this->once())
+            ->method('Get')
+            ->with('content-type')
+            ->willReturn('application/json');
+
+        $this->assertTrue($sut->IsMediaType('application/json'));
+    }
+
+    public function testIsMediaTypeReturnsTrueWhenMediaTypeWithParameters()
+    {
+        $sut = $this->systemUnderTest('Headers');
+        $headers = $this->createMock(CArray::class);
+
+        $sut->expects($this->once())
+            ->method('Headers')
+            ->willReturn($headers);
+        $headers->expects($this->once())
+            ->method('Get')
+            ->with('content-type')
+            ->willReturn('application/json; charset=utf-8');
+
+        $this->assertTrue($sut->IsMediaType('application/json'));
+    }
+
+    public function testIsMediaTypeIgnoresCaseAndWhitespace()
+    {
+        $sut = $this->systemUnderTest('Headers');
+        $headers = $this->createMock(CArray::class);
+
+        $sut->expects($this->once())
+            ->method('Headers')
+            ->willReturn($headers);
+        $headers->expects($this->once())
+            ->method('Get')
+            ->with('content-type')
+            ->willReturn('  Application/JSON ; charset=UTF-8');
+
+        $this->assertTrue($sut->IsMediaType('application/json'));
+    }
+
+    #endregion IsMediaType
+
     #region Data Providers -----------------------------------------------------
 
     static function methodDataProvider()
