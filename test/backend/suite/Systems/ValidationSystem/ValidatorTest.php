@@ -107,13 +107,25 @@ class ValidatorTest extends TestCase
     function testValidateMatchesCustomMessageKeyCaseInsensitivelyForRuleName()
     {
         $sut = new Validator(
-            ['age' => ['min:18']],
-            ['age.MIN' => 'Age must be at least 18.']
+            ['age' => ['mIn:18']],
+            ['age.MiN' => 'Age must be at least 18.']
         );
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Age must be at least 18.');
         $sut->Validate(['age' => 16]);
+    }
+
+    function testFallsBackToDefaultMessageWhenFieldNameCaseDiffers()
+    {
+        $sut = new Validator(
+            ['Age' => ['min:18']],
+            ['aGe.min' => 'Age must be at least 18.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Field 'Age' must have a minimum value of 18.");
+        $sut->Validate(['Age' => 16]);
     }
 
     function testValidateMatchesCustomMessageKeyForIntegerFieldName()
@@ -195,6 +207,8 @@ class ValidatorTest extends TestCase
                 ]
             ],
 
+            #region Required & RequiredWithout ---------------------------------
+
             'Passes requiredWithout rule with ArtistName only' => [
                 null,
                 [
@@ -205,7 +219,6 @@ class ValidatorTest extends TestCase
                     'ArtistName' => 'Michael Jackson'
                 ]
             ],
-
             'Passes requiredWithout rule with ArtistId only' => [
                 null,
                 [
@@ -216,7 +229,6 @@ class ValidatorTest extends TestCase
                     'ArtistId' => '5'
                 ]
             ],
-
             'Fails requiredWithout rule when neither field is present' => [
                 "Either field 'ArtistName' or 'ArtistId' must be present.",
                 [
@@ -225,7 +237,6 @@ class ValidatorTest extends TestCase
                 ],
                 []
             ],
-
             'Fails requiredWithout rule when both fields are present' => [
                 "Only one of fields 'ArtistName' or 'ArtistId' can be present.",
                 [
@@ -237,7 +248,6 @@ class ValidatorTest extends TestCase
                     'ArtistId' => '5'
                 ]
             ],
-
             'Passes requiredWithout rule with ArtistId only (multi-field)' => [
                 null,
                 [
@@ -254,7 +264,6 @@ class ValidatorTest extends TestCase
                     'ArtistId' => '5'
                 ]
             ],
-
             'Passes requiredWithout rule with ArtistFirstName and ArtistLastName' => [
                 null,
                 [
@@ -272,7 +281,6 @@ class ValidatorTest extends TestCase
                     'ArtistLastName' => 'Jackson'
                 ]
             ],
-
             'Fails requiredWithout rule when no fields are present (multi-field)' => [
                 "Either field 'ArtistFirstName' or 'ArtistId' must be present.",
                 [
@@ -287,7 +295,6 @@ class ValidatorTest extends TestCase
                 ],
                 []
             ],
-
             'Fails requiredWithout rule when all fields are present (multi-field)' => [
                 "Only one of fields 'ArtistFirstName' or 'ArtistId' can be present.",
                 [
@@ -306,7 +313,6 @@ class ValidatorTest extends TestCase
                     'ArtistId' => '5'
                 ]
             ],
-
             'Passes requiredWithout rule with SocialSecurityNumber only' => [
                 null,
                 [
@@ -330,7 +336,6 @@ class ValidatorTest extends TestCase
                     'SocialSecurityNumber' => '123-45-6789'
                 ]
             ],
-
             'Passes requiredWithout rule with PassportNumber only' => [
                 null,
                 [
@@ -354,7 +359,6 @@ class ValidatorTest extends TestCase
                     'PassportNumber' => '987654321'
                 ]
             ],
-
             'Passes requiredWithout rule with DriverLicenseNumber only' => [
                 null,
                 [
@@ -378,7 +382,6 @@ class ValidatorTest extends TestCase
                     'DriverLicenseNumber' => 'DL123456'
                 ]
             ],
-
             'Fails requiredWithout rule when no identification fields are present' => [
                 "Either field 'SocialSecurityNumber' or one of 'PassportNumber', 'DriverLicenseNumber' must be present.",
                 [
@@ -400,7 +403,6 @@ class ValidatorTest extends TestCase
                 ],
                 []
             ],
-
             'Fails requiredWithout rule when all identification fields are present' => [
                 "Only one of fields 'SocialSecurityNumber' or one of 'PassportNumber', 'DriverLicenseNumber' can be present.",
                 [
@@ -426,7 +428,6 @@ class ValidatorTest extends TestCase
                     'DriverLicenseNumber' => 'DL123456'
                 ]
             ],
-
             'Fails requiredWithout rule with PassportNumber and DriverLicenseNumber' => [
                 "Only one of fields 'PassportNumber' or one of 'SocialSecurityNumber', 'DriverLicenseNumber' can be present.",
                 [
@@ -451,7 +452,6 @@ class ValidatorTest extends TestCase
                     'DriverLicenseNumber' => 'DL123456'
                 ]
             ],
-
             'Fails requiredWithout rule with SocialSecurityNumber and DriverLicenseNumber' => [
                 "Only one of fields 'SocialSecurityNumber' or one of 'PassportNumber', 'DriverLicenseNumber' can be present.",
                 [
@@ -476,7 +476,6 @@ class ValidatorTest extends TestCase
                     'DriverLicenseNumber' => 'DL123456'
                 ]
             ],
-
             'Fails requiredWithout rule with SocialSecurityNumber and PassportNumber' => [
                 "Only one of fields 'SocialSecurityNumber' or one of 'PassportNumber', 'DriverLicenseNumber' can be present.",
                 [
@@ -501,7 +500,6 @@ class ValidatorTest extends TestCase
                     'PassportNumber' => '987654321'
                 ]
             ],
-
             'Fails requiredWithout rule with empty field name (colon)' => [
                 "Rule 'requiredWithout' must be used with a field name.",
                 [
@@ -512,7 +510,6 @@ class ValidatorTest extends TestCase
                     'ArtistName' => 'Michael Jackson'
                 ]
             ],
-
             'Fails requiredWithout rule with no field name' => [
                 "Rule 'requiredWithout' must be used with a field name.",
                 [
@@ -523,7 +520,6 @@ class ValidatorTest extends TestCase
                     'ArtistName' => 'Michael Jackson'
                 ]
             ],
-
             'Passes requiredWithout rule with case-insensitive rule names' => [
                 null,
                 [
@@ -534,7 +530,6 @@ class ValidatorTest extends TestCase
                     'ArtistName' => 'Michael Jackson'
                 ]
             ],
-
             'Passes required and requiredWithout rules with ArtistName' => [
                 null,
                 [
@@ -545,7 +540,6 @@ class ValidatorTest extends TestCase
                     'ArtistName' => 'Michael Jackson'
                 ]
             ],
-
             'Fails required and requiredWithout rules with only ArtistId' => [
                 "Required field 'ArtistName' is missing.",
                 [
@@ -556,7 +550,6 @@ class ValidatorTest extends TestCase
                     'ArtistId' => '5'
                 ]
             ],
-
             'Fails required and requiredWithout rules with no fields' => [
                 "Required field 'ArtistName' is missing.",
                 [
@@ -565,7 +558,6 @@ class ValidatorTest extends TestCase
                 ],
                 []
             ],
-
             'Fails required and requiredWithout rules when both fields are present' => [
                 "Only one of fields 'ArtistName' or 'ArtistId' can be present.",
                 [
@@ -577,6 +569,105 @@ class ValidatorTest extends TestCase
                     'ArtistId' => '5'
                 ]
             ],
+
+            #endregion Required & RequiredWithout
+
+            #region Nullable ---------------------------------------------------
+
+            'Skips validation when field is null and nullable' => [
+                null,
+                ['Age' => ['nullable', 'integer', 'min:18']],
+                ['Age' => null]
+            ],
+            'Skips validation when rule is nullable with mixed casing' => [
+                null,
+                ['Age' => ['NuLlAbLe', 'integer', 'min:18']],
+                ['Age' => null]
+            ],
+            'Skips validation when rule is nullable with surrounding spaces' => [
+                null,
+                ['Age' => ['  nullable  ', 'integer']],
+                ['Age' => null]
+            ],
+            'Skips validation when nullable is defined after other rules' => [
+                null,
+                ['Age' => ['integer', 'nullable', 'min:18']],
+                ['Age' => null]
+            ],
+            'Skips validation when multiple nullable rules are defined' => [
+                null,
+                ['Age' => ['nullable', 'integer', 'nullable', 'min:18']],
+                ['Age' => null]
+            ],
+            'Fails validation when field is not null and not valid' => [
+                "Field 'Age' must be an integer.",
+                ['Age' => ['nullable', 'integer']],
+                ['Age' => 'not_a_number']
+            ],
+            'Fails validation when null is provided without nullable' => [
+                "Field 'Age' must be an integer.",
+                ['Age' => ['integer', 'min:18']],
+                ['Age' => null]
+            ],
+            'Fails validation when field is not null and below minimum' => [
+                "Field 'Age' must have a minimum value of 18.",
+                ['Age' => ['nullable', 'integer', 'min:18']],
+                ['Age' => 17]
+            ],
+            'Passes validation when field is not null and meets minimum' => [
+                null,
+                ['Age' => ['nullable', 'integer', 'min:18']],
+                ['Age' => 18]
+            ],
+            'Passes validation when field is not null and meets minimum with duplicate nullable' => [
+                null,
+                ['Age' => ['nullable', 'integer', 'nullable', 'min:18']],
+                ['Age' => 18]
+            ],
+            'Fails when required field is missing even if nullable is defined' => [
+                "Required field 'Age' is missing.",
+                ['Age' => ['nullable', 'required', 'integer']],
+                []
+            ],
+            'Skips validation when value is null but required is satisfied' => [
+                null,
+                ['Age' => ['nullable', 'required', 'integer']],
+                ['Age' => null]
+            ],
+            'Skips validation when value is null and closure rule is present' => [
+                null,
+                ['Age' => ['nullable', fn($value) => is_int($value) && $value >= 18]],
+                ['Age' => null]
+            ],
+            'Fails when value is null and no nullable is defined for closure rule' => [
+                "Field 'Age' failed custom validation.",
+                ['Age' => [fn($value) => is_int($value) && $value >= 18]],
+                ['Age' => null]
+            ],
+            'Fails when value is not null and closure rule fails despite nullable' => [
+                "Field 'Age' failed custom validation.",
+                ['Age' => ['nullable', fn($value) => is_int($value) && $value >= 18]],
+                ['Age' => 16]
+            ],
+            'Skips validation for dotted field when value is null and nullable' => [
+                null,
+                ['user.age' => ['nullable', 'integer', 'min:18']],
+                ['user' => ['age' => null]]
+            ],
+            'Fails validation for dotted field when value is null and nullable is missing' => [
+                "Field 'user.age' must be an integer.",
+                ['user.age' => ['integer', 'min:18']],
+                ['user' => ['age' => null]]
+            ],
+            'Passes validation for dotted field when value is valid despite nullable' => [
+                null,
+                ['user.age' => ['nullable', 'integer', 'min:18']],
+                ['user' => ['age' => 20]]
+            ],
+
+            #endregion Nullable
+
+            #region Real-world scenarios ---------------------------------------
 
             'Passes account register validation' => [
                 null,
@@ -591,7 +682,6 @@ class ValidatorTest extends TestCase
                     'TestPass123!'
                 ]
             ],
-
             'Passes account activate validation' => [
                 null,
                 [
@@ -601,7 +691,6 @@ class ValidatorTest extends TestCase
                     'a3f4b6e8129c0d5e7f8a6b4c3d2e1f09876e4c3b2a1f0e9d8c7b6a5f4e3d2c1b'
                 ]
             ],
-
             'Passes account send password reset email validation' => [
                 null,
                 [
@@ -611,7 +700,6 @@ class ValidatorTest extends TestCase
                     'john.doe@example.com'
                 ]
             ],
-
             'Passes account reset password validation' => [
                 null,
                 [
@@ -623,7 +711,6 @@ class ValidatorTest extends TestCase
                     'NewPass123!'
                 ]
             ],
-
             'Passes account login validation' => [
                 null,
                 [
@@ -635,7 +722,6 @@ class ValidatorTest extends TestCase
                     'TestPass123!'
                 ]
             ],
-
             'Passes account change password validation' => [
                 null,
                 [
@@ -647,7 +733,6 @@ class ValidatorTest extends TestCase
                     'NewPass123!'
                 ]
             ],
-
             'Passes administrator add account validation' => [
                 null,
                 [
@@ -661,7 +746,6 @@ class ValidatorTest extends TestCase
                     'PasswordHash' => '$2a$08$TYykDj.WYELAn3U4bTsmo.aXPEi44da.Q8dgJi29Adu4zH4wzKAnK'
                 ]
             ],
-
             'Passes administrator edit account validation' => [
                 null,
                 [
@@ -676,7 +760,6 @@ class ValidatorTest extends TestCase
                     'PasswordHash' => '$2a$08$TYykDj.WYELAn3U4bTsmo.aXPEi44da.Q8dgJi29Adu4zH4wzKAnK'
                 ]
             ],
-
             'Passes administrator add account role validation' => [
                 null,
                 [
@@ -688,7 +771,6 @@ class ValidatorTest extends TestCase
                     'Role' => '0'
                 ]
             ],
-
             'Passes administrator edit account role validation' => [
                 null,
                 [
@@ -702,7 +784,6 @@ class ValidatorTest extends TestCase
                     'Role' => '0'
                 ]
             ],
-
             'Passes administrator add pending account validation' => [
                 null,
                 [
@@ -718,7 +799,6 @@ class ValidatorTest extends TestCase
                     'ActivationCode' => 'a3f4b6e8129c0d5e7f8a6b4c3d2e1f09876e4c3b2a1f0e9d8c7b6a5f4e3d2c1b'
                 ]
             ],
-
             'Passes administrator edit pending account validation' => [
                 null,
                 [
@@ -736,7 +816,6 @@ class ValidatorTest extends TestCase
                     'ActivationCode' => 'a3f4b6e8129c0d5e7f8a6b4c3d2e1f09876e4c3b2a1f0e9d8c7b6a5f4e3d2c1b'
                 ]
             ],
-
             'Passes administrator add forgetful account validation' => [
                 null,
                 [
@@ -748,7 +827,6 @@ class ValidatorTest extends TestCase
                     'ResetCode' => 'a3f4b6e8129c0d5e7f8a6b4c3d2e1f09876e4c3b2a1f0e9d8c7b6a5f4e3d2c1b'
                 ]
             ],
-
             'Passes administrator edit forgetful account validation' => [
                 null,
                 [
@@ -762,6 +840,8 @@ class ValidatorTest extends TestCase
                     'ResetCode' => 'a3f4b6e8129c0d5e7f8a6b4c3d2e1f09876e4c3b2a1f0e9d8c7b6a5f4e3d2c1b'
                 ]
             ],
+
+            #endregion Real-world scenarios
         ];
     }
 
