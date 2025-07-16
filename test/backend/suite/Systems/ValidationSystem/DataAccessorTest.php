@@ -59,6 +59,24 @@ class DataAccessorTest extends TestCase
 
     #endregion __construct
 
+    #region Data ---------------------------------------------------------------
+
+    function testDataReturnsOriginalArray()
+    {
+        $sut = new DataAccessor(['name' => 'John']);
+        $this->assertSame(['name' => 'John'], $sut->Data());
+    }
+
+    function testDataReturnsOriginalObject()
+    {
+        $data = new \stdClass();
+        $data->name = 'John';
+        $sut = new DataAccessor($data);
+        $this->assertSame($data, $sut->Data());
+    }
+
+    #endregion Data
+
     #region HasField -----------------------------------------------------------
 
     function testHasFieldWithExistingFieldNameForArray()
