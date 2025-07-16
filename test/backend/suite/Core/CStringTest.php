@@ -813,7 +813,7 @@ class CStringTest extends TestCase
     function testApplyThrowsOnNonStringReturn()
     {
         $this->expectException(\UnexpectedValueException::class);
-        $this->expectExceptionMessage('Applied function must return an string.');
+        $this->expectExceptionMessage('Applied function must return a string.');
         $cstr = new CString('hello');
         $cstr->Apply(function(string $value) {
             return 123;
@@ -885,7 +885,7 @@ class CStringTest extends TestCase
     function testApplyInPlaceThrowsOnNonStringReturn()
     {
         $this->expectException(\UnexpectedValueException::class);
-        $this->expectExceptionMessage('Applied function must return an string.');
+        $this->expectExceptionMessage('Applied function must return a string.');
         $cstr = new CString('hello');
         $cstr->ApplyInPlace(function(string $value) {
             return 456;
