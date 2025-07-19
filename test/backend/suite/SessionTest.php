@@ -284,49 +284,6 @@ class SessionTest extends TestCase
 
     #endregion Close
 
-    #region Set ----------------------------------------------------------------
-
-    #[BackupGlobals(true)]
-    function testSetDoesNothingWhenStatusIsDisabled()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_DISABLED);
-
-        $this->assertSame($session, $session->Set('key1', 'value1'));
-        $this->assertFalse(isset($_SESSION));
-    }
-
-    #[BackupGlobals(true)]
-    function testSetDoesNothingWhenStatusIsNone()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_NONE);
-
-        $this->assertSame($session, $session->Set('key1', 'value1'));
-        $this->assertFalse(isset($_SESSION));
-    }
-
-    #[BackupGlobals(true)]
-    function testSetWhenStatusIsActive()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_ACTIVE);
-
-        $this->assertSame($session, $session->Set('key1', 'value1'));
-        $this->assertSame('value1', $_SESSION['key1']);
-    }
-
-    #endregion Set
-
     #region Get ----------------------------------------------------------------
 
     #[BackupGlobals(true)]
@@ -369,6 +326,49 @@ class SessionTest extends TestCase
     }
 
     #endregion Get
+
+    #region Set ----------------------------------------------------------------
+
+    #[BackupGlobals(true)]
+    function testSetDoesNothingWhenStatusIsDisabled()
+    {
+        $session = $this->systemUnderTest();
+
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_DISABLED);
+
+        $this->assertSame($session, $session->Set('key1', 'value1'));
+        $this->assertFalse(isset($_SESSION));
+    }
+
+    #[BackupGlobals(true)]
+    function testSetDoesNothingWhenStatusIsNone()
+    {
+        $session = $this->systemUnderTest();
+
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+
+        $this->assertSame($session, $session->Set('key1', 'value1'));
+        $this->assertFalse(isset($_SESSION));
+    }
+
+    #[BackupGlobals(true)]
+    function testSetWhenStatusIsActive()
+    {
+        $session = $this->systemUnderTest();
+
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+
+        $this->assertSame($session, $session->Set('key1', 'value1'));
+        $this->assertSame('value1', $_SESSION['key1']);
+    }
+
+    #endregion Set
 
     #region Remove -------------------------------------------------------------
 
