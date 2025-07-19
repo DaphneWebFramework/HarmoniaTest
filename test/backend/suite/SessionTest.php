@@ -166,8 +166,6 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_DISABLED);
         $session->expects($this->never())
             ->method('_session_start');
-        $session->expects($this->never())
-            ->method('_session_regenerate_id');
 
         $this->assertSame($session, $session->Start());
     }
@@ -181,8 +179,6 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_ACTIVE);
         $session->expects($this->never())
             ->method('_session_start');
-        $session->expects($this->never())
-            ->method('_session_regenerate_id');
 
         $this->assertSame($session, $session->Start());
     }
@@ -196,13 +192,54 @@ class SessionTest extends TestCase
             ->willReturn(\PHP_SESSION_NONE);
         $session->expects($this->once())
             ->method('_session_start');
-        $session->expects($this->once())
-            ->method('_session_regenerate_id');
 
         $this->assertSame($session, $session->Start());
     }
 
     #endregion Start
+
+    #region RenewId ------------------------------------------------------------
+
+    function testRenewIdDoesNothingWhenStatusIsDisabled()
+    {
+        $session = $this->systemUnderTest();
+
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_DISABLED);
+        $session->expects($this->never())
+            ->method('_session_regenerate_id');
+
+        $this->assertSame($session, $session->RenewId());
+    }
+
+    function testRenewIdDoesNothingWhenStatusIsNone()
+    {
+        $session = $this->systemUnderTest();
+
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_NONE);
+        $session->expects($this->never())
+            ->method('_session_regenerate_id');
+
+        $this->assertSame($session, $session->RenewId());
+    }
+
+    function testRenewIdWhenStatusIsActive()
+    {
+        $session = $this->systemUnderTest();
+
+        $session->expects($this->once())
+            ->method('_session_status')
+            ->willReturn(\PHP_SESSION_ACTIVE);
+        $session->expects($this->once())
+            ->method('_session_regenerate_id');
+
+        $this->assertSame($session, $session->RenewId());
+    }
+
+    #endregion RenewId
 
     #region Close --------------------------------------------------------------
 
@@ -293,117 +330,41 @@ class SessionTest extends TestCase
     #region Get ----------------------------------------------------------------
 
     #[BackupGlobals(true)]
-    function testGetReturnsNullWhenStatusIsDisabled()
+    function testGetReturnsDefaultValueWhenSessionSuperglobalIsMissing()
     {
         $session = $this->systemUnderTest();
 
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_DISABLED);
+        $session->expects($this->never())
+            ->method('_session_status');
 
-        $_SESSION['key1'] = 'value1';
-        $this->assertNull($session->Get('key1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetReturnsDefaultValueWhenStatusIsDisabled()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_DISABLED);
-
-        $_SESSION['key1'] = 'value1';
-        $this->assertSame('default1', $session->Get('key1', 'default1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetReturnsNullWhenStatusIsNone()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_NONE);
-
-        $_SESSION['key1'] = 'value1';
-        $this->assertNull($session->Get('key1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetReturnsDefaultValueWhenStatusIsNone()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_NONE);
-
-        $_SESSION['key1'] = 'value1';
-        $this->assertSame('default1', $session->Get('key1', 'default1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetReturnsNullWhenStatusIsActiveButSuperglobalDoesNotExist()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_ACTIVE);
-
-        $this->assertNull($session->Get('key1'));
-    }
-
-    #[BackupGlobals(true)]
-    function testGetReturnsDefaultValueWhenStatusIsActiveButSuperglobalDoesNotExist()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_ACTIVE);
+        unset($_SESSION);
 
         $this->assertSame('default1', $session->Get('key1', 'default1'));
     }
 
     #[BackupGlobals(true)]
-    function testGetReturnsNullWhenStatusIsActiveAndKeyDoesNotExist()
+    function testGetReturnsDefaultValueWhenKeyIsMissing()
     {
         $session = $this->systemUnderTest();
 
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_ACTIVE);
+        $session->expects($this->never())
+            ->method('_session_status');
 
         $_SESSION = [];
-        $this->assertNull($session->Get('key1'));
-    }
 
-    #[BackupGlobals(true)]
-    function testGetReturnsDefaultValueWhenStatusIsActiveButKeyDoesNotExist()
-    {
-        $session = $this->systemUnderTest();
-
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_ACTIVE);
-
-        $_SESSION = [];
         $this->assertSame('default1', $session->Get('key1', 'default1'));
     }
 
     #[BackupGlobals(true)]
-    function testGetReturnsValueWhenStatusIsActiveAndKeyExists()
+    function testGetReturnsValueWhenKeyExists(): void
     {
         $session = $this->systemUnderTest();
 
-        $session->expects($this->once())
-            ->method('_session_status')
-            ->willReturn(\PHP_SESSION_ACTIVE);
+        $session->expects($this->never())
+            ->method('_session_status');
 
         $_SESSION['key1'] = 'value1';
+
         $this->assertSame('value1', $session->Get('key1'));
     }
 
