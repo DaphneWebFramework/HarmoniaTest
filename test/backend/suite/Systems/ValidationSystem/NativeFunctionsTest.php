@@ -5,6 +5,24 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 
+enum EnumInteger: int {
+    case Zero = 0;
+    case One = 1;
+    case Two = 2;
+}
+
+enum EnumString: string {
+    case Alpha = 'alpha';
+    case Beta = 'beta';
+    case Gamma = 'gamma';
+}
+
+enum EnumPure {
+    case Small;
+    case Medium;
+    case Large;
+}
+
 #[CoversClass(NativeFunctions::class)]
 class NativeFunctionsTest extends TestCase
 {
@@ -66,6 +84,12 @@ class NativeFunctionsTest extends TestCase
     function testMatchDateTime(bool $expected, string $value, string $format)
     {
         $this->assertSame($expected, $this->sut->MatchDateTime($value, $format));
+    }
+
+    #[DataProvider('isEnumValueDataProvider')]
+    function testIsEnumValue(bool $expected, mixed $value, string $enumClass)
+    {
+        $this->assertSame($expected, $this->sut->IsEnumValue($value, $enumClass));
     }
 
     #region Data Providers -----------------------------------------------------
@@ -253,6 +277,37 @@ class NativeFunctionsTest extends TestCase
             [false, '2023-02-29', 'Y-m-d'], // 2023 is NOT a leap year
             [false, 'not-a-date', 'Y-m-d'],
             [false, '15:30:45', 'Y-m-d H:i:s'],
+        ];
+    }
+
+    static function isEnumValueDataProvider()
+    {
+        return [
+            // EnumInteger
+            [true, 0, EnumInteger::class],
+            [true, 1, EnumInteger::class],
+            [true, 2, EnumInteger::class],
+            [false, 999, EnumInteger::class],
+            [false, '1', EnumInteger::class],
+            [false, null, EnumInteger::class],
+            [false, true, EnumInteger::class],
+            // EnumString
+            [true, 'alpha', EnumString::class],
+            [true, 'beta', EnumString::class],
+            [true, 'gamma', EnumString::class],
+            [false, 'delta', EnumString::class],
+            [false, 0, EnumString::class],
+            [false, null, EnumString::class],
+            // EnumPure
+            [true, 'Small', EnumPure::class],
+            [true, 'Medium', EnumPure::class],
+            [true, 'Large', EnumPure::class],
+            [false, 'small', EnumPure::class],
+            [false, 0, EnumPure::class],
+            [false, null, EnumPure::class],
+            // Invalid enum class
+            [false, 'whatever', \stdClass::class],
+            [false, 'whatever', 'NopeClass'],
         ];
     }
 
