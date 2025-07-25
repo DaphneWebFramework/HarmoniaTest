@@ -220,14 +220,22 @@ class QueryTest extends TestCase
 
     function testCheckStringTrimsString()
     {
-        $this->assertSame('id', AccessHelper::CallMethod(
-            $this->query, 'checkString', ['  id  ']));
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'checkString',
+            ['  id  ']
+        );
+        $this->assertSame('id', $result);
     }
 
     function testCheckStringWithNonEmptyString()
     {
-        $this->assertSame('id', AccessHelper::CallMethod(
-            $this->query, 'checkString', ['id']));
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'checkString',
+            ['id']
+        );
+        $this->assertSame('id', $result);
     }
 
     #endregion checkString
@@ -257,20 +265,32 @@ class QueryTest extends TestCase
 
     function testCheckStringListTrimsStrings()
     {
-        $this->assertSame(['id', 'name'], AccessHelper::CallMethod(
-            $this->query, 'checkStringList', ['  id  ', '  name  ']));
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'checkStringList',
+            ['  id  ', '  name  ']
+        );
+        $this->assertSame(['id', 'name'], $result);
     }
 
     function testCheckStringListWithSingleString()
     {
-        $this->assertSame(['id'], AccessHelper::CallMethod(
-            $this->query, 'checkStringList', ['id']));
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'checkStringList',
+            ['id']
+        );
+        $this->assertSame(['id'], $result);
     }
 
     function testCheckStringListWithMultipleStrings()
     {
-        $this->assertSame(['id', 'name', 'AVG(*)'], AccessHelper::CallMethod(
-            $this->query, 'checkStringList', ['id', 'name', 'AVG(*)']));
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'checkStringList',
+            ['id', 'name', 'AVG(*)']
+        );
+        $this->assertSame(['id', 'name', 'AVG(*)'], $result);
     }
 
     #endregion checkStringList
@@ -300,21 +320,87 @@ class QueryTest extends TestCase
 
     function testFormatStringListTrimsStrings()
     {
-        $this->assertSame('id, name', AccessHelper::CallMethod(
-            $this->query, 'formatStringList', ['  id  ', '  name  ']));
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'formatStringList',
+            ['  id  ', '  name  ']
+        );
+        $this->assertSame('id, name', $result);
     }
 
     function testFormatStringListWithSingleString()
     {
-        $this->assertSame('id', AccessHelper::CallMethod(
-            $this->query, 'formatStringList', ['id']));
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'formatStringList',
+            ['id']
+        );
+        $this->assertSame('id', $result);
     }
 
     function testFormatStringListWithMultipleStrings()
     {
-        $this->assertSame('id, name, AVG(*)', AccessHelper::CallMethod(
-            $this->query, 'formatStringList', ['id', 'name', 'AVG(*)']));
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'formatStringList',
+            ['id', 'name', 'AVG(*)']
+        );
+        $this->assertSame('id, name, AVG(*)', $result);
     }
 
     #endregion formatStringList
+
+    #region formatIdentifier ---------------------------------------------------
+
+    function testFormatIdentifierWithEmptyString()
+    {
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'formatIdentifier',
+            ['']
+        );
+        $this->assertSame('``', $result);
+    }
+
+    function testFormatIdentifierWithSimpleIdentifier()
+    {
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'formatIdentifier',
+            ['my_identifier']
+        );
+        $this->assertSame('`my_identifier`', $result);
+    }
+
+    function testFormatIdentifierWithAlreadyBacktickedIdentifier()
+    {
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'formatIdentifier',
+            ['`my_identifier`']
+        );
+        $this->assertSame('```my_identifier```', $result);
+    }
+
+    function testFormatIdentifierEscapesSingleBacktick()
+    {
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'formatIdentifier',
+            ['my`identifier']
+        );
+        $this->assertSame('`my``identifier`', $result);
+    }
+
+    function testFormatIdentifierEscapesMultipleBackticks()
+    {
+        $result = AccessHelper::CallMethod(
+            $this->query,
+            'formatIdentifier',
+            ['my``identifier`name']
+        );
+        $this->assertSame('`my````identifier``name`', $result);
+    }
+
+    #endregion formatIdentifier
 }

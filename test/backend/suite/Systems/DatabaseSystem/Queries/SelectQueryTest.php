@@ -26,7 +26,7 @@ class SelectQueryTest extends TestCase
             ->Table('my_table');
         $query->Table('another_table');
         $this->assertSame(
-            'SELECT * FROM another_table',
+            'SELECT * FROM `another_table`',
             $query->ToSql()
         );
     }
@@ -62,7 +62,7 @@ class SelectQueryTest extends TestCase
             ->Columns('column1');
         $query->Columns('column2');
         $this->assertSame(
-            'SELECT column2 FROM my_table',
+            'SELECT column2 FROM `my_table`',
             $query->ToSql()
         );
     }
@@ -98,7 +98,7 @@ class SelectQueryTest extends TestCase
             ->Where('column1 = 1');
         $query->Where('column2 = 99');
         $this->assertSame(
-            'SELECT * FROM my_table WHERE column2 = 99',
+            'SELECT * FROM `my_table` WHERE column2 = 99',
             $query->ToSql()
         );
     }
@@ -134,7 +134,7 @@ class SelectQueryTest extends TestCase
             ->OrderBy('column1 ASC');
         $query->OrderBy('column2 DESC');
         $this->assertSame(
-            'SELECT * FROM my_table ORDER BY column2 DESC',
+            'SELECT * FROM `my_table` ORDER BY column2 DESC',
             $query->ToSql()
         );
     }
@@ -174,7 +174,7 @@ class SelectQueryTest extends TestCase
             ->Table('my_table')
             ->Limit(10);
         $this->assertSame(
-            'SELECT * FROM my_table LIMIT 10',
+            'SELECT * FROM `my_table` LIMIT 10',
             $query->ToSql()
         );
     }
@@ -185,7 +185,7 @@ class SelectQueryTest extends TestCase
             ->Table('my_table')
             ->Limit(10, 20);
         $this->assertSame(
-            'SELECT * FROM my_table LIMIT 10 OFFSET 20',
+            'SELECT * FROM `my_table` LIMIT 10 OFFSET 20',
             $query->ToSql()
         );
     }
@@ -197,7 +197,7 @@ class SelectQueryTest extends TestCase
             ->Limit(10);
         $query->Limit(5, 2);
         $this->assertSame(
-            'SELECT * FROM my_table LIMIT 5 OFFSET 2',
+            'SELECT * FROM `my_table` LIMIT 5 OFFSET 2',
             $query->ToSql()
         );
     }
@@ -241,7 +241,7 @@ class SelectQueryTest extends TestCase
             ]);
 
         $this->assertSame(
-            'SELECT name, email, COUNT(*) AS loginCount FROM users'
+            'SELECT name, email, COUNT(*) AS loginCount FROM `users`'
           . ' WHERE status = :status AND createdAt >= :startDate'
           . ' ORDER BY lastLogin DESC, name ASC'
           . ' LIMIT 20 OFFSET 10'

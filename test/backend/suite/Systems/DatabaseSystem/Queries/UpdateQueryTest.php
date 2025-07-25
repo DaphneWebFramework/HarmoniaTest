@@ -29,7 +29,7 @@ class UpdateQueryTest extends TestCase
             ->Where('id = 42');
         $query->Table('another_table');
         $this->assertSame(
-            "UPDATE another_table SET email = 'user@mail.com' WHERE id = 42",
+            "UPDATE `another_table` SET email = 'user@mail.com' WHERE id = 42",
             $query->ToSql()
         );
     }
@@ -67,7 +67,7 @@ class UpdateQueryTest extends TestCase
             ->Where('id = 42');
         $query->Columns('column2');
         $this->assertSame(
-            'UPDATE my_table SET column2 = 100 WHERE id = 42',
+            'UPDATE `my_table` SET column2 = 100 WHERE id = 42',
             $query->ToSql()
         );
     }
@@ -105,7 +105,7 @@ class UpdateQueryTest extends TestCase
             ->Where('id = 42');
         $query->Values('200');
         $this->assertSame(
-            'UPDATE my_table SET column1 = 200 WHERE id = 42',
+            'UPDATE `my_table` SET column1 = 200 WHERE id = 42',
             $query->ToSql()
         );
     }
@@ -143,7 +143,7 @@ class UpdateQueryTest extends TestCase
             ->Where('column1 = 1');
         $query->Where('column2 = 99');
         $this->assertSame(
-            'UPDATE my_table SET column1 = 100 WHERE column2 = 99',
+            'UPDATE `my_table` SET column1 = 100 WHERE column2 = 99',
             $query->ToSql()
         );
     }
@@ -221,7 +221,7 @@ class UpdateQueryTest extends TestCase
             ]);
 
         $this->assertSame(
-            'UPDATE users SET email = :email, status = :status WHERE id = :id',
+            'UPDATE `users` SET email = :email, status = :status WHERE id = :id',
             $query->ToSql()
         );
         $this->assertSame(

@@ -345,7 +345,7 @@ class FakeDatabaseTest extends TestCase
     {
         $sut = new FakeDatabase();
 
-        $result = $sut->WithTransaction(function () {
+        $result = $sut->WithTransaction(function() {
             throw new \RuntimeException('Fail');
         });
         $this->assertFalse($result);

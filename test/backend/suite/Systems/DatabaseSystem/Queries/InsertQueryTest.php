@@ -27,7 +27,7 @@ class InsertQueryTest extends TestCase
             ->Values('value1');
         $query->Table('another_table');
         $this->assertSame(
-            'INSERT INTO another_table VALUES (value1)',
+            'INSERT INTO `another_table` VALUES (value1)',
             $query->ToSql()
         );
     }
@@ -64,7 +64,7 @@ class InsertQueryTest extends TestCase
             ->Values('value1');
         $query->Columns('column2');
         $this->assertSame(
-            'INSERT INTO my_table (column2) VALUES (value1)',
+            'INSERT INTO `my_table` (column2) VALUES (value1)',
             $query->ToSql()
         );
     }
@@ -100,7 +100,7 @@ class InsertQueryTest extends TestCase
             ->Values('value1');
         $query->Values('value2');
         $this->assertSame(
-            'INSERT INTO my_table VALUES (value2)',
+            'INSERT INTO `my_table` VALUES (value2)',
             $query->ToSql()
         );
     }
@@ -152,8 +152,9 @@ class InsertQueryTest extends TestCase
             ]);
 
         $this->assertSame(
-            'INSERT INTO users (id, name, email, status, createdAt) VALUES (:id, :name, :email, :status, :createdAt)',
-            $query->ToSql()
+            'INSERT INTO `users` (id, name, email, status, createdAt)'
+          . ' VALUES (:id, :name, :email, :status, :createdAt)'
+          , $query->ToSql()
         );
         $this->assertSame(
             [ 'id' => 101, 'name' => 'John Doe', 'email' => 'john.doe@example.com',

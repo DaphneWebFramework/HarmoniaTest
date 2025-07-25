@@ -27,7 +27,7 @@ class DeleteQueryTest extends TestCase
             ->Where('id = 42');
         $query->Table('another_table');
         $this->assertSame(
-            'DELETE FROM another_table WHERE id = 42',
+            'DELETE FROM `another_table` WHERE id = 42',
             $query->ToSql()
         );
     }
@@ -63,7 +63,7 @@ class DeleteQueryTest extends TestCase
             ->Where('column1 = 1');
         $query->Where('column2 = 99');
         $this->assertSame(
-            'DELETE FROM my_table WHERE column2 = 99',
+            'DELETE FROM `my_table` WHERE column2 = 99',
             $query->ToSql()
         );
     }
@@ -108,7 +108,7 @@ class DeleteQueryTest extends TestCase
             ->Bind(['id' => 101]);
 
         $this->assertSame(
-            'DELETE FROM users WHERE id = :id',
+            'DELETE FROM `users` WHERE id = :id',
             $query->ToSql()
         );
         $this->assertSame(
