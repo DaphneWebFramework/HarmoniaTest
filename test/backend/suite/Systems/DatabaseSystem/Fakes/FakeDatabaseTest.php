@@ -130,7 +130,7 @@ class FakeDatabaseTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            'Unexpected query: `SELECT * FROM nonexistent`, bindings: []');
+            'Unexpected query: "SELECT * FROM nonexistent", bindings: []');
         $sut->Execute($query);
     }
 
@@ -149,7 +149,7 @@ class FakeDatabaseTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            'Unexpected query: `SELECT * FROM users WHERE id = :id`,'
+            'Unexpected query: "SELECT * FROM users WHERE id = :id",'
           . ' bindings: {"id":2}'
         );
         $sut->Execute($query);
@@ -168,7 +168,7 @@ class FakeDatabaseTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            'Exhausted query: `SELECT * FROM users WHERE id = :id`,'
+            'Exhausted query: "SELECT * FROM users WHERE id = :id",'
           . ' bindings: {"id":1}');
         $sut->Execute($query); // exceeds 1
     }
@@ -188,7 +188,7 @@ class FakeDatabaseTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage(
-            'Exhausted query: `SELECT * FROM logs WHERE status = :status`,'
+            'Exhausted query: "SELECT * FROM logs WHERE status = :status",'
           . ' bindings: {"status":"archived"}');
         $sut->Execute($query); // exceeds 3
     }
