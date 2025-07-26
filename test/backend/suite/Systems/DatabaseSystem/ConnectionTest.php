@@ -711,6 +711,33 @@ class ConnectionTest extends TestCase
 
     #endregion RollbackTransaction
 
+    #region EscapeString -------------------------------------------------------
+
+    function testEscapeStringDelegatesToHandleRealEscapeString()
+    {
+        $handle = $this->createMock(MySQLiHandle::class);
+        $handle->expects($this->once())
+            ->method('__call')
+            ->with('real_escape_string', ["John'; DROP TABLE students;--"])
+            ->willReturn("John\\'; DROP TABLE students;--");
+
+        $connection = $this->getMockBuilder(Connection::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods([])
+            ->getMock();
+        AccessHelper::SetMockProperty(
+            Connection::class,
+            $connection,
+            'handle',
+            $handle
+        );
+
+        $escaped = $connection->EscapeString("John'; DROP TABLE students;--");
+        $this->assertSame("John\\'; DROP TABLE students;--", $escaped);
+    }
+
+    #endregion EscapeString
+
     #region createHandle -------------------------------------------------------
 
     function testCreateHandleThrowsIfNewMysqliFailsWhenReportModeIsOff()
