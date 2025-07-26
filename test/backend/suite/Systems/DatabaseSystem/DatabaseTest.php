@@ -385,6 +385,36 @@ class DatabaseTest extends TestCase
 
     #endregion WithTransaction
 
+    #region EscapeString -------------------------------------------------------
+
+    function testEscapeStringReturnsEmptyStringWhenNewConnectionThrows()
+    {
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willThrowException(new \RuntimeException());
+
+        $this->assertSame('', $database->EscapeString('unsafe'));
+    }
+
+    function testEscapeStringReturnsWhateverTheConnectionMethodReturns()
+    {
+        $connection = $this->createMock(Connection::class);
+        $connection->expects($this->once())
+            ->method('EscapeString')
+            ->with('input-string')
+            ->willReturn('escaped-string');
+
+        $database = Database::Instance();
+        $database->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
+
+        $this->assertSame('escaped-string', $database->EscapeString('input-string'));
+    }
+
+    #endregion EscapeString
+
     #region Data Providers -----------------------------------------------------
 
     static function nullOrResultDataProvider()
