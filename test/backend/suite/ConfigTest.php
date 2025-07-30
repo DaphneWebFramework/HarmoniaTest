@@ -38,8 +38,8 @@ class ConfigTest extends TestCase
      */
     private function createTestFile(string $fileContent): void
     {
-        \file_put_contents(
-            (string)$this->testFilePath,
+        $this->testFilePath->Call(
+            '\file_put_contents',
             \preg_replace('/^[ ]{4}/m', '', $fileContent)
         );
     }

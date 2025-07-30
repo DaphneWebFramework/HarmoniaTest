@@ -22,7 +22,7 @@ class CPathTest extends TestCase
     {
         $cwd = \getcwd();
         if (!CPath::Join($cwd, 'phpunit.xml')->IsFile()) {
-            \chdir((string)CPath::Join(__DIR__, '..', '..'));
+            CPath::Join(__DIR__, '..', '..')->Call('\chdir');
             self::$originalWorkingDirectory = $cwd;
         }
     }
@@ -201,7 +201,7 @@ class CPathTest extends TestCase
         $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
         $this->assertTrue(\symlink(__FILE__, (string)$path));
         $isLink = $path->IsLink();
-        \unlink((string)$path);
+        $path->Call('\unlink');
         $this->assertTrue($isLink);
     }
 
@@ -211,7 +211,7 @@ class CPathTest extends TestCase
         $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
         $this->assertTrue(\symlink(__DIR__, (string)$path));
         $isLink = $path->IsLink();
-        \unlink((string)$path);
+        $path->Call('\unlink');
         $this->assertTrue($isLink);
     }
 
@@ -239,7 +239,7 @@ class CPathTest extends TestCase
         $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
         $this->assertTrue(\symlink(__FILE__, (string)$path));
         $readLink = $path->ReadLink();
-        \unlink((string)$path);
+        $path->Call('\unlink');
         $this->assertInstanceOf(CPath::class, $readLink);
         $this->assertEquals(__FILE__, $readLink);
     }
@@ -250,7 +250,7 @@ class CPathTest extends TestCase
         $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
         $this->assertTrue(\symlink(__DIR__, (string)$path));
         $readLink = $path->ReadLink();
-        \unlink((string)$path);
+        $path->Call('\unlink');
         $this->assertInstanceOf(CPath::class, $readLink);
         $this->assertEquals(__DIR__, $readLink);
     }

@@ -9,13 +9,13 @@ use \Harmonia\Core\CPath;
 #[CoversClass(CFileSystem::class)]
 class CFileSystemTest extends TestCase
 {
-    private string $testDirectoryPath;
-    private string $testFilePath;
+    private CPath $testDirectoryPath;
+    private CPath $testFilePath;
 
     protected function setUp(): void
     {
-        $this->testDirectoryPath = (string)CPath::Join(__DIR__, 'test-directory');
-        $this->testFilePath = (string)CPath::Join(__DIR__, 'test-file');
+        $this->testDirectoryPath = CPath::Join(__DIR__, 'test-directory');
+        $this->testFilePath = CPath::Join(__DIR__, 'test-file');
         $this->cleanUp();
     }
 
@@ -26,29 +26,28 @@ class CFileSystemTest extends TestCase
 
     private function cleanUp()
     {
-        if (\is_dir($this->testDirectoryPath)) {
-            $this->assertTrue(CFileSystem::Instance()->DeleteDirectory(
-                $this->testDirectoryPath));
+        $fs = CFileSystem::Instance();
+        if ($this->testDirectoryPath->Call('\is_dir')) {
+            $this->assertTrue($fs->DeleteDirectory($this->testDirectoryPath));
         }
-        if (\is_file($this->testFilePath)) {
-            $this->assertTrue(CFileSystem::Instance()->DeleteFile(
-                $this->testFilePath));
+        if ($this->testFilePath->Call('\is_file')) {
+            $this->assertTrue($fs->DeleteFile($this->testFilePath));
         }
     }
 
     private static function createDirectoryStructure(
-        string $parentDirectoryPath,
+        CPath $parentDirectoryPath,
         array $structure
     ): void
     {
-        @\mkdir($parentDirectoryPath, 0755, true);
+        @$parentDirectoryPath->Call('\mkdir', 0755, true);
         foreach ($structure as $key => $value) {
-            $path = (string)CPath::Join($parentDirectoryPath, $key);
+            $path = CPath::Join($parentDirectoryPath, $key);
             if (\is_array($value)) {
-                \mkdir($path, 0755, true);
+                $path->Call('\mkdir', 0755, true);
                 self::createDirectoryStructure($path, $value);
             } else {
-                \file_put_contents($path, $value);
+                $path->Call('\file_put_contents', $value);
             }
         }
     }
@@ -57,25 +56,25 @@ class CFileSystemTest extends TestCase
 
     function testCreateDirectoryWithExistingDirectory()
     {
-        $this->assertTrue(\mkdir($this->testDirectoryPath));
-        $this->assertDirectoryExists($this->testDirectoryPath);
+        $this->assertTrue($this->testDirectoryPath->Call('\mkdir'));
+        $this->assertDirectoryExists((string)$this->testDirectoryPath);
         $this->assertTrue(CFileSystem::Instance()->CreateDirectory($this->testDirectoryPath));
-        $this->assertDirectoryExists($this->testDirectoryPath);
+        $this->assertDirectoryExists((string)$this->testDirectoryPath);
     }
 
     function testCreateDirectoryWithNonExistingDirectory()
     {
-        $this->assertDirectoryDoesNotExist($this->testDirectoryPath);
+        $this->assertDirectoryDoesNotExist((string)$this->testDirectoryPath);
         $this->assertTrue(CFileSystem::Instance()->CreateDirectory($this->testDirectoryPath));
-        $this->assertDirectoryExists($this->testDirectoryPath);
+        $this->assertDirectoryExists((string)$this->testDirectoryPath);
     }
 
     function testCreateDirectoryWithNestedPath()
     {
-        $nestedPath = (string)CPath::Join($this->testDirectoryPath, 'foo', 'bar');
-        $this->assertDirectoryDoesNotExist($nestedPath);
+        $nestedPath = CPath::Join($this->testDirectoryPath, 'foo', 'bar');
+        $this->assertDirectoryDoesNotExist((string)$nestedPath);
         $this->assertTrue(CFileSystem::Instance()->CreateDirectory($nestedPath));
-        $this->assertDirectoryExists($nestedPath);
+        $this->assertDirectoryExists((string)$nestedPath);
     }
 
     #endregion CreateDirectory
@@ -84,17 +83,17 @@ class CFileSystemTest extends TestCase
 
     function testDeleteDirectoryWithNonExistingDirectory()
     {
-        $this->assertDirectoryDoesNotExist($this->testDirectoryPath);
+        $this->assertDirectoryDoesNotExist((string)$this->testDirectoryPath);
         $this->assertFalse(CFileSystem::Instance()->DeleteDirectory($this->testDirectoryPath));
-        $this->assertDirectoryDoesNotExist($this->testDirectoryPath);
+        $this->assertDirectoryDoesNotExist((string)$this->testDirectoryPath);
     }
 
     function testDeleteDirectoryWithExistingDirectory()
     {
-        $this->assertTrue(\mkdir($this->testDirectoryPath));
-        $this->assertDirectoryExists($this->testDirectoryPath);
+        $this->assertTrue($this->testDirectoryPath->Call('\mkdir'));
+        $this->assertDirectoryExists((string)$this->testDirectoryPath);
         $this->assertTrue(CFileSystem::Instance()->DeleteDirectory($this->testDirectoryPath));
-        $this->assertDirectoryDoesNotExist($this->testDirectoryPath);
+        $this->assertDirectoryDoesNotExist((string)$this->testDirectoryPath);
     }
 
     function testDeleteDirectoryWithRecursion()
@@ -113,7 +112,7 @@ class CFileSystemTest extends TestCase
             ]
         ]);
         // Optional: Verify the directory structure before deletion.
-        $this->assertDirectoryExists($this->testDirectoryPath);
+        $this->assertDirectoryExists((string)$this->testDirectoryPath);
         $this->assertFileExists((string)CPath::Join($this->testDirectoryPath, 'file'));
         $this->assertDirectoryExists((string)CPath::Join($this->testDirectoryPath, 'subdir1'));
         $this->assertFileExists((string)CPath::Join($this->testDirectoryPath, 'subdir1', 'file1'));
@@ -122,7 +121,7 @@ class CFileSystemTest extends TestCase
         $this->assertFileExists((string)CPath::Join($this->testDirectoryPath, 'subdir3', 'subdir4', 'file3'));
 
         CFileSystem::Instance()->DeleteDirectory($this->testDirectoryPath);
-        $this->assertDirectoryDoesNotExist($this->testDirectoryPath);
+        $this->assertDirectoryDoesNotExist((string)$this->testDirectoryPath);
     }
 
     #endregion DeleteDirectory
@@ -131,17 +130,17 @@ class CFileSystemTest extends TestCase
 
     function testDeleteFileWithNonExistingFile()
     {
-        $this->assertFileDoesNotExist($this->testFilePath);
+        $this->assertFileDoesNotExist((string)$this->testFilePath);
         $this->assertFalse(CFileSystem::Instance()->DeleteFile($this->testFilePath));
-        $this->assertFileDoesNotExist($this->testFilePath);
+        $this->assertFileDoesNotExist((string)$this->testFilePath);
     }
 
     function testDeleteFileWithExistingFile()
     {
-        \file_put_contents($this->testFilePath, 'content');
-        $this->assertFileExists($this->testFilePath);
+        $this->testFilePath->Call('\file_put_contents', 'content');
+        $this->assertFileExists((string)$this->testFilePath);
         $this->assertTrue(CFileSystem::Instance()->DeleteFile($this->testFilePath));
-        $this->assertFileDoesNotExist($this->testFilePath);
+        $this->assertFileDoesNotExist((string)$this->testFilePath);
     }
 
     #endregion DeleteFile
@@ -163,7 +162,7 @@ class CFileSystemTest extends TestCase
 
     function testFindFilesWithEmptyDirectory()
     {
-        $this->assertTrue(\mkdir($this->testDirectoryPath));
+        $this->assertTrue($this->testDirectoryPath->Call('\mkdir'));
         $actualPaths = [];
         $generator = CFileSystem::Instance()->FindFiles(
             $this->testDirectoryPath,
@@ -245,25 +244,31 @@ class CFileSystemTest extends TestCase
 
     function testModificationTimeReturnsZeroForNonExistingFileOrDirectory()
     {
-        $this->assertFileDoesNotExist($this->testFilePath);
-        $this->assertSame(0, CFileSystem::Instance()->ModificationTime(
-            $this->testFilePath));
+        $this->assertFileDoesNotExist((string)$this->testFilePath);
+        $this->assertSame(
+            0,
+            CFileSystem::Instance()->ModificationTime($this->testFilePath)
+        );
     }
 
     function testModificationTimeReturnsNonZeroTimestampForExistingFile()
     {
-        \file_put_contents($this->testFilePath, 'content');
-        $this->assertFileExists($this->testFilePath);
-        $this->assertGreaterThan(0, CFileSystem::Instance()->ModificationTime(
-            $this->testFilePath));
+        $this->testFilePath->Call('\file_put_contents', 'content');
+        $this->assertFileExists((string)$this->testFilePath);
+        $this->assertGreaterThan(
+            0,
+            CFileSystem::Instance()->ModificationTime($this->testFilePath)
+        );
     }
 
     function testModificationTimeReturnsNonZeroTimestampForExistingDirectory()
     {
-        \mkdir($this->testDirectoryPath);
-        $this->assertDirectoryExists($this->testDirectoryPath);
-        $this->assertGreaterThan(0, CFileSystem::Instance()->ModificationTime(
-            $this->testDirectoryPath));
+        $this->testDirectoryPath->Call('\mkdir');
+        $this->assertDirectoryExists((string)$this->testDirectoryPath);
+        $this->assertGreaterThan(
+            0,
+            CFileSystem::Instance()->ModificationTime($this->testDirectoryPath)
+        );
     }
 
     #endregion ModificationTime

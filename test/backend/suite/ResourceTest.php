@@ -172,10 +172,10 @@ class ResourceTest extends TestCase
         $linkPath = CPath::Join($serverPath, $appBaseName);
 
         # /tmp/suite -> /vagrant/test/backend/suite
-        if (\file_exists((string)$linkPath)) {
-            \unlink((string)$linkPath);
+        if ($linkPath->Call('\file_exists')) {
+            $linkPath->Call('\unlink');
         }
-        $this->assertTrue(\symlink((string)$appPath, (string)$linkPath));
+        $this->assertTrue($appPath->Call('\symlink', (string)$linkPath));
 
         $server->method('Path')
             ->willReturn($serverPath);
@@ -183,7 +183,7 @@ class ResourceTest extends TestCase
         $sut->Initialize($appPath);
         $this->assertEquals($appBaseName, $sut->AppRelativePath());
 
-        \unlink((string)$linkPath);
+        $linkPath->Call('\unlink');
     }
 
     function testAppRelativePathWithAppPathEqualToServerPath()

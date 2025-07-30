@@ -784,9 +784,9 @@ class CStringTest extends TestCase
         $result = [];
         foreach ($substrings as $substring) {
             $this->assertInstanceOf(CString::class, $substring);
-            $result[] = (string)$substring;
+            $result[] = $substring;
         }
-        $this->assertSame($expected, $result);
+        $this->assertEquals($expected, $result);
     }
 
     #endregion Split
@@ -802,8 +802,7 @@ class CStringTest extends TestCase
         foreach ($substrings as $substring) {
             $this->assertInstanceOf(CString::class, $substring);
         }
-        $result = array_map(fn($substring) => (string)$substring, $substrings);
-        $this->assertSame($expected, $result);
+        $this->assertEquals($expected, $substrings);
     }
 
     #endregion SplitToArray
@@ -1009,7 +1008,7 @@ class CStringTest extends TestCase
     {
         $str = 'Hello, World!';
         $cstr = new CString($str);
-        $this->assertSame($str, (string)$cstr);
+        $this->assertEquals($str, $cstr);
     }
 
     #endregion Interface: Stringable
