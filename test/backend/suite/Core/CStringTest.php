@@ -1060,6 +1060,37 @@ class CStringTest extends TestCase
 
     #endregion Interface: IteratorAggregate
 
+    #region JsonSerializable ---------------------------------------------------
+
+    function testJsonSerializeReturnsStringValue()
+    {
+        $cstr = new CString('Merhaba, Dünya!', 'UTF-8');
+        $this->assertSame(
+            '"Merhaba, Dünya!"',
+            json_encode($cstr, \JSON_UNESCAPED_UNICODE)
+        );
+    }
+
+    function testJsonSerializeInAssociativeArray()
+    {
+        $cstr = new CString('Merhaba, Dünya!', 'UTF-8');
+        $this->assertSame(
+            '{"message":"Merhaba, Dünya!"}',
+            json_encode(['message' => $cstr], \JSON_UNESCAPED_UNICODE)
+        );
+    }
+
+    function testJsonSerializeInIndexedArray()
+    {
+        $cstrs = [new CString('Bir'), new CString('İki')];
+        $this->assertSame(
+            '["Bir","İki"]',
+            json_encode($cstrs, \JSON_UNESCAPED_UNICODE)
+        );
+    }
+
+    #endregion JsonSerializable
+
     #region Data Providers -----------------------------------------------------
 
     static function singleByteEncodingProvider()
