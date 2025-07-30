@@ -938,6 +938,48 @@ class CStringTest extends TestCase
 
     #endregion Apply, ApplyInPlace
 
+    #region Call ---------------------------------------------------------------
+
+    function testCallWithoutAdditionalArguments()
+    {
+        $cstr = new CString('hello world', 'ASCII');
+        $result = $cstr->Call('strlen');
+        $this->assertSame(11, $result);
+    }
+
+    function testCallWithAdditionalArguments()
+    {
+        $cstr = new CString('hello world');
+        $result = $cstr->Call('substr', 6, 5);
+        $this->assertSame('world', $result);
+    }
+
+    function testCallWithLambdaWithoutAdditionalArguments()
+    {
+        $cstr = new CString('hello');
+        $result = $cstr->Call(
+            function(string $value) {
+                return str_replace('ll', 'xx', $value);
+            }
+        );
+        $this->assertSame('hexxo', $result);
+    }
+
+    function testCallWithLambdaWithAdditionalArguments()
+    {
+        $cstr = new CString('hello');
+        $result = $cstr->Call(
+            function(string $value, string $prefix, string $suffix) {
+                return $prefix . $value . $suffix;
+            },
+            '<',
+            '>'
+        );
+        $this->assertSame('<hello>', $result);
+    }
+
+    #endregion Call
+
     #region Match --------------------------------------------------------------
 
     #[DataProvider('matchDataProvider')]
