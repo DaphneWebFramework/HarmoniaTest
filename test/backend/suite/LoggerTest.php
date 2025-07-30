@@ -302,7 +302,8 @@ class LoggerTest extends TestCase
             ->with('dirname')
             ->willReturn($dirPath);
         $dirPath->expects($this->once())
-            ->method('IsDirectory')
+            ->method('Call')
+            ->with('\is_dir')
             ->willReturn(true);
         $fileSystem->expects($this->never())
             ->method('CreateDirectory');
@@ -324,7 +325,8 @@ class LoggerTest extends TestCase
             ->with('dirname')
             ->willReturn($dirPath);
         $dirPath->expects($this->once())
-            ->method('IsDirectory')
+            ->method('Call')
+            ->with('\is_dir')
             ->willReturn(false);
         $fileSystem->expects($this->once())
             ->method('CreateDirectory')

@@ -23,7 +23,7 @@ class ConfigTest extends TestCase
     protected function tearDown(): void
     {
         Config::ReplaceInstance($this->originalConfig);
-        if ($this->testFilePath->IsFile()) {
+        if ($this->testFilePath->Call('\is_file')) {
             $this->assertTrue(CFileSystem::Instance()->DeleteFile($this->testFilePath));
         }
     }

@@ -9,36 +9,6 @@ use \Harmonia\Core\CPath;
 #[CoversClass(CPath::class)]
 class CPathTest extends TestCase
 {
-    static ?string $originalWorkingDirectory = null;
-
-    /**
-     * Ensures tests run within the "test/backend" directory. Locally, the
-     * working directory is often already set correctly, but in CI environments
-     * like GitHub Actions, it typically starts at the project root. This method
-     * checks for the presence of "phpunit.xml" to confirm the correct directory.
-     * If not found, it changes the working directory to "test/backend".
-     */
-    static function setUpBeforeClass(): void
-    {
-        $cwd = \getcwd();
-        if (!CPath::Join($cwd, 'phpunit.xml')->IsFile()) {
-            CPath::Join(__DIR__, '..', '..')->Call('\chdir');
-            self::$originalWorkingDirectory = $cwd;
-        }
-    }
-
-    /**
-     * Restore the original working directory after the test suite completes,
-     * but only if it was changed during `setUpBeforeClass`.
-     */
-    static function tearDownAfterClass(): void
-    {
-        if (self::$originalWorkingDirectory !== null) {
-            \chdir(self::$originalWorkingDirectory);
-            self::$originalWorkingDirectory = null;
-        }
-    }
-
     #region __construct --------------------------------------------------------
 
     function testDefaultConstructor()
@@ -156,106 +126,6 @@ class CPathTest extends TestCase
     }
 
     #endregion TrimTrailingSlashes
-
-    #region IsFile -------------------------------------------------------------
-
-    #[DataProvider('isFileDataProvider')]
-    function testIsFile($expected, $value)
-    {
-        $path = new CPath($value);
-        $this->assertSame($expected, $path->IsFile());
-    }
-
-    #endregion IsFile
-
-    #region IsDirectory --------------------------------------------------------
-
-    #[DataProvider('isDirectoryDataProvider')]
-    function testIsDirectory($expected, $value)
-    {
-        $path = new CPath($value);
-        $this->assertSame($expected, $path->IsDirectory());
-    }
-
-    #endregion IsDirectory
-
-    #region IsLink -------------------------------------------------------------
-
-    #[RequiresOperatingSystem('Linux|Darwin')]
-    function testIsLinkFailsWithAFile()
-    {
-        $path = new CPath(__FILE__);
-        $this->assertFalse($path->IsLink());
-    }
-
-    #[RequiresOperatingSystem('Linux|Darwin')]
-    function testIsLinkFailsWithADirectory()
-    {
-        $path = new CPath(__DIR__);
-        $this->assertFalse($path->IsLink());
-    }
-
-    #[RequiresOperatingSystem('Linux|Darwin')]
-    function testIsLinkSucceedsWithALinkToAFile()
-    {
-        $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
-        $this->assertTrue(\symlink(__FILE__, (string)$path));
-        $isLink = $path->IsLink();
-        $path->Call('\unlink');
-        $this->assertTrue($isLink);
-    }
-
-    #[RequiresOperatingSystem('Linux|Darwin')]
-    function testIsLinkSucceedsWithALinkToADirectory()
-    {
-        $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
-        $this->assertTrue(\symlink(__DIR__, (string)$path));
-        $isLink = $path->IsLink();
-        $path->Call('\unlink');
-        $this->assertTrue($isLink);
-    }
-
-    #endregion IsLink
-
-    #region ReadLink -----------------------------------------------------------
-
-    #[RequiresOperatingSystem('Linux|Darwin')]
-    function testReadLinkFailsWithAFile()
-    {
-        $path = new CPath(__FILE__);
-        $this->assertNull($path->ReadLink());
-    }
-
-    #[RequiresOperatingSystem('Linux|Darwin')]
-    function testReadLinkFailsWithADirectory()
-    {
-        $path = new CPath(__DIR__);
-        $this->assertNull($path->ReadLink());
-    }
-
-    #[RequiresOperatingSystem('Linux|Darwin')]
-    function testReadLinkSucceedsWithALinkToAFile()
-    {
-        $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
-        $this->assertTrue(\symlink(__FILE__, (string)$path));
-        $readLink = $path->ReadLink();
-        $path->Call('\unlink');
-        $this->assertInstanceOf(CPath::class, $readLink);
-        $this->assertEquals(__FILE__, $readLink);
-    }
-
-    #[RequiresOperatingSystem('Linux|Darwin')]
-    function testReadLinkSucceedsWithALinkToADirectory()
-    {
-        $path = CPath::Join(\sys_get_temp_dir(), \uniqid('test_'));
-        $this->assertTrue(\symlink(__DIR__, (string)$path));
-        $readLink = $path->ReadLink();
-        $path->Call('\unlink');
-        $this->assertInstanceOf(CPath::class, $readLink);
-        $this->assertEquals(__DIR__, $readLink);
-    }
-
-    #endregion ReadLink
 
     #region Data Providers -----------------------------------------------------
 
@@ -786,28 +656,6 @@ class CPathTest extends TestCase
                 ['', '////'],
             ];
         }
-    }
-
-    static function isFileDataProvider()
-    {
-        return [
-            'existing file' => [true, 'phpunit.xml'],
-            'existing directory' => [false, 'suite'],
-            'non existing path' => [false, 'non_existing'],
-            'path with invalid characters' => [false, '<>:"|?*'],
-            'empty path' => [false, ''],
-        ];
-    }
-
-    static function isDirectoryDataProvider()
-    {
-        return [
-            'existing directory' => [true, 'suite'],
-            'existing file' => [false, 'phpunit.xml'],
-            'non existing path' => [false, 'non_existing'],
-            'path with invalid characters' => [false, '<>:"|?*'],
-            'empty path' => [false, ''],
-        ];
     }
 
     #endregion Data Providers
