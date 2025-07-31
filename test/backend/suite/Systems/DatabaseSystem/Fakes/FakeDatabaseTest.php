@@ -352,4 +352,27 @@ class FakeDatabaseTest extends TestCase
     }
 
     #endregion WithTransaction
+
+    #region EscapeString -------------------------------------------------------
+
+    function testEscapeStringReturnsUnmodifiedWhenInputIsSafe()
+    {
+        $sut = new FakeDatabase();
+        $input = 'plain text';
+        $escaped = $sut->EscapeString($input);
+
+        $this->assertSame($input, $escaped);
+    }
+
+    function testEscapeStringEscapesSpecialCharacters()
+    {
+        $sut = new FakeDatabase();
+        $input = "O'Reilly\nNew\rLine\0with\x1aEscape\\\"Quote\"";
+        $expected = "O\\'Reilly\\nNew\\rLine\\0with\\ZEscape\\\\\\\"Quote\\\"";
+        $escaped = $sut->EscapeString($input);
+
+        $this->assertSame($expected, $escaped);
+    }
+
+    #endregion EscapeString
 }
