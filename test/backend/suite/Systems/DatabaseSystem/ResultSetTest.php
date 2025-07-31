@@ -12,19 +12,19 @@ class ResultSetTest extends TestCase
 {
     #region __construct --------------------------------------------------------
 
-    function testConstructWithNoParameters()
+    function testConstructorWithNoParameters()
     {
         $resultSet = new ResultSet();
         $this->assertNull(AccessHelper::GetProperty($resultSet, 'result'));
     }
 
-    function testConstructWithNull()
+    function testConstructorWithNull()
     {
         $resultSet = new ResultSet(null);
         $this->assertNull(AccessHelper::GetProperty($resultSet, 'result'));
     }
 
-    function testConstructWithResultObject()
+    function testConstructorWithResultObject()
     {
         $result = $this->createMock(MySQLiResult::class);
         $resultSet = new ResultSet($result);

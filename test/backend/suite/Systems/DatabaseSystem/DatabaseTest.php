@@ -17,147 +17,137 @@ use \TestToolkit\AccessHelper;
 #[CoversClass(Database::class)]
 class DatabaseTest extends TestCase
 {
-    private ?Database $originalDatabase = null;
     private ?Config $originalConfig = null;
     private ?Logger $originalLogger = null;
 
     protected function setUp(): void
     {
-        $this->originalDatabase =
-            Database::ReplaceInstance($this->createDatabasePartialMock());
         $this->originalConfig =
-            Config::ReplaceInstance($this->createConfigMock());
+            Config::ReplaceInstance($this->createConfig());
         $this->originalLogger =
             Logger::ReplaceInstance($this->createStub(Logger::class));
     }
 
     protected function tearDown(): void
     {
-        Database::ReplaceInstance($this->originalDatabase);
         Config::ReplaceInstance($this->originalConfig);
         Logger::ReplaceInstance($this->originalLogger);
     }
 
-    private function createDatabasePartialMock(): Database
+    private function systemUnderTest(string ...$mockedMethods): Database
     {
         return $this->getMockBuilder(Database::class)
-            ->onlyMethods(['_new_Connection'])
             ->disableOriginalConstructor()
+            ->onlyMethods($mockedMethods)
             ->getMock();
     }
 
-    private function createConfigMock(): Config
+    private function createConfig(
+        string $host = 'localhost',
+        string $username = 'root',
+        string $password = 'pass1234',
+        string $name = 'test_db',
+        ?string $charset = 'utf8mb4'
+    ): Config
     {
-        $config = $this->createMock(Config::class);
-        $config->expects($this->any())
+        $mock = $this->createMock(Config::class);
+        $mock->expects($this->any())
             ->method('OptionOrDefault')
             ->willReturnMap([
-                ['DatabaseHost', '', 'localhost'],
-                ['DatabaseUsername', '', 'root'],
-                ['DatabasePassword', '', 'pass123'],
-                ['DatabaseName', '', 'test_db']
+                ['DatabaseHost', '', $host],
+                ['DatabaseUsername', '', $username],
+                ['DatabasePassword', '', $password],
+                ['DatabaseName', '', $name]
             ]);
-        $config->expects($this->any())
+        $mock->expects($this->any())
             ->method('Option')
             ->with('DatabaseCharset')
-            ->willReturn('utf8mb4');
-        return $config;
+            ->willReturn($charset);
+        return $mock;
     }
 
     #region Execute ------------------------------------------------------------
 
     function testExecuteReturnsNullWhenConfigOptionsAreMissing()
     {
-        $config = $this->createMock(Config::class); // doesn't use the singleton
-        $config->expects($this->any())
-            ->method('OptionOrDefault')
-            ->willReturnMap([
-                ['DatabaseHost', '', ''],
-                ['DatabaseUsername', '', ''],
-                ['DatabasePassword', '', ''],
-                ['DatabaseName', '', '']
-            ]);
-        $config->expects($this->any())
-            ->method('Option')
-            ->with('DatabaseCharset')
-            ->willReturn(null);
-        Config::ReplaceInstance($config); // tearDown will restore the original
+        $sut = $this->systemUnderTest('_new_Connection');
+        $query = $this->createStub(Query::class);
 
-        $database = Database::Instance();
-        $database->expects($this->once())
+        $sut->expects($this->once())
             ->method('_new_Connection')
             ->with('', '', '', null)
             ->willThrowException(new \RuntimeException('Database not found', 1049));
 
-        $query = $this->createStub(Query::class);
-        $this->assertNull($database->Execute($query));
+        // Overwrite the singleton; tearDown() will restore it.
+        Config::ReplaceInstance($this->createConfig('', '', '', '', null));
+
+        $this->assertNull($sut->Execute($query));
     }
 
     function testExecuteReturnsNullWhenNewConnectionThrows()
     {
-        $database = Database::Instance();
-        $database->expects($this->once())
+        $sut = $this->systemUnderTest('_new_Connection');
+        $query = $this->createStub(Query::class);
+
+        $sut->expects($this->once())
             ->method('_new_Connection')
-            ->with('localhost', 'root', 'pass123', 'utf8mb4')
+            ->with('localhost', 'root', 'pass1234', 'utf8mb4')
             ->willThrowException(new \RuntimeException('Access denied', 1045));
 
-        $query = $this->createStub(Query::class);
-        $this->assertNull($database->Execute($query));
+        $this->assertNull($sut->Execute($query));
     }
 
     function testExecuteReturnsNullWhenConnectionSelectDatabaseThrows()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+        $query = $this->createStub(Query::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->with('localhost', 'root', 'pass1234', 'utf8mb4')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('SelectDatabase')
             ->with('test_db')
             ->willThrowException(new \RuntimeException('Unknown database', 1049));
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->with('localhost', 'root', 'pass123', 'utf8mb4')
-            ->willReturn($connection);
-
-        $query = $this->createStub(Query::class);
-        $this->assertNull($database->Execute($query));
+        $this->assertNull($sut->Execute($query));
     }
 
     function testExecuteReturnsNullWhenConnectionExecuteThrows()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
+        $connection = $this->createMock(Connection::class);
         $query = $this->createStub(Query::class);
 
-        $connection = $this->createMock(Connection::class);
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('Execute')
             ->with($query)
             ->willThrowException(new \RuntimeException('Syntax error', 1064));
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $this->assertNull($database->Execute($query));
+        $this->assertNull($sut->Execute($query));
     }
 
     #[DataProvider('nullOrResultDataProvider')]
     function testExecuteReturnsResultSetWhenConnectionExecuteSucceeds($result)
     {
+        $sut = $this->systemUnderTest('_new_Connection');
+        $connection = $this->createMock(Connection::class);
         $query = $this->createStub(Query::class);
 
-        $connection = $this->createMock(Connection::class);
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('Execute')
             ->with($query)
             ->willReturn($result);
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $this->assertInstanceOf(ResultSet::class, $database->Execute($query));
+        $this->assertInstanceOf(ResultSet::class, $sut->Execute($query));
     }
 
     #endregion Execute
@@ -166,27 +156,28 @@ class DatabaseTest extends TestCase
 
     function testLastInsertIdReturnsZeroWhenNewConnectionThrows()
     {
-        $database = Database::Instance();
-        $database->expects($this->once())
+        $sut = $this->systemUnderTest('_new_Connection');
+
+        $sut->expects($this->once())
             ->method('_new_Connection')
             ->willThrowException(new \RuntimeException());
 
-        $this->assertSame(0, $database->LastInsertId());
+        $this->assertSame(0, $sut->LastInsertId());
     }
 
     function testLastInsertIdReturnsWhateverTheConnectionMethodReturns()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('LastInsertId')
             ->willReturn(123);
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $this->assertSame(123, $database->LastInsertId());
+        $this->assertSame(123, $sut->LastInsertId());
     }
 
     #endregion LastInsertId
@@ -195,27 +186,28 @@ class DatabaseTest extends TestCase
 
     function testLastAffectedRowCountReturnsMinusOneWhenNewConnectionThrows()
     {
-        $database = Database::Instance();
-        $database->expects($this->once())
+        $sut = $this->systemUnderTest('_new_Connection');
+
+        $sut->expects($this->once())
             ->method('_new_Connection')
             ->willThrowException(new \RuntimeException());
 
-        $this->assertSame(-1, $database->LastAffectedRowCount());
+        $this->assertSame(-1, $sut->LastAffectedRowCount());
     }
 
     function testLastAffectedRowCountReturnsWhateverTheConnectionMethodReturns()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('LastAffectedRowCount')
             ->willReturn(3);
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $this->assertSame(3, $database->LastAffectedRowCount());
+        $this->assertSame(3, $sut->LastAffectedRowCount());
     }
 
     #endregion LastAffectedRowCount
@@ -224,12 +216,13 @@ class DatabaseTest extends TestCase
 
     function testWithTransactionReturnsFalseWhenNewConnectionThrows()
     {
-        $database = Database::Instance();
-        $database->expects($this->once())
+        $sut = $this->systemUnderTest('_new_Connection');
+
+        $sut->expects($this->once())
             ->method('_new_Connection')
             ->willThrowException(new \RuntimeException());
 
-        $result = $database->WithTransaction(function() {
+        $result = $sut->WithTransaction(function() {
             return 'any result';
         });
         $this->assertFalse($result);
@@ -237,19 +230,19 @@ class DatabaseTest extends TestCase
 
     function testWithTransactionReturnsFalseWhenBeginTransactionThrows()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('BeginTransaction')
             ->willThrowException(new \RuntimeException());
         $connection->expects($this->once())
             ->method('RollbackTransaction');
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $result = $database->WithTransaction(function() {
+        $result = $sut->WithTransaction(function() {
             $this->fail('Callback should not be executed');
         });
         $this->assertFalse($result);
@@ -257,7 +250,12 @@ class DatabaseTest extends TestCase
 
     function testWithTransactionReturnsFalseWhenCallbackThrows()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('BeginTransaction');
         $connection->expects($this->never())
@@ -265,20 +263,20 @@ class DatabaseTest extends TestCase
         $connection->expects($this->once())
             ->method('RollbackTransaction');
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $result = $database->WithTransaction(function() {
+        $result = $sut->WithTransaction(function() {
             throw new \RuntimeException();
         });
         $this->assertFalse($result);
     }
 
-    function testWithTransactionReturnsFalseWhenCommitTransactionThrows(): void
+    function testWithTransactionReturnsFalseWhenCommitTransactionThrows()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('BeginTransaction');
         $connection->expects($this->once())
@@ -287,12 +285,7 @@ class DatabaseTest extends TestCase
         $connection->expects($this->once())
             ->method('RollbackTransaction');
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $result = $database->WithTransaction(function() {
+        $result = $sut->WithTransaction(function() {
             return 42;
         });
         $this->assertFalse($result);
@@ -300,7 +293,12 @@ class DatabaseTest extends TestCase
 
     function testWithTransactionReturnsFalseWhenRollbackThrows()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('BeginTransaction');
         $connection->expects($this->never())
@@ -309,20 +307,20 @@ class DatabaseTest extends TestCase
             ->method('RollbackTransaction')
             ->willThrowException(new \RuntimeException());
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $result = $database->WithTransaction(function() {
+        $result = $sut->WithTransaction(function() {
             throw new \RuntimeException('Error in callback');
         });
         $this->assertFalse($result);
     }
 
-    function testWithTransactionReturnsCallbackResultOfNullOnSuccess(): void
+    function testWithTransactionReturnsCallbackResultOfNullOnSuccess()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('BeginTransaction');
         $connection->expects($this->once())
@@ -330,20 +328,20 @@ class DatabaseTest extends TestCase
         $connection->expects($this->never())
             ->method('RollbackTransaction');
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $result = $database->WithTransaction(function() {
+        $result = $sut->WithTransaction(function() {
             // no return statement
         });
         $this->assertNull($result);
     }
 
-    function testWithTransactionReturnsCallbackResultOfFalseOnSuccess(): void
+    function testWithTransactionReturnsCallbackResultOfFalseOnSuccess()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('BeginTransaction');
         $connection->expects($this->once())
@@ -351,12 +349,7 @@ class DatabaseTest extends TestCase
         $connection->expects($this->never())
             ->method('RollbackTransaction');
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $result = $database->WithTransaction(function() {
+        $result = $sut->WithTransaction(function() {
             return false;
         });
         $this->assertFalse($result);
@@ -364,7 +357,12 @@ class DatabaseTest extends TestCase
 
     function testWithTransactionReturnsCallbackResultOnSuccess()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('BeginTransaction');
         $connection->expects($this->once())
@@ -372,12 +370,7 @@ class DatabaseTest extends TestCase
         $connection->expects($this->never())
             ->method('RollbackTransaction');
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $result = $database->WithTransaction(function() {
+        $result = $sut->WithTransaction(function() {
             return 'any result';
         });
         $this->assertSame('any result', $result);
@@ -389,28 +382,29 @@ class DatabaseTest extends TestCase
 
     function testEscapeStringReturnsEmptyStringWhenNewConnectionThrows()
     {
-        $database = Database::Instance();
-        $database->expects($this->once())
+        $sut = $this->systemUnderTest('_new_Connection');
+
+        $sut->expects($this->once())
             ->method('_new_Connection')
             ->willThrowException(new \RuntimeException());
 
-        $this->assertSame('', $database->EscapeString('unsafe'));
+        $this->assertSame('', $sut->EscapeString('input-string'));
     }
 
     function testEscapeStringReturnsWhateverTheConnectionMethodReturns()
     {
+        $sut = $this->systemUnderTest('_new_Connection');
         $connection = $this->createMock(Connection::class);
+
+        $sut->expects($this->once())
+            ->method('_new_Connection')
+            ->willReturn($connection);
         $connection->expects($this->once())
             ->method('EscapeString')
             ->with('input-string')
             ->willReturn('escaped-string');
 
-        $database = Database::Instance();
-        $database->expects($this->once())
-            ->method('_new_Connection')
-            ->willReturn($connection);
-
-        $this->assertSame('escaped-string', $database->EscapeString('input-string'));
+        $this->assertSame('escaped-string', $sut->EscapeString('input-string'));
     }
 
     #endregion EscapeString
