@@ -18,8 +18,10 @@ class CookieServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->originalServer = Server::ReplaceInstance($this->createMock(Server::class));
-        $this->originalConfig = Config::ReplaceInstance($this->createMock(Config::class));
+        $this->originalServer =
+            Server::ReplaceInstance($this->createMock(Server::class));
+        $this->originalConfig =
+            Config::ReplaceInstance($this->createMock(Config::class));
     }
 
     protected function tearDown(): void

@@ -16,8 +16,8 @@ class MessagesTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->originalConfig = Config::ReplaceInstance(
-            $this->createMock(Config::class));
+        $this->originalConfig =
+            Config::ReplaceInstance($this->createMock(Config::class));
     }
 
     protected function tearDown(): void

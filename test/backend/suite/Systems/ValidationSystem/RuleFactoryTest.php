@@ -15,7 +15,7 @@ class RuleFactoryTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->originalConfig = Config::ReplaceInstance($this->config());
+        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
         AccessHelper::SetStaticProperty(RuleFactory::class, 'ruleObjects', null);
         AccessHelper::SetStaticProperty(RuleFactory::class, 'nativeFunctions', null);
     }
@@ -25,7 +25,7 @@ class RuleFactoryTest extends TestCase
         Config::ReplaceInstance($this->originalConfig);
     }
 
-    private function config()
+    private function createConfig(): Config
     {
         $mock = $this->createMock(Config::class);
         $mock->method('Option')->with('Language')->willReturn('en');

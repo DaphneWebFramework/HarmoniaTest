@@ -16,7 +16,7 @@ class RequirementEngineTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->originalConfig = Config::ReplaceInstance($this->config());
+        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
     }
 
     protected function tearDown(): void
@@ -24,14 +24,14 @@ class RequirementEngineTest extends TestCase
         Config::ReplaceInstance($this->originalConfig);
     }
 
-    private function config()
+    private function createConfig(): Config
     {
         $mock = $this->createMock(Config::class);
         $mock->method('Option')->with('Language')->willReturn('en');
         return $mock;
     }
 
-    private function metaRule(string $name, mixed $param = null): IMetaRule
+    private function createMetaRule(string $name, mixed $param = null): IMetaRule
     {
         $mock = $this->createMock(IMetaRule::class);
         $mock->method('GetName')->willReturn($name);
@@ -39,15 +39,15 @@ class RequirementEngineTest extends TestCase
         return $mock;
     }
 
-    private function metaRules(array $rules): array
+    private function createMetaRules(array $rules): array
     {
         return \array_map(
-            fn($rule) => $this->metaRule(...$rule),
+            fn($rule) => $this->createMetaRule(...$rule),
             $rules
         );
     }
 
-    private function dataAccessor(array $fields = []): DataAccessor
+    private function createDataAccessor(array $fields = []): DataAccessor
     {
         $mock = $this->createMock(DataAccessor::class);
         $mock->method('HasField')->willReturnCallback(
@@ -73,8 +73,8 @@ class RequirementEngineTest extends TestCase
 
         $sut = new RequirementEngine(
             $field,
-            $this->metaRules($rules),
-            $this->dataAccessor($data)
+            $this->createMetaRules($rules),
+            $this->createDataAccessor($data)
         );
         $sut->Validate();
 
@@ -96,8 +96,8 @@ class RequirementEngineTest extends TestCase
     ) {
         $sut = new RequirementEngine(
             $field,
-            $this->metaRules($rules),
-            $this->dataAccessor($data)
+            $this->createMetaRules($rules),
+            $this->createDataAccessor($data)
         );
 
         $this->assertSame($expected, $sut->ShouldSkipFurtherValidation());
@@ -110,14 +110,14 @@ class RequirementEngineTest extends TestCase
     function testFilterOutRequirementRules()
     {
         $metaRules = [
-            $this->metaRule('required'),
-            $this->metaRule('requiredwithout', 'someField'),
-            $this->metaRule('string')
+            $this->createMetaRule('required'),
+            $this->createMetaRule('requiredwithout', 'someField'),
+            $this->createMetaRule('string')
         ];
         $sut = new RequirementEngine(
             'myField',
             $metaRules,
-            $this->dataAccessor()
+            $this->createDataAccessor()
         );
 
         $filteredRules = $sut->FilterOutRequirementRules($metaRules);
