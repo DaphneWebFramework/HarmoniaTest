@@ -38,7 +38,7 @@ class IntegerRuleTest extends TestCase
 
     #region Validate -----------------------------------------------------------
 
-    function testValidateSucceedsWhenValueIsIntegerLike()
+    function testValidateSucceedsWithNoParameterWhenValueIsIntegerLike()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
@@ -47,11 +47,13 @@ class IntegerRuleTest extends TestCase
             ->method('IsIntegerLike')
             ->with(123)
             ->willReturn(true);
+        $nativeFunctions->expects($this->never())
+            ->method('IsInteger');
 
         $sut->Validate('field1', 123, null);
     }
 
-    function testValidateThrowsWhenValueIsNotIntegerLike()
+    function testValidateThrowsWithNoParameterWhenValueIsNotIntegerLike()
     {
         $sut = $this->systemUnderTest();
         $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
@@ -60,10 +62,60 @@ class IntegerRuleTest extends TestCase
             ->method('IsIntegerLike')
             ->with('not-an-int')
             ->willReturn(false);
+        $nativeFunctions->expects($this->never())
+            ->method('IsInteger');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage("Field 'field1' must be an integer.");
         $sut->Validate('field1', 'not-an-int', null);
+    }
+
+    function testValidateSucceedsWithStrictParameterWhenValueIsInteger()
+    {
+        $sut = $this->systemUnderTest();
+        $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
+
+        $nativeFunctions->expects($this->once())
+            ->method('IsInteger')
+            ->with(123)
+            ->willReturn(true);
+        $nativeFunctions->expects($this->never())
+            ->method('IsIntegerLike');
+
+        $sut->Validate('field1', 123, 'strict');
+    }
+
+    function testValidateThrowsWithStrictParameterWhenValueIsNotInteger()
+    {
+        $sut = $this->systemUnderTest();
+        $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
+
+        $nativeFunctions->expects($this->once())
+            ->method('IsInteger')
+            ->with('123')
+            ->willReturn(false);
+        $nativeFunctions->expects($this->never())
+            ->method('IsIntegerLike');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Field 'field1' must be an integer.");
+        $sut->Validate('field1', '123', 'strict');
+    }
+
+    function testValidateThrowsWhenParameterIsInvalid()
+    {
+        $sut = $this->systemUnderTest();
+        $nativeFunctions = AccessHelper::GetProperty($sut, 'nativeFunctions');
+
+        $nativeFunctions->expects($this->never())
+            ->method('IsInteger');
+        $nativeFunctions->expects($this->never())
+            ->method('IsIntegerLike');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Rule 'integer' must be used with either 'strict' or no parameter.");
+        $sut->Validate('field1', 123, 'banana');
     }
 
     #endregion Validate

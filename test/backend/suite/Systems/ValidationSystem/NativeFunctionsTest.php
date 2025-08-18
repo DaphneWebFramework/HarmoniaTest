@@ -38,6 +38,12 @@ class NativeFunctionsTest extends TestCase
         $this->sut = null;
     }
 
+    #[DataProvider('isIntegerDataProvider')]
+    function testIsInteger(bool $expected, mixed $value)
+    {
+        $this->assertSame($expected, $this->sut->IsInteger($value));
+    }
+
     #[DataProvider('isNumericDataProvider')]
     function testIsNumeric(bool $expected, mixed $value)
     {
@@ -93,6 +99,23 @@ class NativeFunctionsTest extends TestCase
     }
 
     #region Data Providers -----------------------------------------------------
+
+    static function isIntegerDataProvider()
+    {
+        return [
+            [true, 0],
+            [true, 123],
+            [true, -123],
+            [false, 123.45],
+            [false, '123'],
+            [false, 'abc'],
+            [false, null],
+            [false, true],
+            [false, false],
+            [false, []],
+            [false, new \stdClass()],
+        ];
+    }
 
     static function isNumericDataProvider()
     {
