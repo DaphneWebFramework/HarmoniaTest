@@ -2,7 +2,6 @@
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
-use \PHPUnit\Framework\Attributes\RequiresOperatingSystem;
 
 use \Harmonia\Core\CPath;
 
@@ -82,6 +81,35 @@ class CPathTest extends TestCase
     }
 
     #endregion Join
+
+    #region Extend, ExtendInPlace ----------------------------------------------
+
+    function testExtend()
+    {
+        $path = new CPath('path');
+        $extended = $path->Extend('to', 'file');
+        $this->assertNotSame($path, $extended);
+        $this->assertEquals('path', $path);
+        if (\PHP_OS_FAMILY === 'Windows') {
+            $this->assertEquals('path\\to\\file', $extended);
+        } else {
+            $this->assertEquals('path/to/file', $extended);
+        }
+    }
+
+    function testExtendInPlace()
+    {
+        $path = new CPath('path');
+        $extended = $path->ExtendInPlace('to', 'file');
+        $this->assertSame($path, $extended);
+        if (\PHP_OS_FAMILY === 'Windows') {
+            $this->assertEquals('path\\to\\file', $extended);
+        } else {
+            $this->assertEquals('path/to/file', $extended);
+        }
+    }
+
+    #endregion Extend, ExtendInPlace
 
     #region EnsureLeadingSlash -------------------------------------------------
 

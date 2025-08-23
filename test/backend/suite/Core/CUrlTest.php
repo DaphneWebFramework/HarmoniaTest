@@ -4,8 +4,6 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Core\CUrl;
-use \Harmonia\Core\CPath;
-use \Harmonia\Core\CArray;
 
 #[CoversClass(CUrl::class)]
 class CUrlTest extends TestCase
@@ -70,6 +68,27 @@ class CUrlTest extends TestCase
     }
 
     #endregion Join
+
+    #region Extend, ExtendInPlace ----------------------------------------------
+
+    function testExtend()
+    {
+        $url = new CUrl('url');
+        $extended = $url->Extend('to', 'file');
+        $this->assertNotSame($url, $extended);
+        $this->assertEquals('url', $url);
+        $this->assertEquals('url/to/file', $extended);
+    }
+
+    function testExtendInPlace()
+    {
+        $url = new CUrl('url');
+        $result = $url->ExtendInPlace('to', 'file');
+        $this->assertSame($url, $result);
+        $this->assertEquals('url/to/file', $url);
+    }
+
+    #endregion Extend, ExtendInPlace
 
     #region EnsureLeadingSlash -------------------------------------------------
 
