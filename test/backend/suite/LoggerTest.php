@@ -74,7 +74,7 @@ class LoggerTest extends TestCase
         AccessHelper::CallConstructor($sut);
 
         $this->assertEquals(
-            new CPath('app/root/path/to/file'),
+            'app/root/path/to/file',
             AccessHelper::GetMockProperty(Logger::class, $sut, 'filePath')
         );
         $this->assertEquals(
@@ -250,7 +250,7 @@ class LoggerTest extends TestCase
             ->willReturn(true);
 
         $builtPath = AccessHelper::CallMethod($sut, 'buildFilePath', ['path/to/file']);
-        $this->assertEquals(new CPath('path/to/file'), $builtPath);
+        $this->assertEquals('path/to/file', $builtPath);
     }
 
     function testBuildFilePathWithRelativePath()
@@ -268,7 +268,7 @@ class LoggerTest extends TestCase
 
         $builtPath = AccessHelper::CallMethod($sut, 'buildFilePath', ['path/to/file']);
         $builtPath->ReplaceInPlace('\\', '/');
-        $this->assertEquals(new CPath('/app/root/path/to/file'), $builtPath);
+        $this->assertEquals('/app/root/path/to/file', $builtPath);
     }
 
     #endregion buildFilePath

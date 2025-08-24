@@ -179,7 +179,7 @@ class ResourceTest extends TestCase
         $appBaseName = $appPath->Apply('\basename');
 
         # /tmp/suite
-        $linkPath = CPath::Join($serverPath, $appBaseName);
+        $linkPath = $serverPath->Extend($appBaseName);
 
         # /tmp/suite -> /vagrant/test/backend/suite
         if ($linkPath->Call('\file_exists')) {
