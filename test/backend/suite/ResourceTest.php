@@ -85,6 +85,16 @@ class ResourceTest extends TestCase
         $this->assertEquals(__DIR__, $sut->AppPath());
     }
 
+    function testInitializeDoesNotMutateCallerProvidedPathInstance()
+    {
+        $sut = $this->systemUnderTest();
+        $appPath = CPath::Join(__DIR__, '.'); // Deliberately non-canonical
+        $appPathClone = clone $appPath;
+
+        $sut->Initialize($appPath);
+        $this->assertEquals($appPath, $appPathClone);
+    }
+
     #endregion Initialize
 
     #region AppPath ------------------------------------------------------------
