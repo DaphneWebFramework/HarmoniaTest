@@ -67,6 +67,24 @@ class CUrlTest extends TestCase
         $this->assertEquals('http://example.com/path/to/file.html', $joined);
     }
 
+
+    function testJoinDoesNotMutateCallerProvidedSegments()
+    {
+        $segment1 = new CUrl('url');
+        $segment2 = new CUrl('/to');
+        $segment3 = new CUrl('/file');
+        $segment1Clone = clone $segment1;
+        $segment2Clone = clone $segment2;
+        $segment3Clone = clone $segment3;
+
+        $joined = CUrl::Join($segment1, $segment2, $segment3);
+
+        $this->assertEquals($segment1Clone, $segment1);
+        $this->assertEquals($segment2Clone, $segment2);
+        $this->assertEquals($segment3Clone, $segment3);
+        $this->assertEquals('url/to/file', $joined);
+    }
+
     #endregion Join
 
     #region Extend ----------------------------------------------------------------

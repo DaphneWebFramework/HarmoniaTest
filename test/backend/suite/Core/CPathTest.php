@@ -80,6 +80,27 @@ class CPathTest extends TestCase
         }
     }
 
+    function testJoinDoesNotMutateCallerProvidedSegments()
+    {
+        $segment1 = new CPath('path');
+        $segment2 = new CPath('/to');
+        $segment3 = new CPath('/file');
+        $segment1Clone = clone $segment1;
+        $segment2Clone = clone $segment2;
+        $segment3Clone = clone $segment3;
+
+        $joined = CPath::Join($segment1, $segment2, $segment3);
+
+        $this->assertEquals($segment1Clone, $segment1);
+        $this->assertEquals($segment2Clone, $segment2);
+        $this->assertEquals($segment3Clone, $segment3);
+        if (\PHP_OS_FAMILY === 'Windows') {
+            $this->assertEquals('path\\to\\file', $joined);
+        } else {
+            $this->assertEquals('path/to/file', $joined);
+        }
+    }
+
     #endregion Join
 
     #region Extend -------------------------------------------------------------
