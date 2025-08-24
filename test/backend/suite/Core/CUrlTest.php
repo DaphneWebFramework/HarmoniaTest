@@ -69,7 +69,7 @@ class CUrlTest extends TestCase
 
     #endregion Join
 
-    #region Extend, ExtendInPlace ----------------------------------------------
+    #region Extend ----------------------------------------------------------------
 
     function testExtend()
     {
@@ -80,15 +80,14 @@ class CUrlTest extends TestCase
         $this->assertEquals('url/to/file', $extended);
     }
 
-    function testExtendInPlace()
+    function testExtendFromEmpty()
     {
-        $url = new CUrl('url');
-        $result = $url->ExtendInPlace('to', 'file');
-        $this->assertSame($url, $result);
-        $this->assertEquals('url/to/file', $url);
+        $url = new CUrl();
+        $extended = $url->Extend('to', 'file');
+        $this->assertEquals('to/file', $extended);
     }
 
-    #endregion Extend, ExtendInPlace
+    #endregion Extend
 
     #region EnsureLeadingSlash -------------------------------------------------
 

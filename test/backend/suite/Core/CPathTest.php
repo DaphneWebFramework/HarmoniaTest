@@ -82,7 +82,7 @@ class CPathTest extends TestCase
 
     #endregion Join
 
-    #region Extend, ExtendInPlace ----------------------------------------------
+    #region Extend -------------------------------------------------------------
 
     function testExtend()
     {
@@ -97,19 +97,18 @@ class CPathTest extends TestCase
         }
     }
 
-    function testExtendInPlace()
+    function testExtendFromEmpty()
     {
-        $path = new CPath('path');
-        $extended = $path->ExtendInPlace('to', 'file');
-        $this->assertSame($path, $extended);
+        $path = new CPath();
+        $extended = $path->Extend('to', 'file');
         if (\PHP_OS_FAMILY === 'Windows') {
-            $this->assertEquals('path\\to\\file', $extended);
+            $this->assertEquals('to\\file', $extended);
         } else {
-            $this->assertEquals('path/to/file', $extended);
+            $this->assertEquals('to/file', $extended);
         }
     }
 
-    #endregion Extend, ExtendInPlace
+    #endregion Extend
 
     #region EnsureLeadingSlash -------------------------------------------------
 
