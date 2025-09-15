@@ -35,7 +35,7 @@ class ValidatorTest extends TestCase
         }
     }
 
-    function testValidateThrowsCustomMessageForRequiredRule()
+    function testValidateMatchesCustomMessageForRequiredRule()
     {
         $sut = new Validator(
             ['email' => ['required']],
@@ -47,7 +47,7 @@ class ValidatorTest extends TestCase
         $sut->Validate([]); // no email provided
     }
 
-    function testValidateThrowsCustomMessageForRequiredWithoutWhenAllMissing()
+    function testValidateMatchesCustomMessageForRequiredWithoutWhenAllMissing()
     {
         $sut = new Validator(
             ['email' => ['requiredWithout:username']],
@@ -59,7 +59,7 @@ class ValidatorTest extends TestCase
         $sut->Validate([]); // both missing
     }
 
-    function testValidateThrowsCustomMessageForRequiredWithoutWhenBothPresent()
+    function testValidateMatchesCustomMessageForRequiredWithoutWhenBothPresent()
     {
         $sut = new Validator(
             ['email' => ['requiredWithout:username']],
@@ -74,7 +74,7 @@ class ValidatorTest extends TestCase
         ]);
     }
 
-    function testValidateThrowsCustomMessageForStandardRules()
+    function testValidateMatchesCustomMessageForStandardRules()
     {
         $sut = new Validator(
             ['username' => ['required', 'regex:/^[a-z]+$/']],
@@ -86,7 +86,7 @@ class ValidatorTest extends TestCase
         $sut->Validate(['username' => '1234']); // does not match regex
     }
 
-    function testValidateMatchesCustomMessageKeyCaseInsensitivelyForRuleName()
+    function testValidateMatchesCustomMessageForRuleNameInAnyCase()
     {
         $sut = new Validator(
             ['age' => ['mIn:18']],
@@ -98,19 +98,7 @@ class ValidatorTest extends TestCase
         $sut->Validate(['age' => 16]);
     }
 
-    function testFallsBackToDefaultMessageWhenFieldNameCaseDiffers()
-    {
-        $sut = new Validator(
-            ['Age' => ['min:18']],
-            ['aGe.min' => 'Age must be at least 18.']
-        );
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'Age' must have a minimum value of 18.");
-        $sut->Validate(['Age' => 16]);
-    }
-
-    function testValidateMatchesCustomMessageKeyForIntegerFieldName()
+    function testValidateMatchesCustomMessageForIntegerFieldKey()
     {
         $sut = new Validator(
             [0 => ['required']],
@@ -122,7 +110,7 @@ class ValidatorTest extends TestCase
         $sut->Validate([]); // index 0 not provided
     }
 
-    function testValidateMatchesCustomMessageKeyWithDottedFieldName()
+    function testValidateMatchesCustomMessageForDottedFieldKey()
     {
         $sut = new Validator(
             ['profile.email' => ['required']],
@@ -134,11 +122,47 @@ class ValidatorTest extends TestCase
         $sut->Validate([]); // no profile.email
     }
 
-    function testValidateIgnoresCustomMessageForMismatchedField()
+    function testValidateIgnoresCustomMessageForFieldNameWithDifferentCase()
+    {
+        $sut = new Validator(
+            ['Age' => ['min:18']],
+            ['aGe.min' => 'Age must be at least 18.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Field 'Age' must have a minimum value of 18.");
+        $sut->Validate(['Age' => 16]);
+    }
+
+    function testValidateIgnoresCustomMessageForMismatchedFieldWithoutDot()
+    {
+        $sut = new Validator(
+            ['email' => ['required']],
+            ['required' => 'This message should not be used.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Required field 'email' is missing.");
+        $sut->Validate([]);
+    }
+
+    function testValidateIgnoresCustomMessageForMismatchedFieldWithDot()
     {
         $sut = new Validator(
             ['email' => ['required']],
             ['username.required' => 'This message should not be used.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Required field 'email' is missing.");
+        $sut->Validate([]);
+    }
+
+    function testValidateIgnoresCustomMessageForMismatchedRuleName()
+    {
+        $sut = new Validator(
+            ['email' => ['required']],
+            ['email.string' => 'This message should not be used.']
         );
 
         $this->expectException(\RuntimeException::class);
