@@ -7,32 +7,12 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Systems\ValidationSystem\Rules\FileRule;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(FileRule::class)]
 class FileRuleTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     private function systemUnderTest(): FileRule
     {
         return new FileRule($this->createMock(NativeFunctions::class));

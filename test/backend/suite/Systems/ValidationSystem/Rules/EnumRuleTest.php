@@ -6,7 +6,6 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\ValidationSystem\Rules\EnumRule;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
@@ -19,25 +18,6 @@ enum TestEnum: int {
 #[CoversClass(EnumRule::class)]
 class EnumRuleTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     private function systemUnderTest(): EnumRule
     {
         return new EnumRule($this->createMock(NativeFunctions::class));
@@ -56,7 +36,8 @@ class EnumRuleTest extends TestCase
             ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Rule 'enum' must be used with a valid enum class name.");
+        $this->expectExceptionMessage(
+            "Rule 'enum' must be used with a valid enum class name.");
         $sut->Validate('field1', 'value1', 123);
     }
 

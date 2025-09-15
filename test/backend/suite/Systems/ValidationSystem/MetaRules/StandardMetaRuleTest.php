@@ -6,33 +6,16 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\ValidationSystem\MetaRules\StandardMetaRule;
 
-use \Harmonia\Config;
-use \Harmonia\Core\CArray;
 use \Harmonia\Systems\ValidationSystem\RuleFactory;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(StandardMetaRule::class)]
 class StandardMetaRuleTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
     protected function setUp(): void
     {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
         AccessHelper::SetStaticProperty(RuleFactory::class, 'ruleObjects', null);
         AccessHelper::SetStaticProperty(RuleFactory::class, 'nativeFunctions', null);
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
     }
 
     #region GetName ------------------------------------------------------------
@@ -68,7 +51,7 @@ class StandardMetaRuleTest extends TestCase
         $sut = new StandardMetaRule('nonexistent', null);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Unknown rule 'nonexistent'");
+        $this->expectExceptionMessage("Unknown rule 'nonexistent'.");
         $sut->Validate('field1', 'value');
     }
 

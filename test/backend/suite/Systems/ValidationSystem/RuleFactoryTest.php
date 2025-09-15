@@ -7,31 +7,15 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Systems\ValidationSystem\RuleFactory;
 
-use \Harmonia\Config;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(RuleFactory::class)]
 class RuleFactoryTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
     protected function setUp(): void
     {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
         AccessHelper::SetStaticProperty(RuleFactory::class, 'ruleObjects', null);
         AccessHelper::SetStaticProperty(RuleFactory::class, 'nativeFunctions', null);
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
     }
 
     #region Create -------------------------------------------------------------

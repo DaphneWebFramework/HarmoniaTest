@@ -6,32 +6,12 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\ValidationSystem\Rules\MaxRule;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(MaxRule::class)]
 class MaxRuleTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     private function systemUnderTest(): MaxRule
     {
         return new MaxRule($this->createMock(NativeFunctions::class));
@@ -114,7 +94,8 @@ class MaxRuleTest extends TestCase
             ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must have a maximum value of 100.");
+        $this->expectExceptionMessage(
+            "Field 'field1' must have a maximum value of 100.");
         $sut->Validate('field1', 150, 100);
     }
 

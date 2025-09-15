@@ -6,32 +6,12 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\ValidationSystem\Rules\MinRule;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(MinRule::class)]
 class MinRuleTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     private function systemUnderTest(): MinRule
     {
         return new MinRule($this->createMock(NativeFunctions::class));
@@ -114,7 +94,8 @@ class MinRuleTest extends TestCase
             ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must have a minimum value of 10.");
+        $this->expectExceptionMessage(
+            "Field 'field1' must have a minimum value of 10.");
         $sut->Validate('field1', 5, 10);
     }
 

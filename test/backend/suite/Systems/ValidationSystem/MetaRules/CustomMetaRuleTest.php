@@ -6,30 +6,9 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\ValidationSystem\MetaRules\CustomMetaRule;
 
-use \Harmonia\Config;
-
 #[CoversClass(CustomMetaRule::class)]
 class CustomMetaRuleTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     #region GetName ------------------------------------------------------------
 
     function testGetNameReturnsEmptyString()

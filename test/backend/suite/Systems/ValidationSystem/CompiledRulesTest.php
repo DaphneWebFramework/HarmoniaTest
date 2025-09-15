@@ -6,35 +6,15 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\ValidationSystem\CompiledRules;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\MetaRules\CustomMetaRule;
 use \Harmonia\Systems\ValidationSystem\MetaRules\StandardMetaRule;
 
 #[CoversClass(CompiledRules::class)]
 class CompiledRulesTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     #region __construct --------------------------------------------------------
 
-    function testConstructorCompilesStandardRules()
+    function testConstructCompilesStandardRules()
     {
         $sut = new CompiledRules([
             'name' => 'required',
@@ -46,7 +26,7 @@ class CompiledRulesTest extends TestCase
         $this->assertInstanceOf(StandardMetaRule::class, $mrc['email'][0]);
     }
 
-    function testConstructorCompilesCustomRules()
+    function testConstructCompilesCustomRules()
     {
         $sut = new CompiledRules([
             'age' => function($value) { return $value >= 18; }
@@ -56,7 +36,7 @@ class CompiledRulesTest extends TestCase
         $this->assertInstanceOf(CustomMetaRule::class, $mrc['age'][0]);
     }
 
-    function testConstructorCompilesMixedRules()
+    function testConstructCompilesMixedRules()
     {
         $sut = new CompiledRules([
             'id' => ['required', 'integer', 'min:1'],
@@ -72,7 +52,7 @@ class CompiledRulesTest extends TestCase
         $this->assertInstanceOf(CustomMetaRule::class, $mrc['age'][0]);
     }
 
-    function testConstructorThrowsWhenRuleIsInvalid()
+    function testConstructThrowsWhenRuleIsInvalid()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Rule must be a non-empty string.');

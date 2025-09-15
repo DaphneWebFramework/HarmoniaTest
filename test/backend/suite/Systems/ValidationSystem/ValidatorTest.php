@@ -7,31 +7,11 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Systems\ValidationSystem\Validator;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\DataAccessor;
 
 #[CoversClass(Validator::class)]
 class ValidatorTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     #region Validate -----------------------------------------------------------
 
     #[DataProvider('validateDataProvider')]

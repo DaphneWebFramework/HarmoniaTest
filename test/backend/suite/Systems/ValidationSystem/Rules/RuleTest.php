@@ -18,7 +18,7 @@ class RuleTest extends TestCase
 {
     #region __construct --------------------------------------------------------
 
-    function testConstructorAssignsNativeFunctions()
+    function testConstructAssignsNativeFunctions()
     {
         $nativeFunctions = $this->createStub(NativeFunctions::class);
         $rule = new TestRule($nativeFunctions);

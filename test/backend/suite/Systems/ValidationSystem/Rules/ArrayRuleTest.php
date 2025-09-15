@@ -6,32 +6,12 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\ValidationSystem\Rules\ArrayRule;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\NativeFunctions;
 use \TestToolkit\AccessHelper;
 
 #[CoversClass(ArrayRule::class)]
 class ArrayRuleTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     private function systemUnderTest(): ArrayRule
     {
         return new ArrayRule($this->createMock(NativeFunctions::class));

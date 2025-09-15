@@ -6,32 +6,12 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\ValidationSystem\Requirements\FieldRequirementConstraints;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\MetaRules\IMetaRule;
 
 #[CoversClass(FieldRequirementConstraints::class)]
 class FieldRequirementConstraintsTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
-    private function metaRule(string $name, mixed $param = null): IMetaRule
+    private function createMetaRule(string $name, mixed $param = null): IMetaRule
     {
         $mock = $this->createMock(IMetaRule::class);
         $mock->method('GetName')->willReturn($name);
@@ -44,7 +24,7 @@ class FieldRequirementConstraintsTest extends TestCase
     function testFromMetaRulesExtractsRequiredRule()
     {
         $sut = FieldRequirementConstraints::FromMetaRules([
-            $this->metaRule('required')
+            $this->createMetaRule('required')
         ]);
 
         $this->assertTrue($sut->IsRequired());
@@ -55,7 +35,7 @@ class FieldRequirementConstraintsTest extends TestCase
     function testFromMetaRulesExtractsRequiredWithoutRule()
     {
         $sut = FieldRequirementConstraints::FromMetaRules([
-            $this->metaRule('requiredwithout', 'email')
+            $this->createMetaRule('requiredwithout', 'email')
         ]);
 
         $this->assertFalse($sut->IsRequired());
@@ -66,8 +46,8 @@ class FieldRequirementConstraintsTest extends TestCase
     function testFromMetaRulesExtractsBothRequiredAndRequiredWithoutRules()
     {
         $sut = FieldRequirementConstraints::FromMetaRules([
-            $this->metaRule('required'),
-            $this->metaRule('requiredwithout', 'email')
+            $this->createMetaRule('required'),
+            $this->createMetaRule('requiredwithout', 'email')
         ]);
 
         $this->assertTrue($sut->IsRequired());
@@ -82,7 +62,7 @@ class FieldRequirementConstraintsTest extends TestCase
             "Rule 'requiredWithout' must be used with a field name.");
 
         FieldRequirementConstraints::FromMetaRules([
-            $this->metaRule('requiredwithout')
+            $this->createMetaRule('requiredwithout')
         ]);
     }
 
@@ -93,7 +73,7 @@ class FieldRequirementConstraintsTest extends TestCase
     function testFormatRequiredWithoutListWithSingleField()
     {
         $sut = FieldRequirementConstraints::FromMetaRules([
-            $this->metaRule('requiredwithout', 'email')
+            $this->createMetaRule('requiredwithout', 'email')
         ]);
 
         $this->assertSame("'email'", $sut->FormatRequiredWithoutList());
@@ -102,8 +82,8 @@ class FieldRequirementConstraintsTest extends TestCase
     function testFormatRequiredWithoutListWithMultipleFields()
     {
         $sut = FieldRequirementConstraints::FromMetaRules([
-            $this->metaRule('requiredwithout', 'email'),
-            $this->metaRule('requiredwithout', 'phone')
+            $this->createMetaRule('requiredwithout', 'email'),
+            $this->createMetaRule('requiredwithout', 'phone')
         ]);
 
         $this->assertSame("one of 'email', 'phone'", $sut->FormatRequiredWithoutList());

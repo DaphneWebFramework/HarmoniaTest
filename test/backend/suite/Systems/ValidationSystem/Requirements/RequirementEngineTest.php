@@ -7,32 +7,12 @@ use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Systems\ValidationSystem\Requirements\RequirementEngine;
 
-use \Harmonia\Config;
 use \Harmonia\Systems\ValidationSystem\DataAccessor;
 use \Harmonia\Systems\ValidationSystem\MetaRules\IMetaRule;
 
 #[CoversClass(RequirementEngine::class)]
 class RequirementEngineTest extends TestCase
 {
-    private ?Config $originalConfig = null;
-
-    protected function setUp(): void
-    {
-        $this->originalConfig = Config::ReplaceInstance($this->createConfig());
-    }
-
-    protected function tearDown(): void
-    {
-        Config::ReplaceInstance($this->originalConfig);
-    }
-
-    private function createConfig(): Config
-    {
-        $mock = $this->createMock(Config::class);
-        $mock->method('Option')->with('Language')->willReturn('en');
-        return $mock;
-    }
-
     private function createMetaRule(string $name, mixed $param = null): IMetaRule
     {
         $mock = $this->createMock(IMetaRule::class);
