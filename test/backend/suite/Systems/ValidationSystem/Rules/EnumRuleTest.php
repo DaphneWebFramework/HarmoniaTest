@@ -1,4 +1,6 @@
 <?php declare(strict_types=1);
+namespace suite\Systems\ValidationSystem\Rules;
+
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
@@ -73,7 +75,8 @@ class EnumRuleTest extends TestCase
             ->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Field 'field1' must be a valid value of enum 'TestEnum'.");
+        $this->expectExceptionMessage(
+            "Field 'field1' must be a valid value of enum '" . TestEnum::class . "'.");
         $sut->Validate('field1', 'value1', TestEnum::class);
     }
 

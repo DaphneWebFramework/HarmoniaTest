@@ -1,4 +1,6 @@
 <?php declare(strict_types=1);
+namespace suite\Systems\ValidationSystem;
+
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 use \PHPUnit\Framework\Attributes\DataProvider;
@@ -71,7 +73,7 @@ class MessagesTest extends TestCase
     {
         $sut = $this->systemUnderTest();
         $path = CPath::Join(
-            \dirname((new ReflectionClass(Messages::class))->getFileName()),
+            \dirname((new \ReflectionClass(Messages::class))->getFileName()),
             'messages.json'
         );
         $this->assertEquals([$path], AccessHelper::CallMethod($sut, 'filePaths'));
