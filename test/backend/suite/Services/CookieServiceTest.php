@@ -42,32 +42,32 @@ class CookieServiceTest extends TestCase
 
     function testSetCookieWhenHeadersSent()
     {
-        $cookieService = $this->systemUnderTest('_headers_sent', '_setcookie');
+        $sut = $this->systemUnderTest('_headers_sent', '_setcookie');
 
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('_headers_sent')
             ->willReturn(true);
-        $cookieService->expects($this->never())
+        $sut->expects($this->never())
             ->method('_setcookie');
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('HTTP headers have already been sent.');
-        $cookieService->SetCookie('', '');
+        $sut->SetCookie('', '');
     }
 
     #[DataProvider('setCookieDataProvider')]
     function testSetCookie($cookieValue, $isSecure, $returnValue)
     {
-        $cookieService = $this->systemUnderTest('_headers_sent', '_setcookie');
+        $sut = $this->systemUnderTest('_headers_sent', '_setcookie');
         $server = Server::Instance();
 
         $server->expects($this->once())
             ->method('IsSecure')
             ->willReturn($isSecure);
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('_headers_sent')
             ->willReturn(false);
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('_setcookie')
             ->with('cookie-name', $cookieValue, [
                 'expires'  => 0,
@@ -79,13 +79,41 @@ class CookieServiceTest extends TestCase
             ])
             ->willReturn($returnValue);
 
-        AccessHelper::CallConstructor($cookieService); // Initialize options
+        AccessHelper::CallConstructor($sut); // Initialize options
 
         if ($returnValue === false) {
             $this->expectException(\RuntimeException::class);
             $this->expectExceptionMessage('Failed to set or delete cookie.');
         }
-        $cookieService->SetCookie('cookie-name', $cookieValue);
+        $sut->SetCookie('cookie-name', $cookieValue);
+    }
+
+    function testSetCookieWithExpiration()
+    {
+        $sut = $this->systemUnderTest('_headers_sent', '_setcookie');
+        $server = Server::Instance();
+
+        $server->expects($this->once())
+            ->method('IsSecure')
+            ->willReturn(false);
+        $sut->expects($this->once())
+            ->method('_headers_sent')
+            ->willReturn(false);
+        $sut->expects($this->once())
+            ->method('_setcookie')
+            ->with('cookie-name', 'cookie-value', [
+                'expires'  => 1234567890,
+                'path'     => '/',
+                'domain'   => '',
+                'secure'   => false,
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ])
+            ->willReturn(true);
+
+        AccessHelper::CallConstructor($sut); // Initialize options
+
+        $sut->SetCookie('cookie-name', 'cookie-value', 1234567890);
     }
 
     #endregion SetCookie
@@ -94,13 +122,13 @@ class CookieServiceTest extends TestCase
 
     function testDeleteCookie()
     {
-        $cookieService = $this->systemUnderTest('SetCookie');
+        $sut = $this->systemUnderTest('SetCookie');
 
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('SetCookie')
             ->with('cookie-name', '');
 
-        $cookieService->DeleteCookie('cookie-name');
+        $sut->DeleteCookie('cookie-name');
     }
 
     #endregion DeleteCookie
@@ -109,7 +137,7 @@ class CookieServiceTest extends TestCase
 
     function testAppSpecificCookieNameWithEmptySuffix()
     {
-        $cookieService = $this->systemUnderTest();
+        $sut = $this->systemUnderTest();
         $config = Config::Instance();
 
         $config->expects($this->never())
@@ -117,12 +145,12 @@ class CookieServiceTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Suffix cannot be empty.');
-        $cookieService->AppSpecificCookieName('');
+        $sut->AppSpecificCookieName('');
     }
 
     function testAppSpecificCookieNameWhenConfigAppNameIsNotSetOrEmpty()
     {
-        $cookieService = $this->systemUnderTest();
+        $sut = $this->systemUnderTest();
         $config = Config::Instance();
 
         $config->expects($this->once())
@@ -132,13 +160,13 @@ class CookieServiceTest extends TestCase
 
         $this->assertSame(
             'HARMONIA_INTEGRITY_TOKEN',
-            $cookieService->AppSpecificCookieName('INTEGRITY_TOKEN')
+            $sut->AppSpecificCookieName('INTEGRITY_TOKEN')
         );
     }
 
     function testAppSpecificCookieNameWhenConfigAppNameIsSetAndNotEmpty()
     {
-        $cookieService = $this->systemUnderTest();
+        $sut = $this->systemUnderTest();
         $config = Config::Instance();
 
         $config->expects($this->once())
@@ -148,13 +176,13 @@ class CookieServiceTest extends TestCase
 
         $this->assertSame(
             'MYAPP_INTEGRITY_TOKEN',
-            $cookieService->AppSpecificCookieName('INTEGRITY_TOKEN')
+            $sut->AppSpecificCookieName('INTEGRITY_TOKEN')
         );
     }
 
     function testAppSpecificCookieNameWithLowerCaseSuffix()
     {
-        $cookieService = $this->systemUnderTest();
+        $sut = $this->systemUnderTest();
         $config = Config::Instance();
 
         $config->expects($this->once())
@@ -164,7 +192,7 @@ class CookieServiceTest extends TestCase
 
         $this->assertSame(
             'MYAPP_INTEGRITY_TOKEN',
-            $cookieService->AppSpecificCookieName('integrity_token')
+            $sut->AppSpecificCookieName('integrity_token')
         );
     }
 
@@ -174,16 +202,16 @@ class CookieServiceTest extends TestCase
 
     function testSetCsrfCookie()
     {
-        $cookieService = $this->systemUnderTest('CsrfCookieName', 'SetCookie');
+        $sut = $this->systemUnderTest('CsrfCookieName', 'SetCookie');
 
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('CsrfCookieName')
             ->willReturn('cookie-name');
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('SetCookie')
             ->with('cookie-name', 'cookie-value');
 
-        $cookieService->SetCsrfCookie('cookie-value');
+        $sut->SetCsrfCookie('cookie-value');
     }
 
     #endregion SetCsrfCookie
@@ -192,16 +220,16 @@ class CookieServiceTest extends TestCase
 
     function testDeleteCsrfCookie()
     {
-        $cookieService = $this->systemUnderTest('DeleteCookie', 'CsrfCookieName');
+        $sut = $this->systemUnderTest('DeleteCookie', 'CsrfCookieName');
 
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('CsrfCookieName')
             ->willReturn('cookie-name');
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('DeleteCookie')
             ->with('cookie-name');
 
-        $cookieService->DeleteCsrfCookie();
+        $sut->DeleteCsrfCookie();
     }
 
     #endregion DeleteCsrfCookie
@@ -210,14 +238,14 @@ class CookieServiceTest extends TestCase
 
     function testCsrfCookieName()
     {
-        $cookieService = $this->systemUnderTest('AppSpecificCookieName');
+        $sut = $this->systemUnderTest('AppSpecificCookieName');
 
-        $cookieService->expects($this->once())
+        $sut->expects($this->once())
             ->method('AppSpecificCookieName')
             ->with('CSRF')
             ->willReturn('cookie-name');
 
-        $this->assertSame('cookie-name', $cookieService->CsrfCookieName());
+        $this->assertSame('cookie-name', $sut->CsrfCookieName());
     }
 
     #endregion CsrfCookieName
