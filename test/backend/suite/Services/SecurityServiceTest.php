@@ -14,33 +14,29 @@ class SecurityServiceTest extends TestCase
     private const TOKEN_PATTERN = '/^[a-f0-9]{64}$/';
     private const CSRF_TOKEN_COOKIE_VALUE_PATTERN = '/^[a-f0-9]{120}$/';
 
-    private ?SecurityService $originalSecurityService = null;
-
-    protected function setUp(): void
+    private function systemUnderTest(string ...$mockedMethods): SecurityService
     {
-        $this->originalSecurityService = SecurityService::ReplaceInstance(null);
-    }
-
-    protected function tearDown(): void
-    {
-        SecurityService::ReplaceInstance($this->originalSecurityService);
+        return $this->getMockBuilder(SecurityService::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods($mockedMethods)
+            ->getMock();
     }
 
     #region HashPassword -------------------------------------------------------
 
     function testHashPasswordWithEmptyPassword()
     {
-        $securityService = SecurityService::Instance();
+        $sut = $this->systemUnderTest();
         $password = '';
-        $hash = $securityService->HashPassword($password);
+        $hash = $sut->HashPassword($password);
         $this->assertTrue(\password_verify($password, $hash));
     }
 
     function testHashPasswordWithNonEmptyPassword()
     {
-        $securityService = SecurityService::Instance();
+        $sut = $this->systemUnderTest();
         $password = 'pass123';
-        $hash = $securityService->HashPassword($password);
+        $hash = $sut->HashPassword($password);
         $this->assertTrue(\password_verify($password, $hash));
     }
 
@@ -50,26 +46,26 @@ class SecurityServiceTest extends TestCase
 
     function testVerifyPasswordWithInvalidPassword()
     {
-        $securityService = SecurityService::Instance();
+        $sut = $this->systemUnderTest();
         $password = 'pass123';
         $hash = \password_hash($password, \PASSWORD_DEFAULT);
-        $this->assertFalse($securityService->VerifyPassword('invalid', $hash));
+        $this->assertFalse($sut->VerifyPassword('invalid', $hash));
     }
 
     function testVerifyPasswordWithEmptyPassword()
     {
-        $securityService = SecurityService::Instance();
+        $sut = $this->systemUnderTest();
         $password = '';
         $hash = \password_hash($password, \PASSWORD_DEFAULT);
-        $this->assertTrue($securityService->VerifyPassword($password, $hash));
+        $this->assertTrue($sut->VerifyPassword($password, $hash));
     }
 
     function testVerifyPasswordWithNonEmptyPassword()
     {
-        $securityService = SecurityService::Instance();
+        $sut = $this->systemUnderTest();
         $password = 'pass123';
         $hash = \password_hash($password, \PASSWORD_DEFAULT);
-        $this->assertTrue($securityService->VerifyPassword($password, $hash));
+        $this->assertTrue($sut->VerifyPassword($password, $hash));
     }
 
     #endregion VerifyPassword
@@ -78,8 +74,8 @@ class SecurityServiceTest extends TestCase
 
     function testGenerateToken()
     {
-        $securityService = SecurityService::Instance();
-        $token = $securityService->GenerateToken();
+        $sut = $this->systemUnderTest();
+        $token = $sut->GenerateToken();
         $this->assertMatchesRegularExpression(self::TOKEN_PATTERN, $token);
     }
 
@@ -89,14 +85,14 @@ class SecurityServiceTest extends TestCase
 
     function testGenerateCsrfToken()
     {
-        $securityService = SecurityService::Instance();
-        $csrfToken = $securityService->GenerateCsrfToken();
+        $sut = $this->systemUnderTest();
+        $csrfToken = $sut->GenerateCsrfToken();
         $this->assertMatchesRegularExpression(
             self::TOKEN_PATTERN, $csrfToken->Token());
         $this->assertMatchesRegularExpression(
             self::CSRF_TOKEN_COOKIE_VALUE_PATTERN, $csrfToken->CookieValue());
         $deobfuscatedCookieValue = AccessHelper::CallMethod(
-            $securityService, 'deobfuscate', [$csrfToken->CookieValue()]);
+            $sut, 'deobfuscate', [$csrfToken->CookieValue()]);
         $this->assertTrue(\password_verify($csrfToken->Token(),
                                            $deobfuscatedCookieValue));
     }
@@ -107,41 +103,41 @@ class SecurityServiceTest extends TestCase
 
     function testVerifyCsrfTokenWithEmptyTokenAndEmptyCookieValue()
     {
-        $securityService = SecurityService::Instance();
+        $sut = $this->systemUnderTest();
         $csrfToken = new CsrfToken('', '');
-        $this->assertFalse($securityService->VerifyCsrfToken($csrfToken));
+        $this->assertFalse($sut->VerifyCsrfToken($csrfToken));
     }
 
     function testVerifyCsrfTokenWithInvalidTokenAndInvalidCookieValue()
     {
-        $securityService = SecurityService::Instance();
+        $sut = $this->systemUnderTest();
         $csrfToken = new CsrfToken('invalid', 'invalid');
-        $this->assertFalse($securityService->VerifyCsrfToken($csrfToken));
+        $this->assertFalse($sut->VerifyCsrfToken($csrfToken));
     }
 
     function testVerifyCsrfTokenWithValidTokenAndEmptyCookieValue()
     {
-        $securityService = SecurityService::Instance();
-        $csrfToken = new CsrfToken($securityService->GenerateToken(), '');
-        $this->assertFalse($securityService->VerifyCsrfToken($csrfToken));
+        $sut = $this->systemUnderTest();
+        $csrfToken = new CsrfToken($sut->GenerateToken(), '');
+        $this->assertFalse($sut->VerifyCsrfToken($csrfToken));
     }
 
     function testVerifyCsrfTokenWithValidTokenAndInvalidCookieValue()
     {
-        $securityService = SecurityService::Instance();
+        $sut = $this->systemUnderTest();
         // Odd number of characters.
-        $csrfToken = new CsrfToken($securityService->GenerateToken(), 'invalid');
-        $this->assertFalse($securityService->VerifyCsrfToken($csrfToken));
+        $csrfToken = new CsrfToken($sut->GenerateToken(), 'invalid');
+        $this->assertFalse($sut->VerifyCsrfToken($csrfToken));
         // Even number of characters.
-        $csrfToken = new CsrfToken($securityService->GenerateToken(), 'invalid0');
-        $this->assertFalse($securityService->VerifyCsrfToken($csrfToken));
+        $csrfToken = new CsrfToken($sut->GenerateToken(), 'invalid0');
+        $this->assertFalse($sut->VerifyCsrfToken($csrfToken));
     }
 
     function testVerifyCsrfTokenWithValidTokenAndValidCookieValue()
     {
-        $securityService = SecurityService::Instance();
-        $csrfToken = $securityService->GenerateCsrfToken();
-        $this->assertTrue($securityService->VerifyCsrfToken($csrfToken));
+        $sut = $this->systemUnderTest();
+        $csrfToken = $sut->GenerateCsrfToken();
+        $this->assertTrue($sut->VerifyCsrfToken($csrfToken));
     }
 
     #endregion VerifyCsrfToken
