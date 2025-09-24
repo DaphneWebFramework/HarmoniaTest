@@ -128,7 +128,7 @@ class SessionTest extends TestCase
                 'domain'   => '',
                 'secure'   => $isSecure,
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ]);
 
         AccessHelper::CallConstructor($session);

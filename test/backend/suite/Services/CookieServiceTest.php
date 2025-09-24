@@ -75,11 +75,11 @@ class CookieServiceTest extends TestCase
                 'domain'   => '',
                 'secure'   => $isSecure,
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ])
             ->willReturn($returnValue);
 
-        AccessHelper::CallConstructor($sut); // Initialize options
+        AccessHelper::CallConstructor($sut);
 
         if ($returnValue === false) {
             $this->expectException(\RuntimeException::class);
@@ -107,11 +107,11 @@ class CookieServiceTest extends TestCase
                 'domain'   => '',
                 'secure'   => false,
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax'
             ])
             ->willReturn(true);
 
-        AccessHelper::CallConstructor($sut); // Initialize options
+        AccessHelper::CallConstructor($sut);
 
         $sut->SetCookie('cookie-name', 'cookie-value', 1234567890);
     }
