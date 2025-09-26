@@ -13,14 +13,14 @@ class FakeDatabaseTest extends TestCase
 {
     private function createQuery(string $sql, array $bindings = []): Query
     {
-        $query = $this->getMockBuilder(Query::class)
+        $mock = $this->getMockBuilder(Query::class)
             ->onlyMethods(['buildSql'])
             ->getMock();
-        $query->method('buildSql')->willReturn($sql);
+        $mock->method('buildSql')->willReturn($sql);
         if (!empty($bindings)) {
-            $query->Bind($bindings);
+            $mock->Bind($bindings);
         }
-        return $query;
+        return $mock;
     }
 
     #region __construct --------------------------------------------------------
@@ -333,22 +333,25 @@ class FakeDatabaseTest extends TestCase
 
     #region WithTransaction ----------------------------------------------------
 
-    function testWithTransactionReturnsCallbackResult()
+    function testWithTransactionDoesNotThrowIfCallbackDoesNotThrow()
     {
         $sut = new FakeDatabase();
+        $callback = function() {};
 
-        $result = $sut->WithTransaction(fn() => 'done');
-        $this->assertSame('done', $result);
+        $sut->WithTransaction($callback);
+        $this->expectNotToPerformAssertions();
     }
 
-    function testWithTransactionReturnsFalseOnException()
+    function testWithTransactionThrowsIfCallbackThrows()
     {
         $sut = new FakeDatabase();
+        $callback = function() {
+            throw new \RuntimeException("Failed to execute callback.");
+        };
 
-        $result = $sut->WithTransaction(function() {
-            throw new \RuntimeException('Fail');
-        });
-        $this->assertFalse($result);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage("Failed to execute callback.");
+        $sut->WithTransaction($callback);
     }
 
     #endregion WithTransaction

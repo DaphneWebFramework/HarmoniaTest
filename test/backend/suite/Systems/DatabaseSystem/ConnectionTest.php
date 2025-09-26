@@ -29,16 +29,16 @@ class ConnectionTest extends TestCase
 
     private function createQuery(string $sql, array $bindings = []): Query
     {
-        $query = $this->getMockBuilder(Query::class)
+        $mock = $this->getMockBuilder(Query::class)
             ->onlyMethods(['buildSql'])
             ->getMock();
-        $query->expects($this->once())
+        $mock->expects($this->once())
             ->method('buildSql')
             ->willReturn($sql);
         if (!empty($bindings)) {
-            $query->Bind($bindings);
+            $mock->Bind($bindings);
         }
-        return $query;
+        return $mock;
     }
 
     #region __construct --------------------------------------------------------
