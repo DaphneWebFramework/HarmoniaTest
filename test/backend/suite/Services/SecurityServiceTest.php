@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
+use \PHPUnit\Framework\Attributes\TestWith;
 use \PHPUnit\Framework\Attributes\DataProviderExternal;
 
 use \Harmonia\Services\SecurityService;
@@ -12,8 +13,7 @@ use \TestToolkit\DataHelper;
 #[CoversClass(SecurityService::class)]
 class SecurityServiceTest extends TestCase
 {
-    private const DEFAULT_TOKEN_PATTERN = '/^[A-Fa-f0-9]{64}$/';
-    private const CSRF_COOKIE_VALUE_PATTERN = '/^[A-Fa-f0-9]{64}$/';
+    private const CSRF_COOKIE_VALUE_PATTERN = '/^[0-9a-fA-F]{64}$/';
 
     private ?Config $originalConfig = null;
 
@@ -69,15 +69,38 @@ class SecurityServiceTest extends TestCase
     function testGenerateTokenWithDefaultByteLength()
     {
         $sut = $this->systemUnderTest();
-        $token = $sut->GenerateToken();
-        $this->assertMatchesRegularExpression(self::DEFAULT_TOKEN_PATTERN, $token);
+
+        $this->assertMatchesRegularExpression(
+            SecurityService::TOKEN_DEFAULT_PATTERN,
+            $sut->GenerateToken()
+        );
     }
 
-    function testGenerateTokenWithArbitraryByteLength()
+    #[TestWith([-1])]
+    #[TestWith([0])]
+    function testGenerateTokenThrowsIfByteLengthIsLessThanOne($byteLength)
     {
         $sut = $this->systemUnderTest();
-        $token = $sut->GenerateToken(8);
-        $this->assertMatchesRegularExpression('/^[A-Fa-f0-9]{16}$/', $token);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Byte length must be at least 1.');
+        $sut->GenerateToken($byteLength);
+    }
+
+    #[TestWith([1])]
+    #[TestWith([2])]
+    #[TestWith([8])]
+    #[TestWith([16])]
+    #[TestWith([17])]
+    function testGenerateTokenWithArbitraryByteLength($byteLength)
+    {
+        $sut = $this->systemUnderTest();
+        $pattern = '/^[0-9a-fA-F]{' . ($byteLength * 2) . '}$/';
+
+        $this->assertMatchesRegularExpression(
+            $pattern,
+            $sut->GenerateToken($byteLength)
+        );
     }
 
     #endregion GenerateToken
@@ -87,15 +110,38 @@ class SecurityServiceTest extends TestCase
     function testTokenPatternWithDefaultByteLength()
     {
         $sut = $this->systemUnderTest();
-        $tokenPattern = $sut->TokenPattern();
-        $this->assertSame(self::DEFAULT_TOKEN_PATTERN, $tokenPattern);
+
+        $this->assertSame(
+            SecurityService::TOKEN_DEFAULT_PATTERN,
+            $sut->TokenPattern()
+        );
     }
 
-    function testTokenPatternWithArbitraryByteLength()
+    #[TestWith([-1])]
+    #[TestWith([0])]
+    function testTokenPatternThrowsIfByteLengthIsLessThanOne($byteLength)
     {
         $sut = $this->systemUnderTest();
-        $tokenPattern = $sut->TokenPattern(8);
-        $this->assertSame('/^[A-Fa-f0-9]{16}$/', $tokenPattern);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Byte length must be at least 1.');
+        $sut->TokenPattern($byteLength);
+    }
+
+    #[TestWith([1])]
+    #[TestWith([2])]
+    #[TestWith([8])]
+    #[TestWith([16])]
+    #[TestWith([17])]
+    function testTokenPatternWithArbitraryByteLength($byteLength)
+    {
+        $sut = $this->systemUnderTest();
+        $pattern = '/^[0-9a-fA-F]{' . ($byteLength * 2) . '}$/';
+
+        $this->assertSame(
+            $pattern,
+            $sut->TokenPattern($byteLength)
+        );
     }
 
     #endregion TokenPattern
@@ -113,7 +159,7 @@ class SecurityServiceTest extends TestCase
         [$token, $cookieValue] = $sut->GenerateCsrfPair();
 
         $this->assertMatchesRegularExpression(
-            self::DEFAULT_TOKEN_PATTERN,
+            SecurityService::TOKEN_DEFAULT_PATTERN,
             $token
         );
         $this->assertMatchesRegularExpression(
