@@ -41,96 +41,6 @@ class SecurityServiceTest extends TestCase
             ->getMock();
     }
 
-    #region __construct --------------------------------------------------------
-
-    #[DataProviderExternal(DH::class, 'NonStringProvider')]
-    function testConstructWithNonStringCsrfSecret($value)
-    {
-        $sut = $this->systemUnderTest();
-        $config = Config::Instance();
-        $logger = Logger::Instance();
-
-        $config->expects($this->once())
-            ->method('Option')
-            ->with('CsrfSecret')
-            ->willReturn($value);
-        $logger->expects($this->once())
-            ->method('Error')
-            ->with('CSRF secret must be a string.');
-
-        AH::CallConstructor($sut);
-        $this->assertSame(
-            '',
-            AH::GetMockProperty(SecurityService::class, $sut, 'csrfSecret')
-        );
-    }
-
-    function testConstructWithEmptyCsrfSecret()
-    {
-        $sut = $this->systemUnderTest();
-        $config = Config::Instance();
-        $logger = Logger::Instance();
-
-        $config->expects($this->once())
-            ->method('Option')
-            ->with('CsrfSecret')
-            ->willReturn('');
-        $logger->expects($this->once())
-            ->method('Error')
-            ->with('CSRF secret must not be empty.');
-
-        AH::CallConstructor($sut);
-        $this->assertSame(
-            '',
-            AH::GetMockProperty(SecurityService::class, $sut, 'csrfSecret')
-        );
-    }
-
-    function testConstructWithTooShortCsrfSecret()
-    {
-        $sut = $this->systemUnderTest();
-        $config = Config::Instance();
-        $logger = Logger::Instance();
-
-        $config->expects($this->once())
-            ->method('Option')
-            ->with('CsrfSecret')
-            ->willReturn('1234567890');
-        $logger->expects($this->once())
-            ->method('Warning')
-            ->with('CSRF secret must be at least 32 characters.');
-
-        AH::CallConstructor($sut);
-        $this->assertSame(
-            '1234567890',
-            AH::GetMockProperty(SecurityService::class, $sut, 'csrfSecret')
-        );
-    }
-
-    function testConstructWithValidCsrfSecret()
-    {
-        $sut = $this->systemUnderTest();
-        $config = Config::Instance();
-        $logger = Logger::Instance();
-
-        $config->expects($this->once())
-            ->method('Option')
-            ->with('CsrfSecret')
-            ->willReturn('12345678901234567890123456789012');
-        $logger->expects($this->never())
-            ->method('Error');
-        $logger->expects($this->never())
-            ->method('Warning');
-
-        AH::CallConstructor($sut);
-        $this->assertSame(
-            '12345678901234567890123456789012',
-            AH::GetMockProperty(SecurityService::class, $sut, 'csrfSecret')
-        );
-    }
-
-    #endregion __construct
-
     #region HashPassword -------------------------------------------------------
 
     function testHashPassword()
@@ -245,15 +155,12 @@ class SecurityServiceTest extends TestCase
 
     function testGenerateCsrfPair()
     {
-        $sut = $this->systemUnderTest();
-        $config = Config::Instance();
+        $sut = $this->systemUnderTest('csrfSecret');
 
-        $config->expects($this->once())
-            ->method('Option')
-            ->with('CsrfSecret')
+        $sut->expects($this->once())
+            ->method('csrfSecret')
             ->willReturn('12345678901234567890123456789012');
 
-        AH::CallConstructor($sut);
         [$token, $cookieValue] = $sut->GenerateCsrfPair();
 
         $this->assertMatchesRegularExpression(
@@ -272,15 +179,12 @@ class SecurityServiceTest extends TestCase
 
     function testVerifyCsrfPair()
     {
-        $sut = $this->systemUnderTest();
-        $config = Config::Instance();
+        $sut = $this->systemUnderTest('csrfSecret');
 
-        $config->expects($this->once())
-            ->method('Option')
-            ->with('CsrfSecret')
+        $sut->expects($this->atLeastOnce())
+            ->method('csrfSecret')
             ->willReturn('12345678901234567890123456789012');
 
-        AH::CallConstructor($sut);
         [$token, $cookieValue] = $sut->GenerateCsrfPair();
 
         $this->assertTrue($sut->VerifyCsrfPair($token, $cookieValue));
@@ -289,4 +193,96 @@ class SecurityServiceTest extends TestCase
     }
 
     #endregion VerifyCsrfPair
+
+    #region csrfSecret ---------------------------------------------------------
+
+    #[DataProviderExternal(DH::class, 'NonStringProvider')]
+    function testCsrfSecretWhenValueIsNotString($value)
+    {
+        $sut = $this->systemUnderTest();
+        $config = Config::Instance();
+        $logger = Logger::Instance();
+
+        $config->expects($this->once())
+            ->method('Option')
+            ->with('CsrfSecret')
+            ->willReturn($value);
+        $logger->expects($this->once())
+            ->method('Error')
+            ->with('CSRF secret must be a string.');
+
+        $this->assertSame('', AH::CallMethod($sut, 'csrfSecret'));
+    }
+
+    function testCsrfSecretWhenValueIsEmpty()
+    {
+        $sut = $this->systemUnderTest();
+        $config = Config::Instance();
+        $logger = Logger::Instance();
+
+        $config->expects($this->once())
+            ->method('Option')
+            ->with('CsrfSecret')
+            ->willReturn('');
+        $logger->expects($this->once())
+            ->method('Error')
+            ->with('CSRF secret must not be empty.');
+
+        $this->assertSame('', AH::CallMethod($sut, 'csrfSecret'));
+    }
+
+    function testCsrfSecretWhenValueIsTooShort()
+    {
+        $sut = $this->systemUnderTest();
+        $config = Config::Instance();
+        $logger = Logger::Instance();
+
+        $config->expects($this->once())
+            ->method('Option')
+            ->with('CsrfSecret')
+            ->willReturn('1234567890');
+        $logger->expects($this->once())
+            ->method('Warning')
+            ->with('CSRF secret must be at least 32 characters.');
+
+        $this->assertSame('1234567890', AH::CallMethod($sut, 'csrfSecret'));
+    }
+
+    function testCsrfSecretWhenValueIsValid()
+    {
+        $sut = $this->systemUnderTest();
+        $config = Config::Instance();
+        $logger = Logger::Instance();
+
+        $config->expects($this->once())
+            ->method('Option')
+            ->with('CsrfSecret')
+            ->willReturn('12345678901234567890123456789012');
+        $logger->expects($this->never())
+            ->method('Error');
+        $logger->expects($this->never())
+            ->method('Warning');
+
+        $this->assertSame(
+            '12345678901234567890123456789012',
+            AH::CallMethod($sut, 'csrfSecret')
+        );
+    }
+
+    function testCsrfSecretIsLazyAndCached()
+    {
+        $sut = $this->systemUnderTest();
+        $config = Config::Instance();
+
+        $config->expects($this->once())
+            ->method('Option')
+            ->with('CsrfSecret')
+            ->willReturn('12345678901234567890123456789012');
+
+        $first = AH::CallMethod($sut, 'csrfSecret');
+        $second = AH::CallMethod($sut, 'csrfSecret');
+        $this->assertSame($first, $second);
+    }
+
+    #endregion csrfSecret
 }
