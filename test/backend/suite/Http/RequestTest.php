@@ -32,11 +32,11 @@ class RequestTest extends TestCase
 
     private function systemUnderTest(string ...$mockedMethods): Request
     {
-        $sut = $this->getMockBuilder(Request::class)
+        $mock = $this->getMockBuilder(Request::class)
             ->disableOriginalConstructor()
             ->onlyMethods($mockedMethods)
             ->getMock();
-        return AccessHelper::CallConstructor($sut);
+        return AccessHelper::CallConstructor($mock);
     }
 
     #region Method_ ------------------------------------------------------------
