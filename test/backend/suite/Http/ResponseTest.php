@@ -7,7 +7,31 @@ use \Harmonia\Http\Response;
 use \Harmonia\Core\CArray;
 use \Harmonia\Http\StatusCode;
 use \Harmonia\Services\CookieService;
-use \TestToolkit\AccessHelper;
+use \TestToolkit\AccessHelper as ah;
+
+/** This class is only used for testing the static `Redirect` method. */
+class FakeRedirectResponse extends Response
+{
+    public static array $calls;
+    public function __construct() {
+        parent::__construct();
+        self::$calls = [];
+    }
+    public function SetStatusCode(StatusCode $statusCode): self {
+        self::$calls[] = [__FUNCTION__, \func_get_args()];
+        return $this;
+    }
+    public function SetHeader(string $name, string $value): self {
+        self::$calls[] = [__FUNCTION__, \func_get_args()];
+        return $this;
+    }
+    public function Send(): void {
+        self::$calls[] = [__FUNCTION__];
+    }
+    protected function exitScript(): void {
+        self::$calls[] = [__FUNCTION__];
+    }
+}
 
 #[CoversClass(Response::class)]
 class ResponseTest extends TestCase
@@ -16,8 +40,8 @@ class ResponseTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->originalCookieService = CookieService::ReplaceInstance(
-            $this->createMock(CookieService::class));
+        $this->originalCookieService =
+            CookieService::ReplaceInstance($this->createMock(CookieService::class));
     }
 
     protected function tearDown(): void
@@ -36,11 +60,11 @@ class ResponseTest extends TestCase
 
     function testConstruct()
     {
-        $sut = new Response();
-        $this->assertSame(StatusCode::OK, AccessHelper::GetProperty($sut, 'statusCode'));
-        $this->assertNull(AccessHelper::GetProperty($sut, 'headers'));
-        $this->assertNull(AccessHelper::GetProperty($sut, 'cookies'));
-        $this->assertNull(AccessHelper::GetProperty($sut, 'body'));
+        $sut = $this->systemUnderTest();
+        $this->assertSame(StatusCode::OK, ah::GetProperty($sut, 'statusCode'));
+        $this->assertNull(ah::GetProperty($sut, 'headers'));
+        $this->assertNull(ah::GetProperty($sut, 'cookies'));
+        $this->assertNull(ah::GetProperty($sut, 'body'));
     }
 
     #endregion __construct
@@ -49,9 +73,9 @@ class ResponseTest extends TestCase
 
     function testSetStatusCode()
     {
-        $sut = new Response();
+        $sut = $this->systemUnderTest();
         $this->assertSame($sut, $sut->SetStatusCode(StatusCode::ImATeapot));
-        $this->assertSame(StatusCode::ImATeapot, AccessHelper::GetProperty($sut, 'statusCode'));
+        $this->assertSame(StatusCode::ImATeapot, ah::GetProperty($sut, 'statusCode'));
     }
 
     #endregion SetStatusCode
@@ -60,9 +84,9 @@ class ResponseTest extends TestCase
 
     function testSetHeader()
     {
-        $sut = new Response();
+        $sut = $this->systemUnderTest();
         $this->assertSame($sut, $sut->SetHeader('Content-Type', 'text/plain'));
-        $headers = AccessHelper::GetProperty($sut, 'headers');
+        $headers = ah::GetProperty($sut, 'headers');
         $this->assertInstanceof(CArray::class, $headers);
         $this->assertSame('text/plain', $headers->Get('Content-Type'));
     }
@@ -73,9 +97,9 @@ class ResponseTest extends TestCase
 
     function testSetCookie()
     {
-        $sut = new Response();
+        $sut = $this->systemUnderTest();
         $this->assertSame($sut, $sut->SetCookie('name', 'value'));
-        $cookies = AccessHelper::GetProperty($sut, 'cookies');
+        $cookies = ah::GetProperty($sut, 'cookies');
         $this->assertInstanceof(CArray::class, $cookies);
         $this->assertSame('value', $cookies->Get('name'));
     }
@@ -86,9 +110,9 @@ class ResponseTest extends TestCase
 
     function testDeleteCookie()
     {
-        $sut = new Response();
+        $sut = $this->systemUnderTest();
         $this->assertSame($sut, $sut->DeleteCookie('name'));
-        $cookies = AccessHelper::GetProperty($sut, 'cookies');
+        $cookies = ah::GetProperty($sut, 'cookies');
         $this->assertInstanceof(CArray::class, $cookies);
         $this->assertSame('', $cookies->Get('name'));
     }
@@ -99,17 +123,17 @@ class ResponseTest extends TestCase
 
     function testSetBodyWithString()
     {
-        $sut = new Response();
+        $sut = $this->systemUnderTest();
         $this->assertSame($sut, $sut->SetBody('Hello, World!'));
         $this->assertSame(
             'Hello, World!',
-            AccessHelper::GetProperty($sut, 'body')
+            ah::GetProperty($sut, 'body')
         );
     }
 
     function testSetBodyWithStringable()
     {
-        $sut = new Response();
+        $sut = $this->systemUnderTest();
         $sut->SetBody(new class implements \Stringable {
             function __toString() {
                 return 'I am a Stringable object.';
@@ -117,7 +141,7 @@ class ResponseTest extends TestCase
         });
         $this->assertSame(
             'I am a Stringable object.',
-            AccessHelper::GetProperty($sut, 'body')
+            ah::GetProperty($sut, 'body')
         );
     }
 
@@ -340,81 +364,36 @@ class ResponseTest extends TestCase
 
     #region Redirect -----------------------------------------------------------
 
+    function testRedirectWithStringUrl()
+    {
+        $url = 'https://example.com';
+
+        FakeRedirectResponse::Redirect($url);
+
+        $this->assertSame([
+            ['SetStatusCode', [StatusCode::Found]],
+            ['SetHeader', ['Location', 'https://example.com']],
+            ['Send'],
+            ['exitScript'],
+        ], FakeRedirectResponse::$calls);
+    }
+
     function testRedirectWithStringableUrl()
     {
-        $sut = $this->systemUnderTest(
-            'SetStatusCode',
-            'SetHeader',
-            'Send',
-            'exitScript'
-        );
-        $sut->expects($this->once())
-            ->method('SetStatusCode')
-            ->with(StatusCode::Found)
-            ->willReturn($sut);
-        $sut->expects($this->once())
-            ->method('SetHeader')
-            ->with('Location', 'https://example.com')
-            ->willReturn($sut);
-        $sut->expects($this->once())
-            ->method('Send');
-        $sut->expects($this->once())
-            ->method('exitScript');
-
-        $sut->Redirect(new class implements \Stringable {
+        $url = new class implements \Stringable {
             function __toString() {
                 return 'https://example.com';
             }
-        });
-    }
+        };
 
-    function testRedirectWithExitScript()
-    {
-        $sut = $this->systemUnderTest(
-            'SetStatusCode',
-            'SetHeader',
-            'Send',
-            'exitScript'
-        );
-        $sut->expects($this->once())
-            ->method('SetStatusCode')
-            ->with(StatusCode::Found)
-            ->willReturn($sut);
-        $sut->expects($this->once())
-            ->method('SetHeader')
-            ->with('Location', 'https://example.com')
-            ->willReturn($sut);
-        $sut->expects($this->once())
-            ->method('Send');
-        $sut->expects($this->once())
-            ->method('exitScript');
+        FakeRedirectResponse::Redirect($url);
 
-        $sut->Redirect('https://example.com', true);
-    }
-
-    function testRedirectWithoutExitScript()
-    {
-        $sut = $this->systemUnderTest(
-            'SetStatusCode',
-            'SetHeader',
-            'Send',
-            'exitScript'
-        );
-
-        $sut->expects($this->once())
-            ->method('SetStatusCode')
-            ->with(StatusCode::Found)
-            ->willReturn($sut);
-        $sut->expects($this->once())
-            ->method('SetHeader')
-            ->with('Location', 'https://example.com')
-            ->willReturn($sut);
-        $sut->expects($this->once())
-            ->method('Send');
-        $sut->expects($this->never())
-            ->method('exitScript');
-
-        $sut->Redirect('https://example.com', false);
+        $this->assertSame([
+            ['SetStatusCode', [StatusCode::Found]],
+            ['SetHeader', ['Location', 'https://example.com']],
+            ['Send'],
+            ['exitScript'],
+        ], FakeRedirectResponse::$calls);
     }
 
     #endregion Redirect
