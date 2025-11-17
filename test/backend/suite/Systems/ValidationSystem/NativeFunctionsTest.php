@@ -257,6 +257,7 @@ class NativeFunctionsTest extends TestCase
             [false, '2025-11-32T20:35:51Z'], // invalid day
             [false, '2025-13-16T20:35:51Z'], // invalid month
             [false, 'not-a-date'],
+            [false, ''],
 
             [false, 123],
             [false, 123.45],
