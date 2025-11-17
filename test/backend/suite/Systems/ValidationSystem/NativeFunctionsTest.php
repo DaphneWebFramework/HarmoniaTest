@@ -76,6 +76,12 @@ class NativeFunctionsTest extends TestCase
         $this->assertSame($expected, $this->sut->IsArray($value));
     }
 
+    #[DataProvider('isDateTimeDataProvider')]
+    function testIsDateTime(bool $expected, mixed $value)
+    {
+        $this->assertSame($expected, $this->sut->IsDateTime($value));
+    }
+
     #[DataProvider('isUploadedFileDataProvider')]
     function testIsUploadedFile(bool $expected, mixed $value)
     {
@@ -222,6 +228,42 @@ class NativeFunctionsTest extends TestCase
             [false, 123],
             [false, 123.45],
             [false, '[1, 2, 3]'],
+            [false, new \stdClass()],
+        ];
+    }
+
+    static function isDateTimeDataProvider()
+    {
+        return [
+            [true, '2025-11-16T20:35:51.6381234Z'],
+            [true, '2025-11-16T20:35:51.638123Z'],
+            [true, '2025-11-16T20:35:51.63812Z'],
+            [true, '2025-11-16T20:35:51.6381Z'],
+            [true, '2025-11-16T20:35:51.638Z'],
+            [true, '2025-11-16T20:35:51.63Z'],
+            [true, '2025-11-16T20:35:51.6Z'],
+            [true, '2025-11-16T20:35:51.Z'],
+            [true, '2025-11-16T20:35:51Z'],
+            [true, '2025-11-16 20:35:51'],
+            [true, '2025-11-16T20:35'],
+            [true, '2025-11-16T20:35:51-05:00'],
+            [true, '2025-11-16T20:35:51+00:00'],
+            [true, '2025-11-16T20:35:51+02:00'],
+            [true, '2025-11-16'],
+            [true, '2025/11/16'],
+
+            [false, '2025-11-16T20:35:51+99:99'], // invalid offset
+            [false, '2025-11-16T20:35:61Z'], // invalid seconds
+            [false, '2025-11-32T20:35:51Z'], // invalid day
+            [false, '2025-13-16T20:35:51Z'], // invalid month
+            [false, 'not-a-date'],
+
+            [false, 123],
+            [false, 123.45],
+            [false, null],
+            [false, true],
+            [false, false],
+            [false, []],
             [false, new \stdClass()],
         ];
     }
