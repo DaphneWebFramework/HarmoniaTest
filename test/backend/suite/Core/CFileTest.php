@@ -4,7 +4,7 @@ use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Core\CFile;
 
-use \TestToolkit\AccessHelper;
+use \TestToolkit\AccessHelper as ah;
 
 #[CoversClass(CFile::class)]
 class CFileTest extends TestCase
@@ -16,6 +16,14 @@ class CFileTest extends TestCase
         if (\file_exists(self::FILENAME)) {
             \unlink(self::FILENAME);
         }
+    }
+
+    private function systemUnderTest(string ...$mockedMethods): CFile
+    {
+        return $this->getMockBuilder(CFile::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods($mockedMethods)
+            ->getMock();
     }
 
     #region Open ---------------------------------------------------------------
@@ -90,7 +98,7 @@ class CFileTest extends TestCase
     {
         $file = CFile::Open(self::FILENAME, CFile::MODE_WRITE);
         $file->Close();
-        $this->assertNull(AccessHelper::GetProperty($file, 'handle'));
+        $this->assertNull(ah::GetProperty($file, 'handle'));
     }
 
     function testCloseIsIdempotent()
@@ -98,7 +106,7 @@ class CFileTest extends TestCase
         $file = CFile::Open(self::FILENAME, CFile::MODE_WRITE);
         $file->Close();
         $file->Close(); // Calling Close a second time should have no effect
-        $this->assertNull(AccessHelper::GetProperty($file, 'handle'));
+        $this->assertNull(ah::GetProperty($file, 'handle'));
     }
 
     #endregion Close
@@ -125,58 +133,43 @@ class CFileTest extends TestCase
 
     function testReadWhenCursorReturnsNull()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['Cursor', '_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(true);
-        $file->method('Cursor')->willReturn(null);
-        $this->assertNull($file->Read());
+        $sut = $this->systemUnderTest('Cursor', '_flock');
+        $sut->method('_flock')->willReturn(true);
+        $sut->method('Cursor')->willReturn(null);
+        $this->assertNull($sut->Read());
     }
 
     function testReadWhenSizeEqualsCursor()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['Cursor', 'Size', '_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(true);
-        $file->method('Cursor')->willReturn(100);
-        $file->method('Size')->willReturn(100);
-        $this->assertSame('', $file->Read());
+        $sut = $this->systemUnderTest('Cursor', 'Size', '_flock');
+        $sut->method('_flock')->willReturn(true);
+        $sut->method('Cursor')->willReturn(100);
+        $sut->method('Size')->willReturn(100);
+        $this->assertSame('', $sut->Read());
     }
 
     function testReadWhenSizeIsLessThanCursor()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['Cursor', 'Size', '_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(true);
-        $file->method('Cursor')->willReturn(100);
-        $file->method('Size')->willReturn(50);
-        $this->assertNull($file->Read());
+        $sut = $this->systemUnderTest('Cursor', 'Size', '_flock');
+        $sut->method('_flock')->willReturn(true);
+        $sut->method('Cursor')->willReturn(100);
+        $sut->method('Size')->willReturn(50);
+        $this->assertNull($sut->Read());
     }
 
     function testReadWhenFreadFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_fread', '_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(true);
-        $file->method('_fread')->willReturn(false);
-        $this->assertNull($file->Read(10));
+        $sut = $this->systemUnderTest('_fread', '_flock');
+        $sut->method('_flock')->willReturn(true);
+        $sut->method('_fread')->willReturn(false);
+        $this->assertNull($sut->Read(10));
     }
 
     function testReadWhenFlockFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(false);
-        $this->assertNull($file->Read());
+        $sut = $this->systemUnderTest('_flock');
+        $sut->method('_flock')->willReturn(false);
+        $this->assertNull($sut->Read());
     }
 
     function testReadWithNegativeLength()
@@ -213,23 +206,17 @@ class CFileTest extends TestCase
 
     function testReadLineWhenFgetsFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_fgets', '_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(true);
-        $file->method('_fgets')->willReturn(false);
-        $this->assertNull($file->ReadLine());
+        $sut = $this->systemUnderTest('_fgets', '_flock');
+        $sut->method('_flock')->willReturn(true);
+        $sut->method('_fgets')->willReturn(false);
+        $this->assertNull($sut->ReadLine());
     }
 
     function testReadLineWhenFlockFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(false);
-        $this->assertNull($file->ReadLine());
+        $sut = $this->systemUnderTest('_flock');
+        $sut->method('_flock')->willReturn(false);
+        $this->assertNull($sut->ReadLine());
     }
 
     #endregion ReadLine
@@ -248,23 +235,17 @@ class CFileTest extends TestCase
 
     function testWriteWhenFwriteFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_fwrite', '_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(true);
-        $file->method('_fwrite')->willReturn(false);
-        $this->assertFalse($file->Write('Should fail'));
+        $sut = $this->systemUnderTest('_fwrite', '_flock');
+        $sut->method('_flock')->willReturn(true);
+        $sut->method('_fwrite')->willReturn(false);
+        $this->assertFalse($sut->Write('Should fail'));
     }
 
     function testWriteWhenFlockFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(false);
-        $this->assertFalse($file->Write('Should fail'));
+        $sut = $this->systemUnderTest('_flock');
+        $sut->method('_flock')->willReturn(false);
+        $this->assertFalse($sut->Write('Should fail'));
     }
 
     #endregion Write
@@ -282,23 +263,17 @@ class CFileTest extends TestCase
 
     function testWriteLineWhenFwriteFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_fwrite', '_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(true);
-        $file->method('_fwrite')->willReturn(false);
-        $this->assertFalse($file->WriteLine('Should fail'));
+        $sut = $this->systemUnderTest('_fwrite', '_flock');
+        $sut->method('_flock')->willReturn(true);
+        $sut->method('_fwrite')->willReturn(false);
+        $this->assertFalse($sut->WriteLine('Should fail'));
     }
 
     function testWriteLineWhenFlockFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_flock'])
-            ->getMock();
-        $file->method('_flock')->willReturn(false);
-        $this->assertFalse($file->WriteLine('Should fail'));
+        $sut = $this->systemUnderTest('_flock');
+        $sut->method('_flock')->willReturn(false);
+        $this->assertFalse($sut->WriteLine('Should fail'));
     }
 
     #endregion WriteLine
@@ -354,15 +329,12 @@ class CFileTest extends TestCase
         $file->Close();
     }
 
-        function testSizeWhenFstatFails()
-        {
-            $file = $this->getMockBuilder(CFile::class)
-                ->disableOriginalConstructor()
-                ->onlyMethods(['_fstat'])
-                ->getMock();
-            $file->method('_fstat')->willReturn(false);
-            $this->assertSame(0, $file->Size());
-        }
+    function testSizeWhenFstatFails()
+    {
+        $sut = $this->systemUnderTest('_fstat');
+        $sut->method('_fstat')->willReturn(false);
+        $this->assertSame(0, $sut->Size());
+    }
 
     #endregion Size
 
@@ -380,12 +352,9 @@ class CFileTest extends TestCase
 
     function testCursorWhenFtellFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_ftell'])
-            ->getMock();
-        $file->method('_ftell')->willReturn(false);
-        $this->assertNull($file->Cursor());
+        $sut = $this->systemUnderTest('_ftell');
+        $sut->method('_ftell')->willReturn(false);
+        $this->assertNull($sut->Cursor());
     }
 
     #endregion Cursor
@@ -426,13 +395,48 @@ class CFileTest extends TestCase
 
     function testSetCursorWhenFseekFails()
     {
-        $file = $this->getMockBuilder(CFile::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['_fseek'])
-            ->getMock();
-        $file->method('_fseek')->willReturn(-1);
-        $this->assertFalse($file->SetCursor(0, CFile::ORIGIN_BEGIN));
+        $sut = $this->systemUnderTest('_fseek');
+        $sut->method('_fseek')->willReturn(-1);
+        $this->assertFalse($sut->SetCursor(0, CFile::ORIGIN_BEGIN));
     }
 
     #endregion SetCursor
+
+    #region WithReadLock -------------------------------------------------------
+
+    function testWithReadLock()
+    {
+        $sut = $this->systemUnderTest('withLock');
+
+        $sut->expects($this->once())
+            ->method('withLock')
+            ->with(\LOCK_SH, $this->isType('callable'))
+            ->willReturn('Expected result');
+
+        $this->assertSame(
+            'Expected result',
+            $sut->WithReadLock(function() { return 'Expected result'; })
+        );
+    }
+
+    #endregion WithReadLock
+
+    #region WithWriteLock ------------------------------------------------------
+
+    function testWithWriteLock()
+    {
+        $sut = $this->systemUnderTest('withLock');
+
+        $sut->expects($this->once())
+            ->method('withLock')
+            ->with(\LOCK_EX, $this->isType('callable'))
+            ->willReturn('Expected result');
+
+        $this->assertSame(
+            'Expected result',
+            $sut->WithWriteLock(function() { return 'Expected result'; })
+        );
+    }
+
+    #endregion WithWriteLock
 }
