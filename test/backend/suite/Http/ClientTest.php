@@ -121,6 +121,46 @@ class ClientTest extends TestCase
 
     #endregion Method_
 
+    #region Get ----------------------------------------------------------------
+
+    function testGetReturnsSelf()
+    {
+        $sut = new Client();
+        $this->assertSame($sut, $sut->Get());
+    }
+
+    function testGetSetsMethodToGet()
+    {
+        $sut = new Client();
+        $sut->Get();
+        $this->assertSame(
+            'GET',
+            ah::GetProperty($sut, 'request')->method
+        );
+    }
+
+    #endregion Get
+
+    #region Post ---------------------------------------------------------------
+
+    function testPostReturnsSelf()
+    {
+        $sut = new Client();
+        $this->assertSame($sut, $sut->Post());
+    }
+
+    function testPostSetsMethodToPost()
+    {
+        $sut = new Client();
+        $sut->Post();
+        $this->assertSame(
+            'POST',
+            ah::GetProperty($sut, 'request')->method
+        );
+    }
+
+    #endregion Post
+
     #region Url ----------------------------------------------------------------
 
     function testUrlReturnsSelf()
