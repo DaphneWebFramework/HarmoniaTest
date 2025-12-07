@@ -8,7 +8,6 @@ use \Harmonia\Http\Request;
 
 use \Harmonia\Core\CArray;
 use \Harmonia\Core\CString;
-use \Harmonia\Http\RequestMethod;
 use \Harmonia\Server;
 use \TestToolkit\AccessHelper;
 
@@ -42,7 +41,7 @@ class RequestTest extends TestCase
     #region Method_ ------------------------------------------------------------
 
     #[DataProvider('methodDataProvider')]
-    public function testMethod(?RequestMethod $expected, ?CString $serverRequestMethod)
+    public function testMethod(?CString $expected, ?CString $serverRequestMethod)
     {
         $sut = $this->systemUnderTest();
         $server = Server::Instance();
@@ -51,7 +50,7 @@ class RequestTest extends TestCase
             ->method('RequestMethod')
             ->willReturn($serverRequestMethod);
 
-        $this->assertSame($expected, $sut->Method_());
+        $this->assertEquals($expected, $sut->Method_());
     }
 
     #endregion Method_
@@ -390,10 +389,10 @@ class RequestTest extends TestCase
     static function methodDataProvider()
     {
         return [
-            [null,                   null],
-            [null,                   new CString('invalid-method')],
-            [RequestMethod::OPTIONS, new CString('OpTiOnS')],
-            [RequestMethod::POST,    new CString('POST')],
+            [null,                          null],
+            [new CString('INVALID-METHOD'), new CString('invalid-method')],
+            [new CString('OPTIONS'),        new CString('OpTiOnS')],
+            [new CString('POST'),           new CString('POST')],
         ];
     }
 
