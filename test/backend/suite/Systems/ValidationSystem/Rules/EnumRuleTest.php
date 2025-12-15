@@ -35,9 +35,9 @@ class EnumRuleTest extends TestCase
             ->with(123)
             ->willReturn(false);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            "Rule 'enum' must be used with a valid enum class name.");
+            "Rule 'enum' must be used with an enum class name.");
         $sut->Validate('field1', 'value1', 123);
     }
 

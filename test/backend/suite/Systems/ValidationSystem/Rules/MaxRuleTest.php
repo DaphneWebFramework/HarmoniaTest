@@ -46,7 +46,7 @@ class MaxRuleTest extends TestCase
                 ['non-numeric', false]
             ]);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Rule 'max' must be used with a number.");
         $sut->Validate('field1', 50, 'non-numeric');
     }

@@ -46,9 +46,8 @@ class RegexRuleTest extends TestCase
                 [12345, false]
             ]);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage(
-            "Rule 'regex' must be used with a valid pattern.");
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Rule 'regex' must be used with a pattern.");
         $sut->Validate('field1', 'hello', 12345);
     }
 

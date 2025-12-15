@@ -94,7 +94,7 @@ class IntegerRuleTest extends TestCase
         $nativeFunctions->expects($this->never())
             ->method('IsIntegerLike');
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(
             "Rule 'integer' must be used with either 'strict' or no parameter.");
         $sut->Validate('field1', 123, 'banana');

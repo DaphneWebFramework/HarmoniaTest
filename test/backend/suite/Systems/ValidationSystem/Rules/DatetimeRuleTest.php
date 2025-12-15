@@ -95,7 +95,7 @@ class DatetimeRuleTest extends TestCase
             ->with(12345)
             ->willReturn(false);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(
             "Rule 'datetime' must be used with either a format string or no parameter.");
         $sut->Validate('field1', '2025-03-10', 12345);

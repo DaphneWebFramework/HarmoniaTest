@@ -178,7 +178,7 @@ class DataAccessorTest extends TestCase
     function testGetFieldWithNonExistingFieldNameForArray()
     {
         $sut = new DataAccessor(['name' => 'John']);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field 'age' does not exist.");
         $sut->GetField('age');
     }
@@ -192,7 +192,7 @@ class DataAccessorTest extends TestCase
     function testGetFieldWithNonExistingFieldIndexForArray()
     {
         $sut = new DataAccessor(['John']);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field '2' does not exist.");
         $sut->GetField(2);
     }
@@ -206,7 +206,7 @@ class DataAccessorTest extends TestCase
     function testGetFieldWithNonExistingDottedFieldNameForArray()
     {
         $sut = new DataAccessor(['user' => ['name' => 'John']]);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field 'user.age' does not exist.");
         $sut->GetField('user.age');
     }
@@ -214,7 +214,7 @@ class DataAccessorTest extends TestCase
     function testGetFieldWithNonExistingDottedFieldNameWithScalarParentForArray()
     {
         $sut = new DataAccessor(['user' => 42]);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field 'user.age' does not exist.");
         $sut->GetField('user.age');
     }
@@ -228,7 +228,7 @@ class DataAccessorTest extends TestCase
     function testGetFieldWithNonExistingDottedFieldIndexForArray()
     {
         $sut = new DataAccessor([['John']]);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field '0.1' does not exist.");
         $sut->GetField('0.1');
     }
@@ -246,7 +246,7 @@ class DataAccessorTest extends TestCase
         $data = new \stdClass();
         $data->name = 'John';
         $sut = new DataAccessor($data);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field 'age' does not exist.");
         $sut->GetField('age');
     }
@@ -266,7 +266,7 @@ class DataAccessorTest extends TestCase
         $data->user = new \stdClass();
         $data->user->name = 'John';
         $sut = new DataAccessor($data);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field 'user.age' does not exist.");
         $sut->GetField('user.age');
     }
@@ -276,7 +276,7 @@ class DataAccessorTest extends TestCase
         $data = new \stdClass();
         $data->user = 42;
         $sut = new DataAccessor($data);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field 'user.age' does not exist.");
         $sut->GetField('user.age');
     }

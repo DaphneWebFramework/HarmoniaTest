@@ -50,7 +50,7 @@ class StandardMetaRuleTest extends TestCase
     {
         $sut = new StandardMetaRule('nonexistent', null);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown rule 'nonexistent'.");
         $sut->Validate('field1', 'value');
     }

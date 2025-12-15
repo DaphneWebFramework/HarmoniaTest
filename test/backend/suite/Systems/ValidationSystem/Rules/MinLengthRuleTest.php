@@ -48,7 +48,7 @@ class MinlengthRuleTest extends TestCase
             ->with('not-an-int')
             ->willReturn(false);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(
             "Rule 'minLength' must be used with an integer.");
         $sut->Validate('field1', 'abc', 'not-an-int');
