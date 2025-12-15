@@ -170,6 +170,43 @@ class ValidatorTest extends TestCase
         $sut->Validate([]);
     }
 
+    function testValidateFailsWithCode400ForStandardRule()
+    {
+        $sut = new Validator(['age' => ['min:18']]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionCode(400);
+        $this->expectExceptionMessage(
+            "Field 'age' must have a minimum value of 18.");
+
+        $sut->Validate(['age' => 17]);
+    }
+
+    function testValidateFailsWithCode400ForCustomMessage()
+    {
+        $sut = new Validator(
+            ['email' => ['required']],
+            ['email.required' => 'Email is mandatory.']
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionCode(400);
+        $this->expectExceptionMessage('Email is mandatory.');
+
+        $sut->Validate([]);
+    }
+
+    function testValidateFailsWithCode0ForInvalidArgumentException()
+    {
+        $sut = new Validator(['age' => ['min']]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionCode(0);
+        $this->expectExceptionMessage("Rule 'min' must be used with a number.");
+
+        $sut->Validate(['age' => 10]);
+    }
+
     #endregion Validate
 
     #region Data Providers -----------------------------------------------------
