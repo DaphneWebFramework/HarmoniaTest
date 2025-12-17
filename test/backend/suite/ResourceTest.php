@@ -9,7 +9,7 @@ use \Harmonia\Core\CArray;
 use \Harmonia\Core\CPath;
 use \Harmonia\Core\CUrl;
 use \Harmonia\Server;
-use \TestToolkit\AccessHelper;
+use \TestToolkit\AccessHelper as ah;
 
 #[CoversClass(Resource::class)]
 class ResourceTest extends TestCase
@@ -33,7 +33,7 @@ class ResourceTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods($mockedMethods)
             ->getMock();
-        return AccessHelper::CallConstructor($sut);
+        return ah::CallConstructor($sut);
     }
 
     #region __construct --------------------------------------------------------
@@ -42,31 +42,32 @@ class ResourceTest extends TestCase
     {
         $sut = $this->systemUnderTest();
 
-        $this->assertNull(AccessHelper::GetProperty($sut, 'appPath'));
-        $this->assertInstanceOf(CArray::class, AccessHelper::GetProperty($sut, 'cache'));
+        $this->assertNull(ah::GetProperty($sut, 'appPath'));
+        $this->assertInstanceOf(CArray::class, ah::GetProperty($sut, 'cache'));
+        $this->assertInstanceOf(Server::class, ah::GetProperty($sut, 'server'));
     }
 
     #endregion __construct
 
     #region Initialize ---------------------------------------------------------
 
-    function testInitializeWhenAlreadyInitialized()
+    function testInitializeThrowsIfAlreadyInitialized()
     {
         $sut = $this->systemUnderTest();
 
         $sut->Initialize(__DIR__);
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Resource is already initialized.');
+        $this->expectExceptionMessage("Resource is already initialized.");
         $sut->Initialize(__DIR__);
     }
 
-    function testInitializeWithNonExistingPath()
+    function testInitializeThrowsIfPathCannotBeResolved()
     {
         $sut = $this->systemUnderTest();
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to resolve application path.');
-        $sut->Initialize(CPath::Join(__DIR__, 'non_existing_path'));
+        $this->expectExceptionMessage("Failed to resolve application path.");
+        $sut->Initialize(CPath::Join(__DIR__, 'non-existing-path'));
     }
 
     function testInitializeWithExistingPath()
@@ -99,12 +100,12 @@ class ResourceTest extends TestCase
 
     #region AppPath ------------------------------------------------------------
 
-    function testAppPathWhenNotInitialized()
+    function testAppPathThrowsIfNotInitialized()
     {
         $sut = $this->systemUnderTest();
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Resource is not initialized.');
+        $this->expectExceptionMessage("Resource is not initialized.");
         $sut->AppPath();
     }
 
@@ -126,85 +127,78 @@ class ResourceTest extends TestCase
 
     #region AppRelativePath ----------------------------------------------------
 
-    function testAppRelativePathWhenNotInitialized()
-    {
-        $sut = $this->systemUnderTest();
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Resource is not initialized.');
-        $sut->AppRelativePath();
-    }
-
-    function testAppRelativePathWithNullServerPath()
+    function testAppRelativePathThrowsIfServerPathNotAvailable()
     {
         $sut = $this->systemUnderTest();
         $server = Server::Instance();
 
-        $server->method('Path')
+        $server->expects($this->once())
+            ->method('Path')
             ->willReturn(null);
 
-        $sut->Initialize(__DIR__);
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Server path not available.');
+        $this->expectExceptionMessage("Server path not available.");
         $sut->AppRelativePath();
     }
 
-    function testAppRelativePathWithNonExistingServerPath()
+    function testAppRelativePathThrowsIfServerPathCannotBeResolved()
     {
         $sut = $this->systemUnderTest();
         $server = Server::Instance();
 
-        $server->method('Path')
-            ->willReturn(new CPath('non_existing_path'));
+        $server->expects($this->once())
+            ->method('Path')
+            ->willReturn(new CPath('non-existing-path'));
 
-        $sut->Initialize(__DIR__);
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to resolve server path.');
+        $this->expectExceptionMessage("Failed to resolve server path.");
         $sut->AppRelativePath();
     }
 
-    function testAppRelativePathWithAppPathNotUnderServerPath()
+    function testAppRelativePathThrowsIfAppPathIsNotUnderServerPath()
     {
-        $sut = $this->systemUnderTest();
+        $sut = $this->systemUnderTest('AppPath');
         $server = Server::Instance();
 
-        $server->method('Path')
+        $server->expects($this->once())
+            ->method('Path')
             ->willReturn(new CPath(__DIR__));
+        $sut->expects($this->once())
+            ->method('AppPath')
+            ->willReturn(CPath::Join(__DIR__, '..')->Apply('\realpath'));
 
-        $sut->Initialize(CPath::Join(__DIR__, '..'));
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Application path is not under server path.');
+        $this->expectExceptionMessage("Application path is not under server path.");
         $sut->AppRelativePath();
     }
 
     #[RequiresOperatingSystem('Linux|Darwin')]
     function testAppRelativePathWithServerDirectoryContainingLinkToAppPath()
     {
-        $sut = $this->systemUnderTest();
+        $sut = $this->systemUnderTest('AppPath');
         $server = Server::Instance();
 
         # /tmp
         $serverPath = new CPath(\sys_get_temp_dir());
-
         # /vagrant/test/backend/suite
         $appPath = new CPath(__DIR__);
-
         # suite
         $appBaseName = $appPath->Apply('\basename');
-
         # /tmp/suite
         $linkPath = $serverPath->Extend($appBaseName);
-
         # /tmp/suite -> /vagrant/test/backend/suite
         if ($linkPath->Call('\file_exists')) {
             $linkPath->Call('\unlink');
         }
         $this->assertTrue($appPath->Call('\symlink', (string)$linkPath));
 
-        $server->method('Path')
+        $server->expects($this->once())
+            ->method('Path')
             ->willReturn($serverPath);
+        $sut->expects($this->once())
+            ->method('AppPath')
+            ->willReturn($appPath);
 
-        $sut->Initialize($appPath);
         $this->assertEquals($appBaseName, $sut->AppRelativePath());
 
         $linkPath->Call('\unlink');
@@ -212,29 +206,33 @@ class ResourceTest extends TestCase
 
     function testAppRelativePathWithAppPathEqualToServerPath()
     {
-        $sut = $this->systemUnderTest();
+        $sut = $this->systemUnderTest('AppPath');
         $server = Server::Instance();
 
-        $server->method('Path')
+        $server->expects($this->once())
+            ->method('Path')
+            ->willReturn(new CPath(__DIR__));
+        $sut->expects($this->once())
+            ->method('AppPath')
             ->willReturn(new CPath(__DIR__));
 
-        $sut->Initialize(__DIR__);
         $this->assertTrue($sut->AppRelativePath()->IsEmpty());
     }
 
     function testAppRelativePathWithAppPathUnderServerPath()
     {
-        $sut = $this->systemUnderTest();
+        $sut = $this->systemUnderTest('AppPath');
         $server = Server::Instance();
 
-        $server->expects($this->once()) // once() is to ensure cache hit
+        $server->expects($this->once())
             ->method('Path')
             ->willReturn(new CPath(__DIR__));
+        $sut->expects($this->once())
+            ->method('AppPath')
+            ->willReturn(CPath::Join(__DIR__, 'Core'));
 
-        $sut->Initialize(CPath::Join(__DIR__, 'Core'));
         $this->assertEquals('Core', $sut->AppRelativePath());
-        // Cache hit:
-        $this->assertEquals('Core', $sut->AppRelativePath());
+        $this->assertEquals('Core', $sut->AppRelativePath()); // cache hit
     }
 
     function testAppRelativePathReturnsClone()
@@ -243,12 +241,12 @@ class ResourceTest extends TestCase
         $server = Server::Instance();
         $serverPath = new CPath(__DIR__);
 
-        $sut->expects($this->once())
-            ->method('AppPath')
-            ->willReturn($serverPath->Extend('app'));
         $server->expects($this->once())
             ->method('Path')
             ->willReturn($serverPath);
+        $sut->expects($this->once())
+            ->method('AppPath')
+            ->willReturn($serverPath->Extend('app'));
 
         $path1 = $sut->AppRelativePath();
         $path1->ReplaceInPlace('app', 'oops1');
@@ -269,110 +267,49 @@ class ResourceTest extends TestCase
 
     #region AppUrl -------------------------------------------------------------
 
-    function testAppUrlWithNullServerUrl()
+    function testAppUrlThrowsIfServerUrlNotAvailable()
     {
         $sut = $this->systemUnderTest();
         $server = Server::Instance();
 
-        $server->method('Url')
+        $server->expects($this->once())
+            ->method('Url')
             ->willReturn(null);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Server URL not available.');
-        $sut->AppUrl();
-    }
-
-    function testAppUrlWhenNotInitialized()
-    {
-        $sut = $this->systemUnderTest();
-        $server = Server::Instance();
-
-        $server->method('Url')
-            ->willReturn(new CUrl()); // empty instance to pass the null check
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Resource is not initialized.');
-        $sut->AppUrl();
-    }
-
-    function testAppUrlWithNullServerPath()
-    {
-        $sut = $this->systemUnderTest();
-        $server = Server::Instance();
-
-        $server->method('Url')
-            ->willReturn(new CUrl()); // empty instance to pass the null check
-        $server->method('Path')
-            ->willReturn(null);
-
-        $sut->Initialize(__DIR__);
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Server path not available.');
-        $sut->AppUrl();
-    }
-
-    function testAppUrlWithNonExistingServerPath()
-    {
-        $sut = $this->systemUnderTest();
-        $server = Server::Instance();
-
-        $server->method('Url')
-            ->willReturn(new CUrl()); // empty instance to pass the null check
-        $server->method('Path')
-            ->willReturn(new CPath('non_existing_path'));
-
-        $sut->Initialize(__DIR__);
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to resolve server path.');
-        $sut->AppUrl();
-    }
-
-    function testAppUrlWithAppPathNotUnderServerPath()
-    {
-        $sut = $this->systemUnderTest();
-        $server = Server::Instance();
-
-        $server->method('Url')
-            ->willReturn(new CUrl()); // empty instance to pass the null check
-        $server->method('Path')
-            ->willReturn(new CPath(__DIR__));
-
-        $sut->Initialize(CPath::Join(__DIR__, '..'));
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Application path is not under server path.');
+        $this->expectExceptionMessage("Server URL not available.");
         $sut->AppUrl();
     }
 
     function testAppUrlWithAppPathEqualToServerPath()
     {
-        $sut = $this->systemUnderTest();
+        $sut = $this->systemUnderTest('AppRelativePath');
         $server = Server::Instance();
 
-        $server->method('Url')
+        $server->expects($this->once())
+            ->method('Url')
             ->willReturn(new CUrl('http://localhost'));
-        $server->method('Path')
-            ->willReturn(new CPath(__DIR__));
+        $sut->expects($this->once())
+            ->method('AppRelativePath')
+            ->willReturn(new CPath(''));
 
-        $sut->Initialize(__DIR__);
         $this->assertEquals('http://localhost/', $sut->AppUrl());
     }
 
     function testAppUrlWithAppPathUnderServerPath()
     {
-        $sut = $this->systemUnderTest();
+        $sut = $this->systemUnderTest('AppRelativePath');
         $server = Server::Instance();
 
-        $server->expects($this->once()) // once() is to ensure cache hit
+        $server->expects($this->once())
             ->method('Url')
             ->willReturn(new CUrl('http://localhost/'));
-        $server->expects($this->once()) // once() is to ensure cache hit
-            ->method('Path')
-            ->willReturn(new CPath(__DIR__));
+        $sut->expects($this->once())
+            ->method('AppRelativePath')
+            ->willReturn(new CPath('Core'));
 
-        $sut->Initialize(CPath::Join(__DIR__, 'Core'));
         $this->assertEquals('http://localhost/Core/', $sut->AppUrl());
-        // Cache hit:
-        $this->assertEquals('http://localhost/Core/', $sut->AppUrl());
+        $this->assertEquals('http://localhost/Core/', $sut->AppUrl()); // cache hit
     }
 
     function testAppUrlReturnsClone()
@@ -409,21 +346,14 @@ class ResourceTest extends TestCase
     function testAppSubdirectoryPath()
     {
         $sut = $this->systemUnderTest('AppPath');
+        $expected = 'path/to/app' . \DIRECTORY_SEPARATOR . 'subdir';
 
-        $sut->expects($this->once()) // once() is to ensure cache hit
+        $sut->expects($this->once())
             ->method('AppPath')
             ->willReturn(new CPath('path/to/app'));
 
-        $expected = 'path/to/app' . \DIRECTORY_SEPARATOR . 'subdir';
-        $this->assertEquals(
-            $expected,
-            AccessHelper::CallMethod($sut, 'AppSubdirectoryPath', ['subdir'])
-        );
-        // Cache hit:
-        $this->assertEquals(
-            $expected,
-            AccessHelper::CallMethod($sut, 'AppSubdirectoryPath', ['subdir'])
-        );
+        $this->assertEquals($expected, $sut->AppSubdirectoryPath('subdir'));
+        $this->assertEquals($expected, $sut->AppSubdirectoryPath('subdir')); // cache hit
     }
 
     function testAppSubdirectoryPathReturnsClone()
@@ -456,21 +386,14 @@ class ResourceTest extends TestCase
     function testAppSubdirectoryUrl()
     {
         $sut = $this->systemUnderTest('AppUrl');
+        $expected = 'http://localhost/app/subdir';
 
-        $sut->expects($this->once()) // once() is to ensure cache hit
+        $sut->expects($this->once())
             ->method('AppUrl')
             ->willReturn(new CUrl('http://localhost/app/'));
 
-        $expected = 'http://localhost/app/subdir';
-        $this->assertEquals(
-            $expected,
-            AccessHelper::CallMethod($sut, 'AppSubdirectoryUrl', ['subdir'])
-        );
-        // Cache hit:
-        $this->assertEquals(
-            $expected,
-            AccessHelper::CallMethod($sut, 'AppSubdirectoryUrl', ['subdir'])
-        );
+        $this->assertEquals($expected, $sut->AppSubdirectoryUrl('subdir'));
+        $this->assertEquals($expected, $sut->AppSubdirectoryUrl('subdir')); // cache hit
     }
 
     function testAppSubdirectoryUrlReturnsClone()
