@@ -3,7 +3,6 @@ namespace suite\Systems\ValidationSystem;
 
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
-use \PHPUnit\Framework\Attributes\DataProvider;
 
 use \Harmonia\Systems\ValidationSystem\DataAccessor;
 

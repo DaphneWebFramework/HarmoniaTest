@@ -46,6 +46,12 @@ class NativeFunctionsTest extends TestCase
         $this->assertSame($expected, $this->sut->IsInteger($value));
     }
 
+    #[DataProvider('isNumberDataProvider')]
+    function testIsNumber(bool $expected, mixed $value)
+    {
+        $this->assertSame($expected, $this->sut->IsNumber($value));
+    }
+
     #[DataProvider('isNumericDataProvider')]
     function testIsNumeric(bool $expected, mixed $value)
     {
@@ -117,6 +123,33 @@ class NativeFunctionsTest extends TestCase
             [false, 123.45],
             [false, '123'],
             [false, 'abc'],
+            [false, null],
+            [false, true],
+            [false, false],
+            [false, []],
+            [false, new \stdClass()],
+        ];
+    }
+
+    static function isNumberDataProvider()
+    {
+        return [
+            [true, 0],
+            [true, 123],
+            [true, -123],
+            [true, 0.0],
+            [true, 123.45],
+            [true, -123.45],
+            [false, '0'],
+            [false, '123'],
+            [false, '-123'],
+            [false, '0.0'],
+            [false, '123.45'],
+            [false, '-123.45'],
+            [false, 'abc'],
+            [false, '123abc'],
+            [false, 'abc123'],
+            [false, '12.3.4'],
             [false, null],
             [false, true],
             [false, false],
