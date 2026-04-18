@@ -1,10 +1,16 @@
 <?php declare(strict_types=1);
+namespace suite\Systems\DatabaseSystem\Queries;
+
 use \PHPUnit\Framework\TestCase;
 use \PHPUnit\Framework\Attributes\CoversClass;
 
 use \Harmonia\Systems\DatabaseSystem\Queries\Query;
 
-use \TestToolkit\AccessHelper;
+use \TestToolkit\AccessHelper as ah;
+
+enum TPureEnum { case Zero; case One; case Two; }
+enum TIntegerEnum: int { case Zero = 0; case One = 1; case Two = 2; }
+enum TStringEnum: string { case Zero = 'zero'; case One = 'one'; case Two = 'two'; }
 
 #[CoversClass(Query::class)]
 class QueryTest extends TestCase
@@ -35,7 +41,7 @@ class QueryTest extends TestCase
             ->method('buildSql')
             ->willReturn('SELECT * FROM `users` WHERE id = :id');
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing bindings: id');
+        $this->expectExceptionMessage("Missing bindings: id");
         $this->query->ToSql();
     }
 
@@ -45,7 +51,7 @@ class QueryTest extends TestCase
             ->method('buildSql')
             ->willReturn('SELECT * FROM `users` WHERE id = :id AND name = :name');
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing bindings: id, name');
+        $this->expectExceptionMessage("Missing bindings: id, name");
         $this->query->ToSql();
     }
 
@@ -56,7 +62,7 @@ class QueryTest extends TestCase
             ->willReturn('SELECT * FROM `users` WHERE id = :id');
         $this->query->Bind(['id' => 42, 'name' => 'John']);
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing placeholders: name');
+        $this->expectExceptionMessage("Missing placeholders: name");
         $this->query->ToSql();
     }
 
@@ -67,7 +73,7 @@ class QueryTest extends TestCase
             ->willReturn('SELECT * FROM `users` WHERE 1 = 1');
         $this->query->Bind(['id' => 42, 'name' => 'John']);
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Missing placeholders: id, name');
+        $this->expectExceptionMessage("Missing placeholders: id, name");
         $this->query->ToSql();
     }
 
@@ -110,7 +116,7 @@ class QueryTest extends TestCase
     function testBindWithInvalidKey()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid binding key: 1id');
+        $this->expectExceptionMessage("Invalid binding key: 1id");
         $this->query->Bind(['1id' => 42]);
     }
 
@@ -159,14 +165,16 @@ class QueryTest extends TestCase
     function testBindWithArrayAsValue()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("Invalid binding value for 'id': Array not allowed.");
+        $this->expectExceptionMessage(
+            "Invalid binding value for 'id': Array not allowed.");
         $this->query->Bind(['id' => [42]]);
     }
 
     function testBindWithResourceAsValue()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("Invalid binding value for 'id': Resource not allowed.");
+        $this->expectExceptionMessage(
+            "Invalid binding value for 'id': Resource not allowed.");
         $resource = \fopen('php://memory', 'r');
         try {
             $this->query->Bind(['id' => $resource]);
@@ -175,13 +183,35 @@ class QueryTest extends TestCase
         }
     }
 
+    function testBindWithPureEnumAsValue()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "Invalid binding value for 'id': Object must be a BackedEnum or"
+          . " implement __toString().");
+        $this->query->Bind(['id' => TPureEnum::One]);
+    }
+
     function testBindWithObjectWithoutTostringAsValue()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            "Invalid binding value for 'id': Object without __toString() not allowed.");
+            "Invalid binding value for 'id': Object must be a BackedEnum"
+          . " or implement __toString().");
         $objectWithoutToString = new class {};
         $this->query->Bind(['id' => $objectWithoutToString]);
+    }
+
+    function testBindWithIntegerEnumAsValue()
+    {
+        $this->query->Bind(['id' => TIntegerEnum::One]);
+        $this->assertSame(['id' => 1], $this->query->Bindings());
+    }
+
+    function testBindWithStringEnumAsValue()
+    {
+        $this->query->Bind(['id' => TStringEnum::One]);
+        $this->assertSame(['id' => 'one'], $this->query->Bindings());
     }
 
     function testBindWithObjectWithTostringAsValue()
@@ -207,20 +237,20 @@ class QueryTest extends TestCase
     function testCheckStringWithEmptyString()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallMethod($this->query, 'checkString', ['']);
+        $this->expectExceptionMessage("String cannot be empty.");
+        ah::CallMethod($this->query, 'checkString', ['']);
     }
 
     function testCheckStringWithWhitespaceOnlyString()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallMethod($this->query, 'checkString', ['   ']);
+        $this->expectExceptionMessage("String cannot be empty.");
+        ah::CallMethod($this->query, 'checkString', ['   ']);
     }
 
     function testCheckStringTrimsString()
     {
-        $result = AccessHelper::CallMethod(
+        $result = ah::CallMethod(
             $this->query,
             'checkString',
             ['  id  ']
@@ -230,7 +260,7 @@ class QueryTest extends TestCase
 
     function testCheckStringWithNonEmptyString()
     {
-        $result = AccessHelper::CallMethod(
+        $result = ah::CallMethod(
             $this->query,
             'checkString',
             ['id']
@@ -245,27 +275,27 @@ class QueryTest extends TestCase
     function testCheckStringListWithNoStrings()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('String list cannot be empty.');
-        AccessHelper::CallMethod($this->query, 'checkStringList', []);
+        $this->expectExceptionMessage("String list cannot be empty.");
+        ah::CallMethod($this->query, 'checkStringList', []);
     }
 
     function testCheckStringListWithEmptyString()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallMethod($this->query, 'checkStringList', ['']);
+        $this->expectExceptionMessage("String cannot be empty.");
+        ah::CallMethod($this->query, 'checkStringList', ['']);
     }
 
     function testCheckStringListWithWhitespaceOnlyString()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallMethod($this->query, 'checkStringList', ['   ']);
+        $this->expectExceptionMessage("String cannot be empty.");
+        ah::CallMethod($this->query, 'checkStringList', ['   ']);
     }
 
     function testCheckStringListTrimsStrings()
     {
-        $result = AccessHelper::CallMethod(
+        $result = ah::CallMethod(
             $this->query,
             'checkStringList',
             ['  id  ', '  name  ']
@@ -275,7 +305,7 @@ class QueryTest extends TestCase
 
     function testCheckStringListWithSingleString()
     {
-        $result = AccessHelper::CallMethod(
+        $result = ah::CallMethod(
             $this->query,
             'checkStringList',
             ['id']
@@ -285,7 +315,7 @@ class QueryTest extends TestCase
 
     function testCheckStringListWithMultipleStrings()
     {
-        $result = AccessHelper::CallMethod(
+        $result = ah::CallMethod(
             $this->query,
             'checkStringList',
             ['id', 'name', 'AVG(*)']
@@ -300,27 +330,27 @@ class QueryTest extends TestCase
     function testFormatStringListWithNoStrings()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('String list cannot be empty.');
-        AccessHelper::CallMethod($this->query, 'formatStringList', []);
+        $this->expectExceptionMessage("String list cannot be empty.");
+        ah::CallMethod($this->query, 'formatStringList', []);
     }
 
     function testFormatStringListWithEmptyString()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallMethod($this->query, 'formatStringList', ['']);
+        $this->expectExceptionMessage("String cannot be empty.");
+        ah::CallMethod($this->query, 'formatStringList', ['']);
     }
 
     function testFormatStringListWithWhitespaceOnlyString()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('String cannot be empty.');
-        AccessHelper::CallMethod($this->query, 'formatStringList', ['   ']);
+        $this->expectExceptionMessage("String cannot be empty.");
+        ah::CallMethod($this->query, 'formatStringList', ['   ']);
     }
 
     function testFormatStringListTrimsStrings()
     {
-        $result = AccessHelper::CallMethod(
+        $result = ah::CallMethod(
             $this->query,
             'formatStringList',
             ['  id  ', '  name  ']
@@ -330,7 +360,7 @@ class QueryTest extends TestCase
 
     function testFormatStringListWithSingleString()
     {
-        $result = AccessHelper::CallMethod(
+        $result = ah::CallMethod(
             $this->query,
             'formatStringList',
             ['id']
@@ -340,7 +370,7 @@ class QueryTest extends TestCase
 
     function testFormatStringListWithMultipleStrings()
     {
-        $result = AccessHelper::CallMethod(
+        $result = ah::CallMethod(
             $this->query,
             'formatStringList',
             ['id', 'name', 'AVG(*)']
